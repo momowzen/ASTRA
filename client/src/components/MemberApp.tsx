@@ -153,7 +153,7 @@ function CollectionCell({
     const list = (options.includes(value) ? options : [value, ...options]).filter((o) => o !== '');
     return (
       <select
-        className={`coll-select${value ? ' has' : ''}`}
+        className="coll-select"
         value={value}
         style={{ color: optionColor(value) }}
         onChange={(e) => onCommit(e.target.value).catch(() => {})}

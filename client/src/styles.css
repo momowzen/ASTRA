@@ -846,15 +846,6 @@ tr:hover .icon-btn {
   border-color: var(--accent);
   box-shadow: 0 0 0 3px rgba(139, 124, 255, 0.18);
 }
-.coll-select.has {
-  color: var(--green);
-  border-color: rgba(61, 220, 151, 0.45);
-  background-color: rgba(61, 220, 151, 0.08);
-}
-.coll-select.has:hover,
-.coll-select.has:focus {
-  border-color: rgba(61, 220, 151, 0.7);
-}
 
 /* collection grids */
 .coll-wrap {
