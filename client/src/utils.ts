@@ -47,3 +47,13 @@ export function initials(name: string): string {
 export function clsx(...parts: (string | false | null | undefined)[]): string {
   return parts.filter(Boolean).join(' ');
 }
+
+export function isCpLabel(label: string): boolean {
+  return label.trim().toUpperCase() === 'CP';
+}
+
+export function formatCp(value: string): string {
+  const digits = value.replace(/[^0-9]/g, '');
+  if (digits === '') return value.trim() === '' ? '' : value;
+  return Number(digits).toLocaleString('en-US');
+}

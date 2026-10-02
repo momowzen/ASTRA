@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type { Column, DataResponse, Session, TabData } from '../types';
-import { buildColumns, initials, isMark } from '../utils';
+import { buildColumns, formatCp, initials, isCpLabel, isMark } from '../utils';
 import { ApiError, saveCells } from '../api';
 import { IconGear, IconGrid, IconLogout } from './icons';
 import PasswordModal from './PasswordModal';
@@ -23,36 +23,58 @@ function prettyTitle(title: string): string {
     .replace(/\bof\b/gi, 'of');
 }
 
+const MEMBER_READONLY = new Set(['ROLE', 'STATUS']);
+
 function Field({
   label,
   value,
   options,
+  readOnly,
+  format,
   onCommit,
 }: {
   label: string;
   value: string;
   options?: string[];
+  readOnly?: boolean;
+  format?: boolean;
   onCommit: (value: string) => Promise<void>;
 }) {
-  const [val, setVal] = useState(value);
+  const [val, setVal] = useState(() => (format ? formatCp(value) : value));
   const [status, setStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
   const inputRef = useRef<HTMLInputElement>(null);
   const focused = useRef(false);
 
   useEffect(() => {
-    if (!focused.current) setVal(value);
-  }, [value]);
+    if (!focused.current) setVal(format ? formatCp(value) : value);
+  }, [value, format]);
 
   async function commitValue(next: string) {
-    if (next === value) return;
+    const final = format ? formatCp(next) : next;
+    if (final === value) {
+      setVal(final);
+      return;
+    }
     setStatus('saving');
     try {
-      await onCommit(next);
+      await onCommit(final);
+      setVal(final);
       setStatus('saved');
       setTimeout(() => setStatus((s) => (s === 'saved' ? 'idle' : s)), 1800);
     } catch {
       setStatus('error');
     }
+  }
+
+  if (readOnly) {
+    return (
+      <div className="field">
+        <label>{label}</label>
+        <div className="field-ro" title="Managed by an admin — members cannot change this">
+          {value.trim() || '—'}
+        </div>
+      </div>
+    );
   }
 
   const optionList = options
@@ -208,8 +230,17 @@ export default function MemberApp({
     data.tabs.find((t) => t.meta.title.toUpperCase() === 'BASIC INFORMATION') ||
     data.tabs.find((t) => (t.meta.headers[0]?.[0] || '').trim().toUpperCase() === 'IGN');
 
-  const currentTab =
-    data.tabs.find((t) => t.meta.title === activeTitle) || rosterTab || data.tabs[0];
+  const equipTab = data.tabs.find((t) => t.meta.title.toUpperCase() === 'EQUIPMENTS');
+
+  const DASHBOARD_TITLES = ['BASIC INFORMATION', 'EQUIPMENTS'];
+  const memberTabs = data.tabs.filter(
+    (t) =>
+      !DASHBOARD_TITLES.includes(t.meta.title.toUpperCase()) &&
+      (t.meta.headers[0] || []).some((h) => h.trim() !== ''),
+  );
+
+  const activeTab = memberTabs.find((t) => t.meta.title === activeTitle);
+  const isDashboard = !activeTab;
 
   const myRow = useMemo(() => {
     const ign = session.ign.trim().toLowerCase();
@@ -217,6 +248,9 @@ export default function MemberApp({
   }, [session.ign]);
 
   const rosterRow = myRow(rosterTab);
+  const equipRow = myRow(equipTab);
+  const rosterCols = rosterTab ? buildColumns(rosterTab.meta) : [];
+  const equipCols = equipTab ? buildColumns(equipTab.meta) : [];
 
   const profileBadges = useMemo(() => {
     if (!rosterTab || !rosterRow) return [] as { label: string; cls: string }[];
@@ -227,7 +261,8 @@ export default function MemberApp({
       if (!v) continue;
       const upper = c.label.toUpperCase();
       const cls = upper === 'CP' ? 'gold' : upper === 'STATUS' ? 'green' : 'violet';
-      out.push({ label: `${c.label}: ${v}`, cls });
+      const shown = upper === 'CP' ? formatCp(v) : v;
+      out.push({ label: `${c.label}: ${shown}`, cls });
     }
     return out;
   }, [rosterTab, rosterRow]);
@@ -242,10 +277,10 @@ export default function MemberApp({
     }
   }
 
-  const cols = currentTab ? buildColumns(currentTab.meta) : [];
-  const row = myRow(currentTab);
+  const cols = activeTab ? buildColumns(activeTab.meta) : [];
+  const row = activeTab ? myRow(activeTab) : undefined;
   const collectionGroups: { label: string; cols: Column[] }[] = [];
-  if (currentTab && currentTab.meta.headerRows === 2) {
+  if (activeTab && activeTab.meta.headerRows === 2) {
     for (const c of cols.slice(1)) {
       const last = collectionGroups[collectionGroups.length - 1];
       if (last && last.label === c.group) last.cols.push(c);
@@ -275,10 +310,19 @@ export default function MemberApp({
         </div>
 
         <div className="section-label">My profile</div>
-        {data.tabs.map((t) => (
+        <button
+          className={`nav-item ${isDashboard ? 'active' : ''}`}
+          onClick={() => setActiveTitle('')}
+        >
+          <span className="ico">
+            <IconGrid />
+          </span>
+          Profile
+        </button>
+        {memberTabs.map((t) => (
           <button
             key={t.meta.title}
-            className={`nav-item ${t.meta.title === currentTab?.meta.title ? 'active' : ''}`}
+            className={`nav-item ${t.meta.title === activeTitle ? 'active' : ''}`}
             onClick={() => setActiveTitle(t.meta.title)}
           >
             <span className="ico">
@@ -307,7 +351,7 @@ export default function MemberApp({
 
       <main className="main">
         <header className="topbar">
-          <h2>{currentTab ? prettyTitle(currentTab.meta.title) : 'Loading…'}</h2>
+          <h2>{isDashboard ? 'Profile' : activeTab ? prettyTitle(activeTab.meta.title) : 'Loading…'}</h2>
           <div className="grow" />
           <span className={`live ${live === 'live' ? '' : live}`}>
             <span className="dot" />
@@ -336,25 +380,65 @@ export default function MemberApp({
             </div>
           </div>
 
-          <div className="section-chips">
-            {data.tabs.map((t) => (
-              <button
-                key={t.meta.title}
-                className={`chip ${t.meta.title === currentTab?.meta.title ? 'active' : ''}`}
-                onClick={() => setActiveTitle(t.meta.title)}
-              >
-                {prettyTitle(t.meta.title)}
-              </button>
-            ))}
-          </div>
-
-          {currentTab && (
+          {isDashboard && rosterTab && (
             <div className="panel-card">
-              <h3>{prettyTitle(currentTab.meta.title)}</h3>
-              <p className="desc">
-                Your personal entry — edits are written straight to the guild spreadsheet. Your IGN
-                cannot be changed here.
-              </p>
+              <h3>Basic Information</h3>
+              {!rosterRow ? (
+                <div className="empty">
+                  <div className="big">
+                    <IconGrid />
+                  </div>
+                  You don’t have a row in your profile yet. An admin can add you.
+                </div>
+              ) : (
+                <div className="field-grid">
+                  {rosterCols.slice(1).map((c) => (
+                    <Field
+                      key={c.index}
+                      label={c.label}
+                      value={rosterRow.cells[c.index] ?? ''}
+                      options={rosterTab.meta.options?.[c.index]}
+                      readOnly={MEMBER_READONLY.has(c.label.trim().toUpperCase())}
+                      format={isCpLabel(c.label)}
+                      onCommit={(v) => commit(rosterTab, rosterRow.row, c.index, v)}
+                    />
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
+          {isDashboard && equipTab && (
+            <div className="panel-card">
+              <h3>Equipment</h3>
+              {!equipRow ? (
+                <div className="empty">
+                  <div className="big">
+                    <IconGrid />
+                  </div>
+                  You don’t have a row in your profile yet. An admin can add you.
+                </div>
+              ) : (
+                <div className="field-grid">
+                  {equipCols.slice(1).map((c) => (
+                    <Field
+                      key={c.index}
+                      label={c.label}
+                      value={equipRow.cells[c.index] ?? ''}
+                      options={equipTab.meta.options?.[c.index]}
+                      readOnly={MEMBER_READONLY.has(c.label.trim().toUpperCase())}
+                      format={isCpLabel(c.label)}
+                      onCommit={(v) => commit(equipTab, equipRow.row, c.index, v)}
+                    />
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
+          {!isDashboard && activeTab && (
+            <div className="panel-card">
+              <h3>{prettyTitle(activeTab.meta.title)}</h3>
 
               {!row && (
                 <div className="empty">
@@ -365,21 +449,23 @@ export default function MemberApp({
                 </div>
               )}
 
-              {row && currentTab.meta.headerRows === 1 && (
+              {row && activeTab.meta.headerRows === 1 && (
                 <div className="field-grid">
                   {cols.slice(1).map((c) => (
                     <Field
                       key={c.index}
                       label={c.label}
                       value={row.cells[c.index] ?? ''}
-                      options={currentTab.meta.options?.[c.index]}
-                      onCommit={(v) => commit(currentTab, row.row, c.index, v)}
+                      options={activeTab.meta.options?.[c.index]}
+                      readOnly={MEMBER_READONLY.has(c.label.trim().toUpperCase())}
+                      format={isCpLabel(c.label)}
+                      onCommit={(v) => commit(activeTab, row.row, c.index, v)}
                     />
                   ))}
                 </div>
               )}
 
-              {row && currentTab.meta.headerRows === 2 && (
+              {row && activeTab.meta.headerRows === 2 && (
                 <div className="coll-grid">
                   {collectionGroups.map((g) => (
                     <section className="coll-card" key={g.label}>
@@ -387,14 +473,14 @@ export default function MemberApp({
                       <div className="coll-items">
                         {g.cols.map((c) => {
                           const sub =
-                            (currentTab.meta.headers[1]?.[c.index] || '').trim() || c.label;
+                            (activeTab.meta.headers[1]?.[c.index] || '').trim() || c.label;
                           return (
                             <div className="coll-item" key={c.index}>
                               <span className="coll-sub">{sub}</span>
                               <CollectionCell
                                 value={row.cells[c.index] ?? ''}
-                                options={currentTab.meta.options?.[c.index]}
-                                onCommit={(v) => commit(currentTab, row.row, c.index, v)}
+                                options={activeTab.meta.options?.[c.index]}
+                                onCommit={(v) => commit(activeTab, row.row, c.index, v)}
                               />
                             </div>
                           );

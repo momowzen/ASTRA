@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type { RefObject } from 'react';
 import type { Column, DataResponse, Session } from '../types';
-import { buildColumns } from '../utils';
+import { buildColumns, formatCp, isCpLabel } from '../utils';
 import { addRow as apiAddRow, deleteRow as apiDeleteRow, saveCells, ApiError } from '../api';
 import { IconGear, IconGrid, IconLogout, IconPlus, IconSearch, IconTrash } from './icons';
 import PasswordModal from './PasswordModal';
@@ -19,11 +19,13 @@ interface Props {
 function EditableCell({
   initial,
   options,
+  format,
   onCommit,
   onCancel,
 }: {
   initial: string;
   options?: string[];
+  format?: boolean;
   onCommit: (value: string) => Promise<boolean>;
   onCancel: () => void;
 }) {
@@ -39,7 +41,7 @@ function EditableCell({
   async function commit() {
     if (closing.current) return;
     closing.current = true;
-    const ok = await onCommit(val);
+    const ok = await onCommit(format ? formatCp(val) : val);
     if (!ok) closing.current = false;
   }
 
@@ -356,6 +358,7 @@ export default function AdminApp({
                       {cols.map((c) => {
                         const isEditing = editing?.row === r.row && editing?.col === c.index;
                         const value = r.cells[c.index] ?? '';
+                        const shown = isCpLabel(c.label) ? formatCp(value) : value;
                         return (
                           <td
                             key={c.index}
@@ -366,12 +369,13 @@ export default function AdminApp({
                               <EditableCell
                                 initial={value}
                                 options={tab.meta.options?.[c.index]}
+                                format={isCpLabel(c.label)}
                                 onCommit={(v) => commitCell(r.row, c.index, v)}
                                 onCancel={() => setEditing(null)}
                               />
                             ) : (
-                              <div className="cell" title={value}>
-                                {value || <span className="muted">—</span>}
+                              <div className="cell" title={shown}>
+                                {shown || <span className="muted">—</span>}
                               </div>
                             )}
                           </td>
@@ -475,7 +479,9 @@ function AddRowModal({
         <form
           onSubmit={(e) => {
             e.preventDefault();
-            void onSubmit(values);
+            void onSubmit(
+              values.map((v, i) => (isCpLabel(columns[i]?.label ?? '') ? formatCp(v) : v)),
+            );
           }}
         >
           <div className="form-grid">

@@ -1,4 +1,5 @@
 :root {
+  color-scheme: dark;
   --bg: #070a12;
   --bg-2: #0a0e1a;
   --panel: #10162a;
@@ -51,6 +52,12 @@ select,
 textarea {
   font: inherit;
   color: inherit;
+}
+
+select,
+select option {
+  background-color: var(--bg-2);
+  color: var(--text);
 }
 
 ::-webkit-scrollbar {
@@ -178,6 +185,16 @@ textarea {
   color: var(--muted);
   text-transform: uppercase;
   letter-spacing: 0.06em;
+}
+.field-ro {
+  background: var(--bg-2);
+  border: 1px dashed var(--line);
+  border-radius: var(--radius-sm);
+  padding: 9px 12px;
+  color: var(--muted);
+  min-height: 38px;
+  display: flex;
+  align-items: center;
 }
 
 .spinner {
@@ -715,35 +732,6 @@ tr:hover .icon-btn {
   background: rgba(61, 220, 151, 0.08);
 }
 
-.section-chips {
-  display: flex;
-  gap: 8px;
-  margin: 20px 0 16px;
-  overflow-x: auto;
-  padding-bottom: 4px;
-}
-.chip {
-  padding: 8px 15px;
-  border-radius: 999px;
-  border: 1px solid var(--line);
-  background: var(--panel);
-  color: var(--muted);
-  cursor: pointer;
-  font-size: 13px;
-  font-weight: 600;
-  white-space: nowrap;
-  transition: 0.13s ease;
-}
-.chip:hover {
-  color: var(--text);
-  border-color: #34406b;
-}
-.chip.active {
-  background: linear-gradient(135deg, rgba(139, 124, 255, 0.25), rgba(139, 124, 255, 0.1));
-  border-color: rgba(139, 124, 255, 0.5);
-  color: #fff;
-}
-
 .panel-card {
   background: var(--panel);
   border: 1px solid var(--line-soft);
@@ -751,15 +739,18 @@ tr:hover .icon-btn {
   padding: 22px;
   box-shadow: 0 12px 34px rgba(0, 0, 0, 0.25);
 }
+.panel-card + .panel-card {
+  margin-top: 16px;
+}
 .panel-card h3 {
   font-family: var(--display);
   margin: 0 0 4px;
   font-size: 16px;
 }
-.panel-card .desc {
-  color: var(--muted);
-  font-size: 13px;
-  margin: 0 0 18px;
+.panel-card h3 + .field-grid,
+.panel-card h3 + .coll-grid,
+.panel-card h3 + .empty {
+  margin-top: 14px;
 }
 
 .field-grid {
