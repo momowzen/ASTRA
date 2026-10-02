@@ -34,6 +34,34 @@ let inFlight: Promise<void> | null = null;
 let timer: NodeJS.Timeout | null = null;
 export let lastError: string | null = null;
 
+/**
+ * Google can serve stale reads for a couple of seconds after a write, so a
+ * refresh that lands after a fresh one may still contain pre-write values.
+ * Remember recent writes and overlay them onto every load until Google has
+ * certainly caught up, so a stale read can never regress the snapshot.
+ */
+const RECENT_WRITE_TTL_MS = 8_000;
+const recentWrites = new Map<string, { row: number; col: number; value: string; expires: number }>();
+
+export function noteWrite(title: string, row: number, col: number, value: string): void {
+  recentWrites.set(`${title}!${row}!${col}`, { row, col, value, expires: Date.now() + RECENT_WRITE_TTL_MS });
+}
+
+function applyRecentWrites(title: string, values: string[][]): void {
+  const now = Date.now();
+  for (const [key, w] of recentWrites) {
+    if (!key.startsWith(`${title}!`)) continue;
+    if (w.expires < now) {
+      recentWrites.delete(key);
+      continue;
+    }
+    const idx = w.row - 1;
+    while (values.length <= idx) values.push([]);
+    while (values[idx].length <= w.col) values[idx].push('');
+    values[idx][w.col] = w.value;
+  }
+}
+
 function detectHeaderRows(values: string[][]): 1 | 2 {
   if (values.length < 2) return 1;
   const first = values[0] || [];
@@ -107,6 +135,10 @@ async function load(): Promise<Snapshot> {
     .sort((a, b) => a.index - b.index);
   const titles = visible.map((s) => s.title);
   const values = await sheets.batchGetValues(titles);
+  for (const title of titles) {
+    if (!values[title]) values[title] = [];
+    applyRecentWrites(title, values[title]);
+  }
   const validations = await loadValidations(titles);
   const tabs = visible.map((s, i) =>
     buildTab(

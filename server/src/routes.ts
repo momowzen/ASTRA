@@ -3,7 +3,7 @@ import { config } from './config';
 import * as sheets from './sheets';
 import { findCredential, deleteCredential, setPassword, verifyCredential } from './credentials';
 import { rateLimit, requireAdmin, requireAuth, signToken } from './auth';
-import { findIgn, getSnapshot, getTab, scheduleRefresh, lastError } from './store';
+import { findIgn, getSnapshot, getTab, scheduleRefresh, noteWrite, lastError } from './store';
 
 class ForbiddenRow extends Error {
   constructor(public row: number) {
@@ -190,6 +190,7 @@ api.put('/tabs/:title/values', requireAuth, async (req, res) => {
       title,
       clean.map((u) => ({ a1: `${sheets.columnLetter(u.col)}${u.row}`, values: [[u.value]] })),
     );
+    for (const u of clean) noteWrite(title, u.row, u.col, u.value);
     scheduleRefresh();
     res.json({ ok: true });
   } catch (err) {
