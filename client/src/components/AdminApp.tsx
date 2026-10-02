@@ -1,10 +1,12 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type { RefObject } from 'react';
+import { INTERNAL_TABS } from '../types';
 import type { Column, DataResponse, Session } from '../types';
 import { buildColumns, formatCp, isCpLabel, optionColor } from '../utils';
 import { addRow as apiAddRow, deleteRow as apiDeleteRow, saveCells, ApiError } from '../api';
 import { IconGear, IconGrid, IconLogout, IconPlus, IconSearch, IconTrash } from './icons';
 import PasswordModal from './PasswordModal';
+import BossTracker from './BossTracker';
 
 interface Props {
   data: DataResponse;
@@ -124,6 +126,7 @@ export default function AdminApp({
   const [search, setSearch] = useState('');
   const [showCol, setShowCol] = useState(-1);
   const [filterVal, setFilterVal] = useState('');
+  const [bossView, setBossView] = useState<'dashboard' | 'attendance' | 'config' | null>(null);
   const [editing, setEditing] = useState<{ row: number; col: number } | null>(null);
   const [addOpen, setAddOpen] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState<number | null>(null);
@@ -229,24 +232,56 @@ export default function AdminApp({
           </div>
         </div>
 
+        <div className="section-label">Boss Attendance Tracker</div>
+        <button
+          className={`nav-item ${bossView === 'dashboard' ? 'active' : ''}`}
+          onClick={() => setBossView('dashboard')}
+        >
+          <span className="ico">
+            <IconGrid />
+          </span>
+          Dashboard
+        </button>
+        <button
+          className={`nav-item ${bossView === 'attendance' ? 'active' : ''}`}
+          onClick={() => setBossView('attendance')}
+        >
+          <span className="ico">
+            <IconPlus />
+          </span>
+          Attendance
+        </button>
+        <button
+          className={`nav-item ${bossView === 'config' ? 'active' : ''}`}
+          onClick={() => setBossView('config')}
+        >
+          <span className="ico">
+            <IconGear />
+          </span>
+          Boss Config
+        </button>
+
         <div className="section-label">Sheet tabs</div>
-        {data.tabs.map((t) => (
-          <button
-            key={t.meta.title}
-            className={`nav-item ${t.meta.title === tab?.meta.title ? 'active' : ''}`}
-            onClick={() => {
-              setActiveTitle(t.meta.title);
-              setEditing(null);
-              setShowCol(-1);
-              setFilterVal('');
-            }}
-          >
-            <span className="ico">
-              <IconGrid />
-            </span>
-            {t.meta.title}
-          </button>
-        ))}
+        {data.tabs
+          .filter((t) => !INTERNAL_TABS.includes(t.meta.title.toUpperCase()))
+          .map((t) => (
+            <button
+              key={t.meta.title}
+              className={`nav-item ${bossView === null && t.meta.title === tab?.meta.title ? 'active' : ''}`}
+              onClick={() => {
+                setActiveTitle(t.meta.title);
+                setBossView(null);
+                setEditing(null);
+                setShowCol(-1);
+                setFilterVal('');
+              }}
+            >
+              <span className="ico">
+                <IconGrid />
+              </span>
+              {t.meta.title}
+            </button>
+          ))}
 
         <div className="spacer" />
         <div className="userbox">
@@ -270,78 +305,89 @@ export default function AdminApp({
 
       <main className="main">
         <header className="topbar">
-          <h2>{tab?.meta.title ?? 'Loading…'}</h2>
+          <h2>
+            {bossView
+              ? `Boss Attendance · ${
+                  bossView === 'dashboard' ? 'Dashboard' : bossView === 'attendance' ? 'Attendance' : 'Boss Config'
+                }`
+              : tab?.meta.title ?? 'Loading…'}
+          </h2>
           <div className="grow" />
-          <div className="toolbar">
-            <div className="search">
-              <IconSearch />
-              <input
-                className="input"
-                placeholder="Search IGN…"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-              />
-            </div>
-            <div className="col-filter">
-              <select
-                className="select"
-                value={showCol}
-                onChange={(e) => {
-                  setShowCol(Number(e.target.value));
-                  setFilterVal('');
-                  setEditing(null);
-                }}
-              >
-                <option value={-1}>All columns</option>
-                {allCols.map((c) => (
-                  <option key={c.index} value={c.index}>
-                    {c.label}
-                  </option>
-                ))}
-              </select>
-              {showCol >= 0 && (
+          {!bossView && (
+            <div className="toolbar">
+              <div className="search">
+                <IconSearch />
+                <input
+                  className="input"
+                  placeholder="Search IGN…"
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                />
+              </div>
+              <div className="col-filter">
                 <select
-                  className="select val-filter"
-                  title={`Filter by ${cols.find((c) => c.index === showCol)?.label ?? ''}`}
-                  value={filterVal}
+                  className="select"
+                  value={showCol}
                   onChange={(e) => {
-                    setFilterVal(e.target.value);
+                    setShowCol(Number(e.target.value));
+                    setFilterVal('');
                     setEditing(null);
                   }}
                 >
-                  <option value="">All values</option>
-                  {filterChoices.map((v) => (
-                    <option key={v} value={v} style={{ color: optionColor(v) || 'var(--text)' }}>
-                      {v}
+                  <option value={-1}>All columns</option>
+                  {allCols.map((c) => (
+                    <option key={c.index} value={c.index}>
+                      {c.label}
                     </option>
                   ))}
                 </select>
+                {showCol >= 0 && (
+                  <select
+                    className="select val-filter"
+                    title={`Filter by ${cols.find((c) => c.index === showCol)?.label ?? ''}`}
+                    value={filterVal}
+                    onChange={(e) => {
+                      setFilterVal(e.target.value);
+                      setEditing(null);
+                    }}
+                  >
+                    <option value="">All values</option>
+                    {filterChoices.map((v) => (
+                      <option key={v} value={v} style={{ color: optionColor(v) || 'var(--text)' }}>
+                        {v}
+                      </option>
+                    ))}
+                  </select>
+                )}
+              </div>
+              {(search || showCol >= 0 || filterVal) && (
+                <button
+                  className="btn btn-ghost btn-sm"
+                  onClick={() => {
+                    setSearch('');
+                    setShowCol(-1);
+                    setFilterVal('');
+                  }}
+                >
+                  Clear
+                </button>
               )}
-            </div>
-            {(search || showCol >= 0 || filterVal) && (
-              <button
-                className="btn btn-ghost btn-sm"
-                onClick={() => {
-                  setSearch('');
-                  setShowCol(-1);
-                  setFilterVal('');
-                }}
-              >
-                Clear
+              <button className="btn btn-primary" onClick={() => setAddOpen(true)}>
+                <IconPlus /> Add row
               </button>
-            )}
-            <button className="btn btn-primary" onClick={() => setAddOpen(true)}>
-              <IconPlus /> Add row
-            </button>
-            <span className={`live ${live === 'live' ? '' : live}`}>
-              <span className="dot" />
-              {liveNote}
-            </span>
-          </div>
+            </div>
+          )}
+          <span className={`live ${live === 'live' ? '' : live}`}>
+            <span className="dot" />
+            {liveNote}
+          </span>
         </header>
 
         <div className="content">
-          <div className="table-card">
+          {bossView ? (
+            <BossTracker view={bossView} data={data} onPatch={onPatch} toast={toast} />
+          ) : (
+            <div className="table-card">
             <div className="table-meta">
               <span>
                 <strong>{rows.length}</strong>
@@ -443,6 +489,7 @@ export default function AdminApp({
               </table>
             </div>
           </div>
+          )}
         </div>
       </main>
 

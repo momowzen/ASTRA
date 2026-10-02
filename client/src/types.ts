@@ -42,3 +42,6 @@ export interface Column {
   label: string;
   group: string;
 }
+
+/** Database-only sheet tabs backing the boss attendance tracker. Never shown in nav. */
+export const INTERNAL_TABS = ['BOSS ATTENDANCE', 'BOSS CONFIG'];

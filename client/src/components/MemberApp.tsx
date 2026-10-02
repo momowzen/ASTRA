@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { INTERNAL_TABS } from '../types';
 import type { Column, DataResponse, Session, TabData } from '../types';
 import { buildColumns, formatCp, initials, isCpLabel, isMark, optionColor } from '../utils';
 import { ApiError, saveCells } from '../api';
@@ -244,6 +245,7 @@ export default function MemberApp({
   const memberTabs = data.tabs.filter(
     (t) =>
       !DASHBOARD_TITLES.includes(t.meta.title.toUpperCase()) &&
+      !INTERNAL_TABS.includes(t.meta.title.toUpperCase()) &&
       (t.meta.headers[0] || []).some((h) => h.trim() !== ''),
   );
 

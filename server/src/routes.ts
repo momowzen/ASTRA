@@ -4,6 +4,7 @@ import * as sheets from './sheets';
 import { findCredential, deleteCredential, setPassword, verifyCredential } from './credentials';
 import { rateLimit, requireAdmin, requireAuth, signToken } from './auth';
 import { findIgn, getSnapshot, getTab, scheduleRefresh, noteWrite, lastError } from './store';
+import { BOSS_NAMES } from './bosses';
 
 class ForbiddenRow extends Error {
   constructor(public row: number) {
@@ -15,6 +16,9 @@ export const api = Router();
 
 const MAX_VALUE_LEN = 1000;
 const MAX_UPDATES = 200;
+
+/** Database-only tabs backing the boss attendance tracker — never shown to any role. */
+const INTERNAL_TABS = ['BOSS ATTENDANCE', 'BOSS CONFIG'];
 
 function bad(res: Response, status: number, message: string): void {
   res.status(status).json({ error: message });
@@ -125,10 +129,12 @@ api.get('/data', requireAuth, (req, res) => {
   const isAdmin = s.role === 'ADMIN';
   const ign = s.ign.toLowerCase();
 
-  const tabs = snap.tabs.map((t) => ({
-    meta: t.meta,
-    rows: isAdmin ? t.rows : t.rows.filter((r) => (r.cells[0] || '').trim().toLowerCase() === ign),
-  }));
+  const tabs = snap.tabs
+    .filter((t) => isAdmin || !INTERNAL_TABS.includes(t.meta.title.toUpperCase()))
+    .map((t) => ({
+      meta: t.meta,
+      rows: isAdmin ? t.rows : t.rows.filter((r) => (r.cells[0] || '').trim().toLowerCase() === ign),
+    }));
 
   res.json({
     rev: snap.rev,
@@ -155,6 +161,9 @@ api.put('/tabs/:title/values', requireAuth, async (req, res) => {
 
   const s = req.session!;
   const isAdmin = s.role === 'ADMIN';
+  if (!isAdmin && INTERNAL_TABS.includes(title.toUpperCase())) {
+    return bad(res, 403, 'This tab is not editable');
+  }
   const clean: { row: number; col: number; value: string }[] = [];
 
   for (const u of updates) {
@@ -257,5 +266,21 @@ api.post('/admin/reset-member', requireAuth, requireAdmin, async (req, res) => {
   } catch (err) {
     console.error('[admin] reset member failed:', err);
     bad(res, 502, 'Could not reset the member password');
+  }
+});
+
+api.post('/boss/config/seed', requireAuth, requireAdmin, async (_req, res) => {
+  try {
+    const tab = getTab('BOSS CONFIG');
+    if (tab && tab.rows.length > 0) {
+      return res.json({ ok: true, seeded: false });
+    }
+    const rows: string[][] = [['Boss', 'Points'], ...BOSS_NAMES.map((name) => [name, '1'])];
+    await sheets.batchUpdateValues('BOSS CONFIG', [{ a1: 'A1', values: rows }]);
+    scheduleRefresh();
+    res.json({ ok: true, seeded: true, count: BOSS_NAMES.length });
+  } catch (err) {
+    console.error('[boss] seed config failed:', err);
+    bad(res, 502, 'Could not seed boss config');
   }
 });

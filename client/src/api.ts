@@ -146,6 +146,10 @@ export async function deleteRow(tabTitle: string, row: number): Promise<void> {
   await request(`/tabs/${encodeURIComponent(tabTitle)}/rows?row=${row}`, { method: 'DELETE' });
 }
 
+export async function seedBossConfig(): Promise<{ ok: boolean; seeded: boolean; count?: number }> {
+  return request('/boss/config/seed', { method: 'POST' });
+}
+
 export async function changePassword(currentPassword: string, newPassword: string): Promise<void> {
   await request('/auth/password', {
     method: 'POST',
