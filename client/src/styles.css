@@ -18,6 +18,8 @@
   --shadow: 0 24px 60px rgba(0, 0, 0, 0.45);
   --radius: 14px;
   --radius-sm: 9px;
+  --topbar-h: 58px;
+  --hero-h: 140px;
   --font: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
   --display: 'Sora', 'Inter', system-ui, sans-serif;
 }
@@ -669,7 +671,9 @@ tr:hover .icon-btn {
 /* ---------- member profile ---------- */
 
 .profile-hero {
-  position: relative;
+  position: sticky;
+  top: var(--topbar-h);
+  z-index: 20;
   border-radius: var(--radius);
   border: 1px solid var(--line-soft);
   overflow: hidden;
@@ -744,6 +748,10 @@ tr:hover .icon-btn {
   margin-top: 16px;
 }
 .panel-card h3 {
+  position: sticky;
+  top: calc(var(--topbar-h) + var(--hero-h));
+  z-index: 10;
+  background: var(--panel);
   font-family: var(--display);
   margin: 0 0 4px;
   font-size: 16px;
