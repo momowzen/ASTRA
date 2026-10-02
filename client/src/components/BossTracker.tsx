@@ -421,21 +421,19 @@ function DashboardView({ attendanceTab }: { attendanceTab: TabData | undefined }
             <tbody>
               {leaderboard.map((x, i) => {
                 const mark = inBand(x.points);
+                const cellCls = mark ? 'cell top-cell' : 'cell';
                 return (
                   <tr key={x.ign}>
                     <td className="rownum">{i + 1}</td>
                     <td className="ign-col">
-                      <div className="cell">
+                      <div className={cellCls} title={mark ? t('boss.top30') : undefined}>
                         {x.ign}
-                        {mark && (
-                          <span className="top-mark" title={t('boss.top30')}>
-                            ★
-                          </span>
-                        )}
                       </div>
                     </td>
                     <td>
-                      <div className="cell">{x.points}</div>
+                      <div className={cellCls} title={mark ? t('boss.top30') : undefined}>
+                        {x.points}
+                      </div>
                     </td>
                   </tr>
                 );

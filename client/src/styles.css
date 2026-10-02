@@ -1223,8 +1223,7 @@ table.coll td.ign-col {
   font-variant-numeric: tabular-nums;
   font-size: 12px;
 }
-.top-mark {
+.top-cell {
   color: #f5b942;
-  margin-left: 6px;
-  font-size: 12px;
+  font-weight: 800;
 }
