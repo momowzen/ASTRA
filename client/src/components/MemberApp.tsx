@@ -23,7 +23,7 @@ function prettyTitle(title: string): string {
     .replace(/\bof\b/gi, 'of');
 }
 
-const MEMBER_READONLY = new Set(['ROLE', 'STATUS']);
+const MEMBER_READONLY = new Set(['CP', 'GUILD', 'ROLE', 'STATUS']);
 
 function Field({
   label,
@@ -67,11 +67,12 @@ function Field({
   }
 
   if (readOnly) {
+    const shown = format ? formatCp(value) : value;
     return (
       <div className="field">
         <label>{label}</label>
         <div className="field-ro" title="Managed by an admin — members cannot change this">
-          {value.trim() || '—'}
+          {shown.trim() || '—'}
         </div>
       </div>
     );

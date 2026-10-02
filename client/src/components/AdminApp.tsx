@@ -123,6 +123,7 @@ export default function AdminApp({
   const [activeTitle, setActiveTitle] = useState(data.tabs[0]?.meta.title ?? '');
   const [search, setSearch] = useState('');
   const [showCol, setShowCol] = useState(-1);
+  const [filterVal, setFilterVal] = useState('');
   const [editing, setEditing] = useState<{ row: number; col: number } | null>(null);
   const [addOpen, setAddOpen] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState<number | null>(null);
@@ -137,11 +138,31 @@ export default function AdminApp({
     [allCols, showCol, projecting],
   );
 
+  // Distinct values of the column chosen in the first filter — choices for the
+  // second (value) filter, in sheet order.
+  const filterChoices = useMemo(() => {
+    if (!tab || showCol < 0) return [];
+    const seen = new Set<string>();
+    const out: string[] = [];
+    for (const r of tab.rows) {
+      const v = (r.cells[showCol] ?? '').trim();
+      if (v && !seen.has(v)) {
+        seen.add(v);
+        out.push(v);
+      }
+    }
+    return out;
+  }, [tab, showCol]);
+
   const rows = useMemo(() => {
     if (!tab) return [];
     const q = search.trim().toLowerCase();
-    return tab.rows.filter((r) => !q || (r.cells[0] || '').toLowerCase().includes(q));
-  }, [tab, search]);
+    return tab.rows.filter((r) => {
+      if (q && !(r.cells[0] || '').toLowerCase().includes(q)) return false;
+      if (showCol >= 0 && filterVal && (r.cells[showCol] ?? '').trim() !== filterVal) return false;
+      return true;
+    });
+  }, [tab, search, showCol, filterVal]);
 
   async function commitCell(row: number, col: number, value: string): Promise<boolean> {
     if (!tab) return false;
@@ -217,6 +238,7 @@ export default function AdminApp({
               setActiveTitle(t.meta.title);
               setEditing(null);
               setShowCol(-1);
+              setFilterVal('');
             }}
           >
             <span className="ico">
@@ -266,6 +288,7 @@ export default function AdminApp({
                 value={showCol}
                 onChange={(e) => {
                   setShowCol(Number(e.target.value));
+                  setFilterVal('');
                   setEditing(null);
                 }}
               >
@@ -276,13 +299,32 @@ export default function AdminApp({
                   </option>
                 ))}
               </select>
+              {showCol >= 0 && (
+                <select
+                  className="select val-filter"
+                  title={`Filter by ${cols.find((c) => c.index === showCol)?.label ?? ''}`}
+                  value={filterVal}
+                  onChange={(e) => {
+                    setFilterVal(e.target.value);
+                    setEditing(null);
+                  }}
+                >
+                  <option value="">All values</option>
+                  {filterChoices.map((v) => (
+                    <option key={v} value={v} style={{ color: optionColor(v) || 'var(--text)' }}>
+                      {v}
+                    </option>
+                  ))}
+                </select>
+              )}
             </div>
-            {(search || showCol >= 0) && (
+            {(search || showCol >= 0 || filterVal) && (
               <button
                 className="btn btn-ghost btn-sm"
                 onClick={() => {
                   setSearch('');
                   setShowCol(-1);
+                  setFilterVal('');
                 }}
               >
                 Clear
