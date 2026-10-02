@@ -1,0 +1,15 @@
+{
+  "name": "astra-guild-manager",
+  "version": "1.0.0",
+  "private": true,
+  "description": "ASTRA guild manager - client on GitHub Pages, API in server/ deployed to Railway",
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "build": "npm ci --prefix server --no-audit --no-fund && npm run build --prefix server",
+    "start": "npm run start --prefix server",
+    "dev:server": "npm run dev --prefix server",
+    "dev:client": "npm run dev --prefix client"
+  }
+}
