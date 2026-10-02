@@ -18,8 +18,6 @@
   --shadow: 0 24px 60px rgba(0, 0, 0, 0.45);
   --radius: 14px;
   --radius-sm: 9px;
-  --topbar-h: 58px;
-  --hero-h: 140px;
   --font: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
   --display: 'Sora', 'Inter', system-ui, sans-serif;
 }
@@ -447,6 +445,12 @@ select option {
     radial-gradient(1000px 400px at 80% -10%, rgba(139, 124, 255, 0.08), transparent 60%),
     var(--bg);
 }
+/* Member view is an app shell: lock the page so only panel bodies scroll. */
+.shell-member .main {
+  height: 100vh;
+  height: 100dvh;
+  overflow: hidden;
+}
 
 .topbar {
   display: flex;
@@ -509,6 +513,11 @@ select option {
   padding: 22px;
   flex: 1;
   min-width: 0;
+}
+.shell-member .content {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
 }
 
 /* ---------- data table ---------- */
@@ -671,9 +680,8 @@ tr:hover .icon-btn {
 /* ---------- member profile ---------- */
 
 .profile-hero {
-  position: sticky;
-  top: var(--topbar-h);
-  z-index: 20;
+  position: relative;
+  flex: 0 0 auto;
   border-radius: var(--radius);
   border: 1px solid var(--line-soft);
   overflow: hidden;
@@ -743,15 +751,15 @@ tr:hover .icon-btn {
   border-radius: var(--radius);
   padding: 22px;
   box-shadow: 0 12px 34px rgba(0, 0, 0, 0.25);
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
 }
 .panel-card + .panel-card {
   margin-top: 16px;
 }
 .panel-card h3 {
-  position: sticky;
-  top: calc(var(--topbar-h) + var(--hero-h));
-  z-index: 10;
-  background: var(--panel);
   font-family: var(--display);
   margin: 0 0 4px;
   font-size: 16px;
@@ -760,6 +768,14 @@ tr:hover .icon-btn {
 .panel-card h3 + .coll-grid,
 .panel-card h3 + .empty {
   margin-top: 14px;
+}
+
+/* Panel bodies are the only scrollable region in the member shell. */
+.panel-card > .field-grid,
+.panel-card > .coll-grid,
+.panel-card > .empty {
+  overflow-y: auto;
+  min-height: 0;
 }
 
 .field-grid {
@@ -1055,6 +1071,15 @@ table.coll td.ign-col {
 @media (max-width: 900px) {
   .shell {
     grid-template-columns: 1fr;
+  }
+  .shell-member {
+    height: 100vh;
+    height: 100dvh;
+    overflow: hidden;
+    grid-template-rows: auto 1fr;
+  }
+  .shell-member .main {
+    height: auto;
   }
   .sidebar {
     position: static;

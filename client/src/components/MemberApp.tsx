@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import type { Column, DataResponse, Session, TabData } from '../types';
 import { buildColumns, formatCp, initials, isCpLabel, isMark, optionColor } from '../utils';
 import { ApiError, saveCells } from '../api';
@@ -233,28 +233,6 @@ export default function MemberApp({
   const [activeTitle, setActiveTitle] = useState('');
   const [settingsOpen, setSettingsOpen] = useState(false);
 
-  const topbarRef = useRef<HTMLElement>(null);
-  const heroRef = useRef<HTMLDivElement>(null);
-
-  // Sticky offsets for the pinned top bar / hero / panel titles depend on
-  // their measured heights, so keep the CSS vars in sync on mount and resize.
-  useLayoutEffect(() => {
-    const root = document.documentElement;
-    const sync = () => {
-      if (topbarRef.current) root.style.setProperty('--topbar-h', `${topbarRef.current.offsetHeight}px`);
-      if (heroRef.current) root.style.setProperty('--hero-h', `${heroRef.current.offsetHeight}px`);
-    };
-    sync();
-    const ro = new ResizeObserver(sync);
-    if (topbarRef.current) ro.observe(topbarRef.current);
-    if (heroRef.current) ro.observe(heroRef.current);
-    return () => {
-      ro.disconnect();
-      root.style.removeProperty('--topbar-h');
-      root.style.removeProperty('--hero-h');
-    };
-  }, []);
-
   const rosterTab =
     data.tabs.find((t) => t.meta.title.toUpperCase() === 'BASIC INFORMATION') ||
     data.tabs.find((t) => (t.meta.headers[0]?.[0] || '').trim().toUpperCase() === 'IGN');
@@ -318,7 +296,7 @@ export default function MemberApp({
   }
 
   return (
-    <div className="shell">
+    <div className="shell shell-member">
       <aside className="sidebar">
         <div className="brand">
           <img className="mark" src="./assets/logo.png" alt="" />
@@ -369,7 +347,7 @@ export default function MemberApp({
       </aside>
 
       <main className="main">
-        <header className="topbar" ref={topbarRef}>
+        <header className="topbar">
           <h2>{isDashboard ? 'Profile' : activeTab ? prettyTitle(activeTab.meta.title) : 'Loading…'}</h2>
           <div className="grow" />
           <span className={`live ${live === 'live' ? '' : live}`}>
@@ -379,7 +357,7 @@ export default function MemberApp({
         </header>
 
         <div className="content">
-          <div className="profile-hero" ref={heroRef}>
+          <div className="profile-hero">
             <div className="avatar">{initials(session.ign)}</div>
             <div className="id">
               <h1>{session.ign}</h1>
