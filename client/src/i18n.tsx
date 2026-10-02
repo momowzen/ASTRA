@@ -158,6 +158,11 @@ const DICT: Record<string, { en: string; ko: string }> = {
   'boss.membersWithPoints': { en: 'Members with points', ko: '포인트 보유 멤버' },
   'boss.bossesTracked': { en: 'Bosses tracked', ko: '추적 중인 보스' },
   'boss.membersOnBoard': { en: 'members on the board', ko: '명이 순위표에 있습니다' },
+  'boss.top30': { en: 'Top 30%', ko: '상위 30%' },
+  'boss.top30Meta': {
+    en: '{n} in the top 30% band (≥ {threshold} pts)',
+    ko: '상위 30% 이내 {n}명 (≥ {threshold}점)',
+  },
   'boss.noAttendance': { en: 'No attendance recorded yet.', ko: '아직 기록된 출석이 없습니다.' },
   'boss.added': { en: 'Added {name}', ko: '{name} 추가됨' },
   'boss.couldNotSave': { en: 'Could not save', ko: '저장할 수 없습니다' },

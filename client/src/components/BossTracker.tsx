@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type { DataResponse, TabData } from '../types';
-import { BOSSES, respawnLabel } from '../bosses';
+import { BOSSES } from '../bosses';
 import { addRow, ApiError, saveCells, seedBossConfig } from '../api';
 import { useLang } from '../i18n';
 
@@ -146,8 +146,6 @@ function ConfigView({
             <thead>
               <tr className="labels single">
                 <th className="ign-col">{t('boss.boss')}</th>
-                <th>{t('boss.level')}</th>
-                <th>{t('boss.respawn')}</th>
                 <th>{t('boss.points')}</th>
               </tr>
             </thead>
@@ -156,12 +154,6 @@ function ConfigView({
                 <tr key={b.id}>
                   <td className="ign-col">
                     <div className="cell">{b.name}</div>
-                  </td>
-                  <td>
-                    <div className="cell">{b.level}</div>
-                  </td>
-                  <td>
-                    <div className="cell">{respawnLabel(b)}</div>
                   </td>
                   <td onClick={(e) => e.stopPropagation()}>
                     <PointsCell
@@ -383,6 +375,10 @@ function DashboardView({ attendanceTab }: { attendanceTab: TabData | undefined }
   }, [attendanceTab]);
 
   const totalPoints = leaderboard.reduce((s, x) => s + x.points, 0);
+  const topPoints = leaderboard[0]?.points ?? 0;
+  const threshold = topPoints > 0 ? Math.max(1, Math.round(topPoints * 0.3)) : 0;
+  const inBand = (points: number) => threshold > 0 && points >= threshold;
+  const bandCount = leaderboard.filter((x) => inBand(x.points)).length;
 
   return (
     <div className="boss-view">
@@ -405,6 +401,12 @@ function DashboardView({ attendanceTab }: { attendanceTab: TabData | undefined }
         <div className="table-meta">
           <span>
             <strong>{leaderboard.length}</strong> {t('boss.membersOnBoard')}
+            {bandCount > 0 && (
+              <>
+                {' '}
+                · {t('boss.top30Meta', { n: bandCount, threshold })}
+              </>
+            )}
           </span>
         </div>
         <div className="table-scroll">
@@ -417,17 +419,27 @@ function DashboardView({ attendanceTab }: { attendanceTab: TabData | undefined }
               </tr>
             </thead>
             <tbody>
-              {leaderboard.map((x, i) => (
-                <tr key={x.ign}>
-                  <td className="rownum">{i + 1}</td>
-                  <td className="ign-col">
-                    <div className="cell">{x.ign}</div>
-                  </td>
-                  <td>
-                    <div className="cell">{x.points}</div>
-                  </td>
-                </tr>
-              ))}
+              {leaderboard.map((x, i) => {
+                const mark = inBand(x.points);
+                return (
+                  <tr key={x.ign}>
+                    <td className="rownum">{i + 1}</td>
+                    <td className="ign-col">
+                      <div className="cell">
+                        {x.ign}
+                        {mark && (
+                          <span className="top-mark" title={t('boss.top30')}>
+                            ★
+                          </span>
+                        )}
+                      </div>
+                    </td>
+                    <td>
+                      <div className="cell">{x.points}</div>
+                    </td>
+                  </tr>
+                );
+              })}
               {leaderboard.length === 0 && (
                 <tr>
                   <td colSpan={3}>
