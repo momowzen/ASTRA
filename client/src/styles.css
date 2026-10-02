@@ -673,6 +673,7 @@ tr:hover .icon-btn {
   border-radius: var(--radius);
   border: 1px solid var(--line-soft);
   overflow: hidden;
+  margin-bottom: 22px;
   background:
     radial-gradient(600px 200px at 20% 0%, rgba(139, 124, 255, 0.3), transparent 65%),
     radial-gradient(500px 220px at 90% 10%, rgba(245, 185, 66, 0.16), transparent 60%),

@@ -57,3 +57,16 @@ export function formatCp(value: string): string {
   if (digits === '') return value.trim() === '' ? '' : value;
   return Number(digits).toLocaleString('en-US');
 }
+
+const OPTION_PALETTE: Record<string, string> = {
+  o: '#3ddc97',
+  x: '#ff6b7a',
+  rare: '#58a6ff',
+  epic: '#8b7cff',
+  legend: '#f5b942',
+  mythic: '#ff6b7a',
+};
+
+export function optionColor(value: string): string | undefined {
+  return OPTION_PALETTE[value.trim().toLowerCase()];
+}

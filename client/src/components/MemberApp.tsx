@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type { Column, DataResponse, Session, TabData } from '../types';
-import { buildColumns, formatCp, initials, isCpLabel, isMark } from '../utils';
+import { buildColumns, formatCp, initials, isCpLabel, isMark, optionColor } from '../utils';
 import { ApiError, saveCells } from '../api';
 import { IconGear, IconGrid, IconLogout } from './icons';
 import PasswordModal from './PasswordModal';
@@ -98,6 +98,7 @@ function Field({
         <select
           className="select"
           value={val}
+          style={{ color: optionColor(val) }}
           onFocus={() => (focused.current = true)}
           onChange={(e) => {
             const next = e.target.value;
@@ -105,9 +106,11 @@ function Field({
             void commitValue(next);
           }}
         >
-          <option value="">—</option>
+          <option value="" style={{ color: 'var(--muted)' }}>
+            —
+          </option>
           {optionList.map((o) => (
-            <option key={o} value={o}>
+            <option key={o} value={o} style={{ color: optionColor(o) || 'var(--text)' }}>
               {o}
             </option>
           ))}
@@ -152,11 +155,14 @@ function CollectionCell({
       <select
         className={`coll-select${value ? ' has' : ''}`}
         value={value}
+        style={{ color: optionColor(value) }}
         onChange={(e) => onCommit(e.target.value).catch(() => {})}
       >
-        <option value="">—</option>
+        <option value="" style={{ color: 'var(--muted)' }}>
+          —
+        </option>
         {list.map((o) => (
-          <option key={o} value={o}>
+          <option key={o} value={o} style={{ color: optionColor(o) || 'var(--text)' }}>
             {o}
           </option>
         ))}
@@ -204,6 +210,7 @@ function CollectionCell({
     <span
       className="cell-text"
       title="Click to edit"
+      style={{ color: optionColor(value) }}
       onClick={() => {
         setDraft(value);
         setEditing(true);
@@ -262,7 +269,7 @@ export default function MemberApp({
       const upper = c.label.toUpperCase();
       const cls = upper === 'CP' ? 'gold' : upper === 'STATUS' ? 'green' : 'violet';
       const shown = upper === 'CP' ? formatCp(v) : v;
-      out.push({ label: `${c.label}: ${shown}`, cls });
+      out.push({ label: shown, cls });
     }
     return out;
   }, [rosterTab, rosterRow]);
@@ -292,17 +299,7 @@ export default function MemberApp({
     <div className="shell">
       <aside className="sidebar">
         <div className="brand">
-          <svg className="mark" viewBox="0 0 64 64" aria-hidden>
-            <defs>
-              <linearGradient id="lg3" x1="0" y1="0" x2="1" y2="1">
-                <stop offset="0" stopColor="#8b7cff" />
-                <stop offset="1" stopColor="#f5b942" />
-              </linearGradient>
-            </defs>
-            <rect width="64" height="64" rx="16" fill="#0a0e1a" stroke="#232c4a" />
-            <path fill="url(#lg3)" d="M32 10l5.4 14.7L52 29.2 37.2 34.6 32 49l-5.2-14.4L12 29.2l14.6-4.5L32 10z" />
-            <circle cx="47" cy="16" r="3" fill="#f5b942" />
-          </svg>
+          <img className="mark" src="./assets/logo.png" alt="" />
           <div>
             <div className="name">ASTRA</div>
             <div className="tag">Member</div>
@@ -366,8 +363,8 @@ export default function MemberApp({
               <h1>{session.ign}</h1>
               <div className="badges">
                 <span className="badge gold">Member</span>
-                {profileBadges.map((b) => (
-                  <span key={b.label} className={`badge ${b.cls}`}>
+                {profileBadges.map((b, i) => (
+                  <span key={i} className={`badge ${b.cls}`}>
                     {b.label}
                   </span>
                 ))}

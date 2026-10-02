@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type { RefObject } from 'react';
 import type { Column, DataResponse, Session } from '../types';
-import { buildColumns, formatCp, isCpLabel } from '../utils';
+import { buildColumns, formatCp, isCpLabel, optionColor } from '../utils';
 import { addRow as apiAddRow, deleteRow as apiDeleteRow, saveCells, ApiError } from '../api';
 import { IconGear, IconGrid, IconLogout, IconPlus, IconSearch, IconTrash } from './icons';
 import PasswordModal from './PasswordModal';
@@ -52,6 +52,7 @@ function EditableCell({
         ref={ref as RefObject<HTMLSelectElement>}
         className="cell-input"
         value={val}
+        style={{ color: optionColor(val) }}
         onChange={(e) => {
           const next = e.target.value;
           setVal(next);
@@ -73,11 +74,13 @@ function EditableCell({
         }}
         onClick={(e) => e.stopPropagation()}
       >
-        <option value="">—</option>
+        <option value="" style={{ color: 'var(--muted)' }}>
+          —
+        </option>
         {list
           .filter((o) => o !== '')
           .map((o) => (
-            <option key={o} value={o}>
+            <option key={o} value={o} style={{ color: optionColor(o) || 'var(--text)' }}>
               {o}
             </option>
           ))}
@@ -198,17 +201,7 @@ export default function AdminApp({
     <div className="shell">
       <aside className="sidebar">
         <div className="brand">
-          <svg className="mark" viewBox="0 0 64 64" aria-hidden>
-            <defs>
-              <linearGradient id="lg2" x1="0" y1="0" x2="1" y2="1">
-                <stop offset="0" stopColor="#8b7cff" />
-                <stop offset="1" stopColor="#f5b942" />
-              </linearGradient>
-            </defs>
-            <rect width="64" height="64" rx="16" fill="#0a0e1a" stroke="#232c4a" />
-            <path fill="url(#lg2)" d="M32 10l5.4 14.7L52 29.2 37.2 34.6 32 49l-5.2-14.4L12 29.2l14.6-4.5L32 10z" />
-            <circle cx="47" cy="16" r="3" fill="#f5b942" />
-          </svg>
+          <img className="mark" src="./assets/logo.png" alt="" />
           <div>
             <div className="name">ASTRA</div>
             <div className="tag">Admin</div>
@@ -374,7 +367,7 @@ export default function AdminApp({
                                 onCancel={() => setEditing(null)}
                               />
                             ) : (
-                              <div className="cell" title={shown}>
+                              <div className="cell" title={shown} style={{ color: optionColor(shown) }}>
                                 {shown || <span className="muted">—</span>}
                               </div>
                             )}
@@ -497,6 +490,7 @@ function AddRowModal({
                     <select
                       className="select"
                       value={values[i] ?? ''}
+                      style={{ color: optionColor(values[i] ?? '') }}
                       autoFocus={i === 0}
                       onChange={(e) =>
                         setValues((prev) => {
@@ -506,9 +500,11 @@ function AddRowModal({
                         })
                       }
                     >
-                      <option value="">—</option>
+                      <option value="" style={{ color: 'var(--muted)' }}>
+                        —
+                      </option>
                       {opts.map((o) => (
-                        <option key={o} value={o}>
+                        <option key={o} value={o} style={{ color: optionColor(o) || 'var(--text)' }}>
                           {o}
                         </option>
                       ))}

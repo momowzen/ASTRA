@@ -27,20 +27,7 @@ export default function Login({ onDone }: { onDone: (session: Session) => void }
     <div className="auth">
       <div className="auth-card">
         <div className="brand">
-          <svg className="mark" viewBox="0 0 64 64" aria-hidden>
-            <defs>
-              <linearGradient id="lg" x1="0" y1="0" x2="1" y2="1">
-                <stop offset="0" stopColor="#8b7cff" />
-                <stop offset="1" stopColor="#f5b942" />
-              </linearGradient>
-            </defs>
-            <rect width="64" height="64" rx="16" fill="#0a0e1a" stroke="#232c4a" />
-            <path
-              fill="url(#lg)"
-              d="M32 10l5.4 14.7L52 29.2 37.2 34.6 32 49l-5.2-14.4L12 29.2l14.6-4.5L32 10z"
-            />
-            <circle cx="47" cy="16" r="3" fill="#f5b942" />
-          </svg>
+          <img className="mark" src="./assets/logo.png" alt="" />
           <div>
             <div className="name">ASTRA</div>
             <div className="tag">Guild Manager</div>
