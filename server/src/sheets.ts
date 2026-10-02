@@ -87,6 +87,64 @@ export async function getValues(title: string): Promise<string[][]> {
   return res[title] || [];
 }
 
+/** Dropdown options per column index, keyed by sheet title. */
+export type ValidationOptions = Record<string, Record<number, string[]>>;
+
+interface CellValidation {
+  condition?: { type?: string; values?: { userEnteredValue?: string }[] };
+}
+
+/**
+ * Read data-validation (dropdown) rules for the given sheets.
+ * Options are collected from the first ~20 rows, which is where sheets
+ * typically carry the rule for the whole column. Failures never throw —
+ * a missing options map simply means free-text inputs in the UI.
+ */
+export async function fetchValidations(titles: string[]): Promise<ValidationOptions> {
+  const out: ValidationOptions = {};
+  if (titles.length === 0) return out;
+  try {
+    const params = titles
+      .map((t) => `ranges=${encodeURIComponent(`${q(t)}!A1:ZZ20`)}`)
+      .join('&');
+    const data = await sheetsRequest<{
+      sheets?: {
+        properties?: { title?: string };
+        data?: { rowData?: { values?: { dataValidation?: CellValidation }[] }[] }[];
+      }[];
+    }>(
+      `/spreadsheets/${config.spreadsheetId}?includeGridData=true&${params}` +
+        `&fields=sheets.properties(title),sheets.data.rowData.values.dataValidation`,
+    );
+    for (const sheet of data.sheets || []) {
+      const title = sheet.properties?.title;
+      if (!title) continue;
+      const perCol: Record<number, string[]> = {};
+      for (const block of sheet.data || []) {
+        for (const row of block.rowData || []) {
+          const values = row.values || [];
+          for (let ci = 0; ci < values.length; ci++) {
+            const dv = values[ci]?.dataValidation;
+            if (!dv) continue;
+            const rule = (dv as CellValidation & { rule?: CellValidation }).rule || dv;
+            if (rule.condition?.type !== 'ONE_OF_LIST') continue;
+            const list = (rule.condition.values || [])
+              .map((v) => v.userEnteredValue)
+              .filter((v): v is string => typeof v === 'string' && v !== '');
+            if (list.length === 0) continue;
+            const existing = perCol[ci] || (perCol[ci] = []);
+            for (const opt of list) if (!existing.includes(opt)) existing.push(opt);
+          }
+        }
+      }
+      if (Object.keys(perCol).length > 0) out[title] = perCol;
+    }
+  } catch (err) {
+    console.warn('[sync] validation fetch failed (dropdowns unavailable):', err instanceof Error ? err.message : err);
+  }
+  return out;
+}
+
 /** Read arbitrary A1 ranges (e.g. `'Sheet'!A5`); returns the first row of each range. */
 export async function getCells(ranges: string[]): Promise<string[][]> {
   if (ranges.length === 0) return [];

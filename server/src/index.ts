@@ -34,9 +34,13 @@ async function main(): Promise<void> {
   await ensureCredentialsTab();
   await initStore();
 
-  app.listen(config.port, () => {
+  const server = app.listen(config.port, () => {
     console.log(`[server] listening on :${config.port} (env=${config.isProd ? 'production' : 'development'})`);
   });
+  // Keep idle sockets alive longer than reverse proxies (Vite, Railway) do,
+  // otherwise reused sockets are reset mid-request and show up as 502s.
+  server.keepAliveTimeout = 65_000;
+  server.headersTimeout = 66_000;
 }
 
 void main().catch((err) => {

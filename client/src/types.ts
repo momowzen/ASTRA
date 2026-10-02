@@ -5,6 +5,8 @@ export interface TabMeta {
   headerRows: 1 | 2;
   headers: string[][];
   columnCount: number;
+  /** Dropdown options from sheet data validation, keyed by column index. */
+  options?: Record<number, string[]>;
 }
 
 export interface RowData {

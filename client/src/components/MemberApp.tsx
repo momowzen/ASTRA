@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import type { DataResponse, Session, TabData } from '../types';
+import type { Column, DataResponse, Session, TabData } from '../types';
 import { buildColumns, initials, isMark } from '../utils';
 import { ApiError, saveCells } from '../api';
 import { IconGear, IconGrid, IconLogout } from './icons';
@@ -26,10 +26,12 @@ function prettyTitle(title: string): string {
 function Field({
   label,
   value,
+  options,
   onCommit,
 }: {
   label: string;
   value: string;
+  options?: string[];
   onCommit: (value: string) => Promise<void>;
 }) {
   const [val, setVal] = useState(value);
@@ -41,17 +43,21 @@ function Field({
     if (!focused.current) setVal(value);
   }, [value]);
 
-  async function commit() {
-    if (val === value) return;
+  async function commitValue(next: string) {
+    if (next === value) return;
     setStatus('saving');
     try {
-      await onCommit(val);
+      await onCommit(next);
       setStatus('saved');
       setTimeout(() => setStatus((s) => (s === 'saved' ? 'idle' : s)), 1800);
     } catch {
       setStatus('error');
     }
   }
+
+  const optionList = options
+    ? (options.includes(val) ? options : [val, ...options]).filter((o) => o !== '')
+    : [];
 
   return (
     <div className="field">
@@ -66,35 +72,75 @@ function Field({
           {status === 'error' && 'Failed'}
         </span>
       </label>
-      <input
-        ref={inputRef}
-        className="input"
-        value={val}
-        onFocus={() => (focused.current = true)}
-        onBlur={() => {
-          focused.current = false;
-          void commit();
-        }}
-        onChange={(e) => setVal(e.target.value)}
-        onKeyDown={(e) => {
-          if (e.key === 'Enter') inputRef.current?.blur();
-        }}
-      />
+      {options ? (
+        <select
+          className="select"
+          value={val}
+          onFocus={() => (focused.current = true)}
+          onChange={(e) => {
+            const next = e.target.value;
+            setVal(next);
+            void commitValue(next);
+          }}
+        >
+          <option value="">—</option>
+          {optionList.map((o) => (
+            <option key={o} value={o}>
+              {o}
+            </option>
+          ))}
+        </select>
+      ) : (
+        <input
+          ref={inputRef}
+          className="input"
+          value={val}
+          onFocus={() => (focused.current = true)}
+          onBlur={() => {
+            focused.current = false;
+            void commitValue(val);
+          }}
+          onChange={(e) => setVal(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') inputRef.current?.blur();
+          }}
+        />
+      )}
     </div>
   );
 }
 
 function CollectionCell({
   value,
+  options,
   onCommit,
 }: {
   value: string;
+  options?: string[];
   onCommit: (value: string) => Promise<void>;
 }) {
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(value);
   const empty = value.trim() === '';
   const mark = isMark(value);
+
+  if (options) {
+    const list = (options.includes(value) ? options : [value, ...options]).filter((o) => o !== '');
+    return (
+      <select
+        className={`coll-select${value ? ' has' : ''}`}
+        value={value}
+        onChange={(e) => onCommit(e.target.value).catch(() => {})}
+      >
+        <option value="">—</option>
+        {list.map((o) => (
+          <option key={o} value={o}>
+            {o}
+          </option>
+        ))}
+      </select>
+    );
+  }
 
   if (editing) {
     return (
@@ -198,13 +244,12 @@ export default function MemberApp({
 
   const cols = currentTab ? buildColumns(currentTab.meta) : [];
   const row = myRow(currentTab);
-  const groupRuns: { label: string; span: number }[] = [];
+  const collectionGroups: { label: string; cols: Column[] }[] = [];
   if (currentTab && currentTab.meta.headerRows === 2) {
-    for (let i = 1; i < cols.length; i++) {
-      const g = cols[i].group;
-      const last = groupRuns[groupRuns.length - 1];
-      if (last && last.label === g) last.span += 1;
-      else groupRuns.push({ label: g, span: 1 });
+    for (const c of cols.slice(1)) {
+      const last = collectionGroups[collectionGroups.length - 1];
+      if (last && last.label === c.group) last.cols.push(c);
+      else collectionGroups.push({ label: c.group, cols: [c] });
     }
   }
 
@@ -327,6 +372,7 @@ export default function MemberApp({
                       key={c.index}
                       label={c.label}
                       value={row.cells[c.index] ?? ''}
+                      options={currentTab.meta.options?.[c.index]}
                       onCommit={(v) => commit(currentTab, row.row, c.index, v)}
                     />
                   ))}
@@ -334,39 +380,28 @@ export default function MemberApp({
               )}
 
               {row && currentTab.meta.headerRows === 2 && (
-                <div className="coll-wrap">
-                  <table className="coll">
-                    <thead>
-                      <tr className="groups">
-                        <th className="ign-col" rowSpan={2}>
-                          {cols[0]?.label}
-                        </th>
-                        {groupRuns.map((g, i) => (
-                          <th key={i} colSpan={g.span}>
-                            {g.label}
-                          </th>
-                        ))}
-                      </tr>
-                      <tr className="labels">
-                        {cols.slice(1).map((c) => (
-                          <th key={c.index}>{c.label}</th>
-                        ))}
-                      </tr>
-                    </thead>
-                    <tbody>
-                      <tr>
-                        <td className="ign-col">{row.cells[0]}</td>
-                        {cols.slice(1).map((c) => (
-                          <td key={c.index}>
-                            <CollectionCell
-                              value={row.cells[c.index] ?? ''}
-                              onCommit={(v) => commit(currentTab, row.row, c.index, v)}
-                            />
-                          </td>
-                        ))}
-                      </tr>
-                    </tbody>
-                  </table>
+                <div className="coll-grid">
+                  {collectionGroups.map((g) => (
+                    <section className="coll-card" key={g.label}>
+                      <div className="coll-card-title">{g.label}</div>
+                      <div className="coll-items">
+                        {g.cols.map((c) => {
+                          const sub =
+                            (currentTab.meta.headers[1]?.[c.index] || '').trim() || c.label;
+                          return (
+                            <div className="coll-item" key={c.index}>
+                              <span className="coll-sub">{sub}</span>
+                              <CollectionCell
+                                value={row.cells[c.index] ?? ''}
+                                options={currentTab.meta.options?.[c.index]}
+                                onCommit={(v) => commit(currentTab, row.row, c.index, v)}
+                              />
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </section>
+                  ))}
                 </div>
               )}
             </div>

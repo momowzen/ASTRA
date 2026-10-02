@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import type { DataResponse, Session } from '../types';
+import type { RefObject } from 'react';
+import type { Column, DataResponse, Session } from '../types';
 import { buildColumns } from '../utils';
 import { addRow as apiAddRow, deleteRow as apiDeleteRow, saveCells, ApiError } from '../api';
 import { IconGear, IconGrid, IconLogout, IconPlus, IconSearch, IconTrash } from './icons';
@@ -17,20 +18,22 @@ interface Props {
 
 function EditableCell({
   initial,
+  options,
   onCommit,
   onCancel,
 }: {
   initial: string;
+  options?: string[];
   onCommit: (value: string) => Promise<boolean>;
   onCancel: () => void;
 }) {
   const [val, setVal] = useState(initial);
-  const ref = useRef<HTMLInputElement>(null);
+  const ref = useRef<HTMLInputElement | HTMLSelectElement>(null);
   const closing = useRef(false);
 
   useEffect(() => {
     ref.current?.focus();
-    ref.current?.select();
+    if (ref.current instanceof HTMLInputElement) ref.current.select();
   }, []);
 
   async function commit() {
@@ -40,9 +43,49 @@ function EditableCell({
     if (!ok) closing.current = false;
   }
 
+  if (options) {
+    const list = options.includes(val) ? options : [val, ...options];
+    return (
+      <select
+        ref={ref as RefObject<HTMLSelectElement>}
+        className="cell-input"
+        value={val}
+        onChange={(e) => {
+          const next = e.target.value;
+          setVal(next);
+          closing.current = true;
+          void onCommit(next).then((ok) => {
+            if (!ok) {
+              closing.current = false;
+              setVal(initial);
+            }
+          });
+        }}
+        onKeyDown={(e) => {
+          if (e.key === 'Escape') {
+            closing.current = true;
+            e.preventDefault();
+            onCancel();
+          }
+          e.stopPropagation();
+        }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <option value="">—</option>
+        {list
+          .filter((o) => o !== '')
+          .map((o) => (
+            <option key={o} value={o}>
+              {o}
+            </option>
+          ))}
+      </select>
+    );
+  }
+
   return (
     <input
-      ref={ref}
+      ref={ref as RefObject<HTMLInputElement>}
       className="cell-input"
       value={val}
       onChange={(e) => setVal(e.target.value)}
@@ -74,8 +117,7 @@ export default function AdminApp({
 }: Props) {
   const [activeTitle, setActiveTitle] = useState(data.tabs[0]?.meta.title ?? '');
   const [search, setSearch] = useState('');
-  const [filterCol, setFilterCol] = useState(-1);
-  const [filterValue, setFilterValue] = useState('');
+  const [showCol, setShowCol] = useState(-1);
   const [editing, setEditing] = useState<{ row: number; col: number } | null>(null);
   const [addOpen, setAddOpen] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState<number | null>(null);
@@ -83,18 +125,18 @@ export default function AdminApp({
   const [busy, setBusy] = useState(false);
 
   const tab = data.tabs.find((t) => t.meta.title === activeTitle) || data.tabs[0];
-  const cols = useMemo(() => (tab ? buildColumns(tab.meta) : []), [tab]);
+  const allCols = useMemo(() => (tab ? buildColumns(tab.meta) : []), [tab]);
+  const projecting = showCol >= 0;
+  const cols = useMemo(
+    () => (projecting ? allCols.filter((c) => c.index === 0 || c.index === showCol) : allCols),
+    [allCols, showCol, projecting],
+  );
 
   const rows = useMemo(() => {
     if (!tab) return [];
     const q = search.trim().toLowerCase();
-    const fq = filterValue.trim().toLowerCase();
-    return tab.rows.filter((r) => {
-      if (q && !(r.cells[0] || '').toLowerCase().includes(q)) return false;
-      if (filterCol >= 0 && fq && !(r.cells[filterCol] || '').toLowerCase().includes(fq)) return false;
-      return true;
-    });
-  }, [tab, search, filterCol, filterValue]);
+    return tab.rows.filter((r) => !q || (r.cells[0] || '').toLowerCase().includes(q));
+  }, [tab, search]);
 
   async function commitCell(row: number, col: number, value: string): Promise<boolean> {
     if (!tab) return false;
@@ -179,8 +221,7 @@ export default function AdminApp({
             onClick={() => {
               setActiveTitle(t.meta.title);
               setEditing(null);
-              setFilterCol(-1);
-              setFilterValue('');
+              setShowCol(-1);
             }}
           >
             <span className="ico">
@@ -227,32 +268,26 @@ export default function AdminApp({
             <div className="col-filter">
               <select
                 className="select"
-                value={filterCol}
-                onChange={(e) => setFilterCol(Number(e.target.value))}
+                value={showCol}
+                onChange={(e) => {
+                  setShowCol(Number(e.target.value));
+                  setEditing(null);
+                }}
               >
-                <option value={-1}>Filter by column…</option>
-                {cols.map((c) => (
+                <option value={-1}>All columns</option>
+                {allCols.map((c) => (
                   <option key={c.index} value={c.index}>
                     {c.label}
                   </option>
                 ))}
               </select>
-              <input
-                className="input"
-                style={{ width: 130 }}
-                placeholder="value…"
-                disabled={filterCol < 0}
-                value={filterValue}
-                onChange={(e) => setFilterValue(e.target.value)}
-              />
             </div>
-            {(search || filterValue) && (
+            {(search || showCol >= 0) && (
               <button
                 className="btn btn-ghost btn-sm"
                 onClick={() => {
                   setSearch('');
-                  setFilterCol(-1);
-                  setFilterValue('');
+                  setShowCol(-1);
                 }}
               >
                 Clear
@@ -274,14 +309,14 @@ export default function AdminApp({
               <span>
                 <strong>{rows.length}</strong>
                 {rows.length !== tab?.rows.length ? ` of ${tab?.rows.length}` : ''} member rows ·{' '}
-                {cols.length} columns
+                {projecting ? `showing ${cols.length} of ${allCols.length} columns` : `${cols.length} columns`}
               </span>
               <span className="muted">Click any cell to edit · changes save to the sheet instantly</span>
             </div>
             <div className="table-scroll">
               <table className="grid">
                 <thead>
-                  {tab && tab.meta.headerRows === 2 ? (
+                  {tab && tab.meta.headerRows === 2 && !projecting ? (
                     <>
                       <tr className="groups">
                         <th className="rownum" rowSpan={2}>
@@ -330,6 +365,7 @@ export default function AdminApp({
                             {isEditing ? (
                               <EditableCell
                                 initial={value}
+                                options={tab.meta.options?.[c.index]}
                                 onCommit={(v) => commitCell(r.row, c.index, v)}
                                 onCancel={() => setEditing(null)}
                               />
@@ -373,7 +409,8 @@ export default function AdminApp({
 
       {addOpen && tab && (
         <AddRowModal
-          labels={cols.map((c) => c.label)}
+          columns={allCols}
+          options={tab.meta.options}
           busy={busy}
           onClose={() => setAddOpen(false)}
           onSubmit={handleAddRow}
@@ -413,17 +450,19 @@ export default function AdminApp({
 }
 
 function AddRowModal({
-  labels,
+  columns,
+  options,
   busy,
   onClose,
   onSubmit,
 }: {
-  labels: string[];
+  columns: Column[];
+  options?: Record<number, string[]>;
   busy: boolean;
   onClose: () => void;
   onSubmit: (cells: string[]) => Promise<void>;
 }) {
-  const [values, setValues] = useState<string[]>(() => labels.map(() => ''));
+  const [values, setValues] = useState<string[]>(() => columns.map(() => ''));
 
   return (
     <div className="overlay" onMouseDown={(e) => e.target === e.currentTarget && onClose()}>
@@ -440,26 +479,51 @@ function AddRowModal({
           }}
         >
           <div className="form-grid">
-            {labels.map((label, i) => (
-              <div className="field" key={i}>
-                <label>
-                  {label}
-                  {i === 0 ? ' *' : ''}
-                </label>
-                <input
-                  className="input"
-                  value={values[i] ?? ''}
-                  autoFocus={i === 0}
-                  onChange={(e) =>
-                    setValues((prev) => {
-                      const next = [...prev];
-                      next[i] = e.target.value;
-                      return next;
-                    })
-                  }
-                />
-              </div>
-            ))}
+            {columns.map((col, i) => {
+              const opts = options?.[col.index];
+              return (
+                <div className="field" key={i}>
+                  <label>
+                    {col.label}
+                    {i === 0 ? ' *' : ''}
+                  </label>
+                  {opts ? (
+                    <select
+                      className="select"
+                      value={values[i] ?? ''}
+                      autoFocus={i === 0}
+                      onChange={(e) =>
+                        setValues((prev) => {
+                          const next = [...prev];
+                          next[i] = e.target.value;
+                          return next;
+                        })
+                      }
+                    >
+                      <option value="">—</option>
+                      {opts.map((o) => (
+                        <option key={o} value={o}>
+                          {o}
+                        </option>
+                      ))}
+                    </select>
+                  ) : (
+                    <input
+                      className="input"
+                      value={values[i] ?? ''}
+                      autoFocus={i === 0}
+                      onChange={(e) =>
+                        setValues((prev) => {
+                          const next = [...prev];
+                          next[i] = e.target.value;
+                          return next;
+                        })
+                      }
+                    />
+                  )}
+                </div>
+              );
+            })}
           </div>
           <div className="row">
             <button type="button" className="btn btn-ghost" onClick={onClose}>

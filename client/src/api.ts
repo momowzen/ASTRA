@@ -18,8 +18,12 @@ export function apiBase(): string {
   }
   const override = sessionStorage.getItem(API_SESSION_KEY);
   if (override) return override.replace(/\/+$/, '');
-  const cfg = window.ASTRA_CONFIG?.apiBase?.trim();
-  if (cfg) return cfg.replace(/\/+$/, '');
+  // In dev, Vite proxies /api to the local backend — ignore config.js so a
+  // deployed API URL never hijacks local development.
+  if (!import.meta.env.DEV) {
+    const cfg = window.ASTRA_CONFIG?.apiBase?.trim();
+    if (cfg) return cfg.replace(/\/+$/, '');
+  }
   return '/api';
 }
 

@@ -9,6 +9,8 @@ export interface TabMeta {
   headerRows: 1 | 2;
   headers: string[][];
   columnCount: number;
+  /** Dropdown options from sheet data validation, keyed by column index (omitted when none). */
+  options?: Record<number, string[]>;
 }
 
 export interface RowData {
@@ -42,7 +44,14 @@ function detectHeaderRows(values: string[][]): 1 | 2 {
   return secondCol === '' && firstCol !== '' && secondHasData ? 2 : 1;
 }
 
-function buildTab(title: string, sheetId: number, index: number, columnCount: number, values: string[][]): TabData {
+function buildTab(
+  title: string,
+  sheetId: number,
+  index: number,
+  columnCount: number,
+  values: string[][],
+  options?: Record<number, string[]>,
+): TabData {
   const headerRows = detectHeaderRows(values);
   const headers = headerRows === 2 ? [values[0] || [], values[1] || []] : [values[0] || []];
   const rows: RowData[] = [];
@@ -61,9 +70,34 @@ function buildTab(title: string, sheetId: number, index: number, columnCount: nu
       headerRows,
       headers,
       columnCount: Math.min(Math.max(maxLen, 1), columnCount || maxLen),
+      ...(options && Object.keys(options).length > 0 ? { options } : {}),
     },
     rows,
   };
+}
+
+/**
+ * Dropdown rules change rarely, and each fetch is a Google read request
+ * against a per-minute quota — so validations are cached and re-read at most
+ * once a minute (or when the set of tabs changes).
+ */
+const VALIDATION_TTL_MS = 60_000;
+let validationCache: sheets.ValidationOptions | null = null;
+let validationCacheKey = '';
+let validationCacheAt = 0;
+
+async function loadValidations(titles: string[]): Promise<sheets.ValidationOptions> {
+  const key = titles.join('|');
+  const stale =
+    !validationCache ||
+    key !== validationCacheKey ||
+    Date.now() - validationCacheAt > VALIDATION_TTL_MS;
+  if (stale) {
+    validationCache = await sheets.fetchValidations(titles);
+    validationCacheKey = key;
+    validationCacheAt = Date.now();
+  }
+  return validationCache ?? {};
 }
 
 async function load(): Promise<Snapshot> {
@@ -73,11 +107,23 @@ async function load(): Promise<Snapshot> {
     .sort((a, b) => a.index - b.index);
   const titles = visible.map((s) => s.title);
   const values = await sheets.batchGetValues(titles);
+  const validations = await loadValidations(titles);
   const tabs = visible.map((s, i) =>
-    buildTab(s.title, s.sheetId, i, s.gridProperties?.columnCount ?? 100, values[s.title] || []),
+    buildTab(
+      s.title,
+      s.sheetId,
+      i,
+      s.gridProperties?.columnCount ?? 100,
+      values[s.title] || [],
+      validations[s.title],
+    ),
   );
   const rev = createHash('sha1')
-    .update(JSON.stringify(tabs.map((t) => [t.meta.title, t.rows.map((r) => [r.row, r.cells])])))
+    .update(
+      JSON.stringify(
+        tabs.map((t) => [t.meta.title, t.meta.options ?? null, t.rows.map((r) => [r.row, r.cells])]),
+      ),
+    )
     .digest('hex')
     .slice(0, 16);
   return { rev, ts: Date.now(), tabs };

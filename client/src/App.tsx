@@ -20,7 +20,6 @@ export default function App() {
   const [error, setError] = useState('');
   const [toasts, setToasts] = useState<Toast[]>([]);
   const [live, setLive] = useState<'live' | 'stale' | 'error'>('stale');
-  const [syncedAt, setSyncedAt] = useState(Date.now());
   const [, setTick] = useState(0);
 
   const revRef = useRef('');
@@ -50,7 +49,6 @@ export default function App() {
       const res = await fetchData();
       applyData(res);
       setLive('live');
-      setSyncedAt(Date.now());
     } catch (err) {
       if (err instanceof ApiError && err.status === 401) return;
       setError(err instanceof ApiError ? err.message : 'Failed to load data');
@@ -82,14 +80,15 @@ export default function App() {
 
     const interval = setInterval(async () => {
       if (!getSession()) return;
-      const ae = document.activeElement;
-      const typing =
-        !!ae && (ae.tagName === 'INPUT' || ae.tagName === 'TEXTAREA') && ae.getAttribute('type') !== 'checkbox';
+        const ae = document.activeElement;
+        const typing =
+          !!ae &&
+          (ae.tagName === 'INPUT' || ae.tagName === 'TEXTAREA' || ae.tagName === 'SELECT') &&
+          ae.getAttribute('type') !== 'checkbox';
 
-      try {
-        const res = await fetchData(revRef.current || undefined);
-        setLive('live');
-        setSyncedAt(Date.now());
+        try {
+          const res = await fetchData(revRef.current || undefined);
+          setLive('live');
 
         if (res.unchanged) {
           if (pendingRef.current && !typing) applyData(pendingRef.current);
@@ -155,15 +154,8 @@ export default function App() {
     setData(null);
   }
 
-  const secondsAgo = Math.max(0, Math.round((Date.now() - syncedAt) / 1000));
   const liveNote =
-    live === 'error'
-      ? 'connection lost'
-      : live === 'stale'
-        ? 'waiting for data…'
-        : secondsAgo <= 1
-          ? 'live · just synced'
-          : `live · synced ${secondsAgo}s ago`;
+    live === 'error' ? 'connection lost' : live === 'stale' ? 'waiting for data…' : 'live';
 
   if (!session) {
     return (
