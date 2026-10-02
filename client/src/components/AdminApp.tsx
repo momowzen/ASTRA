@@ -7,6 +7,7 @@ import { addRow as apiAddRow, deleteRow as apiDeleteRow, saveCells, ApiError } f
 import { IconGear, IconGrid, IconLogout, IconPlus, IconSearch, IconTrash } from './icons';
 import PasswordModal from './PasswordModal';
 import BossTracker from './BossTracker';
+import { LangToggle, useLang } from '../i18n';
 
 interface Props {
   data: DataResponse;
@@ -133,6 +134,8 @@ export default function AdminApp({
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [busy, setBusy] = useState(false);
 
+  const { t } = useLang();
+
   const tab = data.tabs.find((t) => t.meta.title === activeTitle) || data.tabs[0];
   const allCols = useMemo(() => (tab ? buildColumns(tab.meta) : []), [tab]);
   const projecting = showCol >= 0;
@@ -176,7 +179,7 @@ export default function AdminApp({
       setEditing(null);
       return true;
     } catch (err) {
-      toast(err instanceof ApiError ? err.message : 'Could not save the cell', 'err');
+      toast(err instanceof ApiError ? err.message : t('admin.couldNotSaveCell'), 'err');
       return false;
     } finally {
       setBusy(false);
@@ -189,9 +192,9 @@ export default function AdminApp({
     try {
       await apiAddRow(tab.meta.title, cells);
       setAddOpen(false);
-      toast(`Added ${cells[0]} to ${tab.meta.title}`, 'ok');
+      toast(t('admin.addedRow', { ign: cells[0], title: tab.meta.title }), 'ok');
     } catch (err) {
-      toast(err instanceof ApiError ? err.message : 'Could not add the row', 'err');
+      toast(err instanceof ApiError ? err.message : t('admin.couldNotAddRow'), 'err');
     } finally {
       setBusy(false);
     }
@@ -203,9 +206,9 @@ export default function AdminApp({
     try {
       await apiDeleteRow(tab.meta.title, confirmDelete);
       setConfirmDelete(null);
-      toast('Row deleted', 'ok');
+      toast(t('admin.rowDeleted'), 'ok');
     } catch (err) {
-      toast(err instanceof ApiError ? err.message : 'Could not delete the row', 'err');
+      toast(err instanceof ApiError ? err.message : t('admin.couldNotDeleteRow'), 'err');
     } finally {
       setBusy(false);
     }
@@ -232,7 +235,7 @@ export default function AdminApp({
           </div>
         </div>
 
-        <div className="section-label">Boss Attendance Tracker</div>
+        <div className="section-label">{t('admin.trackerSection')}</div>
         <button
           className={`nav-item ${bossView === 'dashboard' ? 'active' : ''}`}
           onClick={() => setBossView('dashboard')}
@@ -240,7 +243,7 @@ export default function AdminApp({
           <span className="ico">
             <IconGrid />
           </span>
-          Dashboard
+          {t('admin.dashboard')}
         </button>
         <button
           className={`nav-item ${bossView === 'attendance' ? 'active' : ''}`}
@@ -249,7 +252,7 @@ export default function AdminApp({
           <span className="ico">
             <IconPlus />
           </span>
-          Attendance
+          {t('admin.attendance')}
         </button>
         <button
           className={`nav-item ${bossView === 'config' ? 'active' : ''}`}
@@ -258,10 +261,10 @@ export default function AdminApp({
           <span className="ico">
             <IconGear />
           </span>
-          Boss Config
+          {t('admin.bossConfig')}
         </button>
 
-        <div className="section-label">Sheet tabs</div>
+        <div className="section-label">{t('admin.sheetTabs')}</div>
         {data.tabs
           .filter((t) => !INTERNAL_TABS.includes(t.meta.title.toUpperCase()))
           .map((t) => (
@@ -286,19 +289,19 @@ export default function AdminApp({
         <div className="spacer" />
         <div className="userbox">
           <div className="section-label" style={{ paddingTop: 0 }}>
-            Signed in as {session.username}
+            {t('admin.signedInAs', { user: session.username })}
           </div>
           <button className="nav-item" onClick={() => setSettingsOpen(true)}>
             <span className="ico">
               <IconGear />
             </span>
-            Settings
+            {t('common.settings')}
           </button>
           <button className="nav-item" onClick={onLogout}>
             <span className="ico">
               <IconLogout />
             </span>
-            Sign out
+            {t('common.signOut')}
           </button>
         </div>
       </aside>
@@ -307,10 +310,14 @@ export default function AdminApp({
         <header className="topbar">
           <h2>
             {bossView
-              ? `Boss Attendance · ${
-                  bossView === 'dashboard' ? 'Dashboard' : bossView === 'attendance' ? 'Attendance' : 'Boss Config'
+              ? `${t('admin.bossTitle')} · ${
+                  bossView === 'dashboard'
+                    ? t('admin.dashboard')
+                    : bossView === 'attendance'
+                      ? t('admin.attendance')
+                      : t('admin.bossConfig')
                 }`
-              : tab?.meta.title ?? 'Loading…'}
+              : tab?.meta.title ?? t('member.loading')}
           </h2>
           <div className="grow" />
           {!bossView && (
@@ -319,7 +326,7 @@ export default function AdminApp({
                 <IconSearch />
                 <input
                   className="input"
-                  placeholder="Search IGN…"
+                  placeholder={t('admin.searchPh')}
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                 />
@@ -334,7 +341,7 @@ export default function AdminApp({
                     setEditing(null);
                   }}
                 >
-                  <option value={-1}>All columns</option>
+                  <option value={-1}>{t('admin.allColumns')}</option>
                   {allCols.map((c) => (
                     <option key={c.index} value={c.index}>
                       {c.label}
@@ -344,14 +351,14 @@ export default function AdminApp({
                 {showCol >= 0 && (
                   <select
                     className="select val-filter"
-                    title={`Filter by ${cols.find((c) => c.index === showCol)?.label ?? ''}`}
+                    title={t('admin.filterBy', { col: cols.find((c) => c.index === showCol)?.label ?? '' })}
                     value={filterVal}
                     onChange={(e) => {
                       setFilterVal(e.target.value);
                       setEditing(null);
                     }}
                   >
-                    <option value="">All values</option>
+                    <option value="">{t('admin.allValues')}</option>
                     {filterChoices.map((v) => (
                       <option key={v} value={v} style={{ color: optionColor(v) || 'var(--text)' }}>
                         {v}
@@ -369,11 +376,11 @@ export default function AdminApp({
                     setFilterVal('');
                   }}
                 >
-                  Clear
+                  {t('admin.clear')}
                 </button>
               )}
               <button className="btn btn-primary" onClick={() => setAddOpen(true)}>
-                <IconPlus /> Add row
+                <IconPlus /> {t('admin.addRow')}
               </button>
             </div>
           )}
@@ -381,6 +388,7 @@ export default function AdminApp({
             <span className="dot" />
             {liveNote}
           </span>
+          <LangToggle />
         </header>
 
         <div className="content">
@@ -390,11 +398,16 @@ export default function AdminApp({
             <div className="table-card">
             <div className="table-meta">
               <span>
-                <strong>{rows.length}</strong>
-                {rows.length !== tab?.rows.length ? ` of ${tab?.rows.length}` : ''} member rows ·{' '}
-                {projecting ? `showing ${cols.length} of ${allCols.length} columns` : `${cols.length} columns`}
+                <strong>{rows.length}</strong>{' '}
+                {rows.length !== tab?.rows.length
+                  ? t('admin.memberRowsOf', { a: rows.length, b: tab?.rows.length })
+                  : t('admin.memberRows', { a: rows.length })}{' '}
+                ·{' '}
+                {projecting
+                  ? t('admin.showingCols', { a: cols.length, b: allCols.length })
+                  : t('admin.columnsCount', { a: cols.length })}
               </span>
-              <span className="muted">Click any cell to edit · changes save to the sheet instantly</span>
+              <span className="muted">{t('admin.editHint')}</span>
             </div>
             <div className="table-scroll">
               <table className="grid">
@@ -480,7 +493,7 @@ export default function AdminApp({
                           <div className="big">
                             <IconGrid />
                           </div>
-                          No rows match your filters.
+                          {t('admin.noRows')}
                         </div>
                       </td>
                     </tr>
@@ -506,16 +519,14 @@ export default function AdminApp({
       {confirmDelete != null && tab && (
         <div className="overlay" onMouseDown={(e) => e.target === e.currentTarget && setConfirmDelete(null)}>
           <div className="modal">
-            <h3>Delete row {confirmDelete}?</h3>
-            <p className="desc">
-              This removes the row from “{tab.meta.title}” in the Google Sheet. This cannot be undone.
-            </p>
+            <h3>{t('admin.deleteRowTitle', { n: confirmDelete })}</h3>
+            <p className="desc">{t('admin.deleteRowDesc', { title: tab.meta.title })}</p>
             <div className="row">
               <button className="btn btn-ghost" onClick={() => setConfirmDelete(null)}>
-                Cancel
+                {t('common.cancel')}
               </button>
               <button className="btn btn-danger" disabled={busy} onClick={() => void handleDelete()}>
-                {busy ? <span className="spinner" /> : 'Delete row'}
+                {busy ? <span className="spinner" /> : t('admin.deleteRow')}
               </button>
             </div>
           </div>
@@ -524,11 +535,11 @@ export default function AdminApp({
 
       {settingsOpen && (
         <PasswordModal
-          title="Admin settings"
-          description="Change the admin password. It is stored (hashed) in the hidden credentials tab of the spreadsheet."
-          currentLabel="Current admin password"
+          title={t('admin.settingsTitle')}
+          description={t('admin.settingsDesc')}
+          currentLabel={t('admin.currentAdminPassword')}
           onClose={() => setSettingsOpen(false)}
-          onDone={() => toast('Admin password updated', 'ok')}
+          onDone={() => toast(t('admin.passwordUpdated'), 'ok')}
         />
       )}
     </div>
@@ -548,16 +559,14 @@ function AddRowModal({
   onClose: () => void;
   onSubmit: (cells: string[]) => Promise<void>;
 }) {
+  const { t } = useLang();
   const [values, setValues] = useState<string[]>(() => columns.map(() => ''));
 
   return (
     <div className="overlay" onMouseDown={(e) => e.target === e.currentTarget && onClose()}>
       <div className="modal wide">
-        <h3>Add row</h3>
-        <p className="desc">
-          The first column (IGN) is required and must be unique. Leave the rest empty to fill in
-          later.
-        </p>
+        <h3>{t('admin.addRow')}</h3>
+        <p className="desc">{t('admin.addRowDesc')}</p>
         <form
           onSubmit={(e) => {
             e.preventDefault();
@@ -618,10 +627,10 @@ function AddRowModal({
           </div>
           <div className="row">
             <button type="button" className="btn btn-ghost" onClick={onClose}>
-              Cancel
+              {t('common.cancel')}
             </button>
             <button type="submit" className="btn btn-primary" disabled={busy}>
-              {busy ? <span className="spinner" /> : 'Add row'}
+              {busy ? <span className="spinner" /> : t('admin.addRow')}
             </button>
           </div>
         </form>

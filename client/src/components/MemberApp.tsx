@@ -5,6 +5,7 @@ import { buildColumns, formatCp, initials, isCpLabel, isMark, optionColor } from
 import { ApiError, saveCells } from '../api';
 import { IconGear, IconGrid, IconLogout } from './icons';
 import PasswordModal from './PasswordModal';
+import { LangToggle, useLang } from '../i18n';
 
 interface Props {
   data: DataResponse;
@@ -41,6 +42,7 @@ function Field({
   format?: boolean;
   onCommit: (value: string) => Promise<void>;
 }) {
+  const { t } = useLang();
   const [val, setVal] = useState(() => (format ? formatCp(value) : value));
   const [status, setStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
   const inputRef = useRef<HTMLInputElement>(null);
@@ -72,7 +74,7 @@ function Field({
     return (
       <div className="field">
         <label>{label}</label>
-        <div className="field-ro" title="Managed by an admin — members cannot change this">
+        <div className="field-ro" title={t('member.adminManaged')}>
           {shown.trim() || '—'}
         </div>
       </div>
@@ -91,9 +93,9 @@ function Field({
           className={`save-note ${status === 'saved' ? 'ok' : status === 'error' ? 'err' : ''}`}
           style={{ textTransform: 'none', letterSpacing: 0 }}
         >
-          {status === 'saving' && 'Saving…'}
-          {status === 'saved' && 'Saved'}
-          {status === 'error' && 'Failed'}
+          {status === 'saving' && t('common.saving')}
+          {status === 'saved' && t('common.saved')}
+          {status === 'error' && t('common.failed')}
         </span>
       </label>
       {options ? (
@@ -146,6 +148,7 @@ function CollectionCell({
   options?: string[];
   onCommit: (value: string) => Promise<void>;
 }) {
+  const { t } = useLang();
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(value);
   const empty = value.trim() === '';
@@ -196,14 +199,14 @@ function CollectionCell({
 
   if (empty) {
     return (
-      <button className="cell-btn" title="Click to mark" onClick={() => void onCommit('o')}>
+      <button className="cell-btn" title={t('cell.mark')} onClick={() => void onCommit('o')}>
         ·
       </button>
     );
   }
   if (mark) {
     return (
-      <button className="cell-btn on" title="Click to clear" onClick={() => void onCommit('')}>
+      <button className="cell-btn on" title={t('cell.clear')} onClick={() => void onCommit('')}>
         ✓
       </button>
     );
@@ -211,7 +214,7 @@ function CollectionCell({
   return (
     <span
       className="cell-text"
-      title="Click to edit"
+      title={t('cell.edit')}
       style={{ color: optionColor(value) }}
       onClick={() => {
         setDraft(value);
@@ -234,6 +237,8 @@ export default function MemberApp({
 }: Props) {
   const [activeTitle, setActiveTitle] = useState('');
   const [settingsOpen, setSettingsOpen] = useState(false);
+
+  const { t } = useLang();
 
   const rosterTab =
     data.tabs.find((t) => t.meta.title.toUpperCase() === 'BASIC INFORMATION') ||
@@ -282,7 +287,7 @@ export default function MemberApp({
       await saveCells(tab.meta.title, [{ row, col, value }]);
       onPatch(tab.meta.title, [{ row, col, value }]);
     } catch (err) {
-      toast(err instanceof ApiError ? err.message : 'Could not save', 'err');
+      toast(err instanceof ApiError ? err.message : t('member.couldNotSave'), 'err');
       throw err;
     }
   }
@@ -305,11 +310,11 @@ export default function MemberApp({
           <img className="mark" src="./assets/logo.png" alt="" />
           <div>
             <div className="name">ASTRA</div>
-            <div className="tag">Member</div>
+            <div className="tag">{t('member.tag')}</div>
           </div>
         </div>
 
-        <div className="section-label">My profile</div>
+        <div className="section-label">{t('member.myProfile')}</div>
         <button
           className={`nav-item ${isDashboard ? 'active' : ''}`}
           onClick={() => setActiveTitle('')}
@@ -317,7 +322,7 @@ export default function MemberApp({
           <span className="ico">
             <IconGrid />
           </span>
-          Profile
+          {t('member.profile')}
         </button>
         {memberTabs.map((t) => (
           <button
@@ -338,25 +343,26 @@ export default function MemberApp({
             <span className="ico">
               <IconGear />
             </span>
-            Settings
+            {t('common.settings')}
           </button>
           <button className="nav-item" onClick={onLogout}>
             <span className="ico">
               <IconLogout />
             </span>
-            Sign out
+            {t('common.signOut')}
           </button>
         </div>
       </aside>
 
       <main className="main">
         <header className="topbar">
-          <h2>{isDashboard ? 'Profile' : activeTab ? prettyTitle(activeTab.meta.title) : 'Loading…'}</h2>
+          <h2>{isDashboard ? t('member.profile') : activeTab ? prettyTitle(activeTab.meta.title) : t('member.loading')}</h2>
           <div className="grow" />
           <span className={`live ${live === 'live' ? '' : live}`}>
             <span className="dot" />
             {liveNote}
           </span>
+          <LangToggle />
         </header>
 
         <div className="content">
@@ -365,7 +371,7 @@ export default function MemberApp({
             <div className="id">
               <h1>{session.ign}</h1>
               <div className="badges">
-                <span className="badge gold">Member</span>
+                <span className="badge gold">{t('member.badgeMember')}</span>
                 {profileBadges.map((b, i) => (
                   <span key={i} className={`badge ${b.cls}`}>
                     {b.label}
@@ -373,7 +379,7 @@ export default function MemberApp({
                 ))}
                 {!rosterRow && (
                   <span className="badge" style={{ color: 'var(--accent-2)' }}>
-                    Not on the roster yet — ask an admin to add you
+                    {t('member.notOnRoster')}
                   </span>
                 )}
               </div>
@@ -388,7 +394,7 @@ export default function MemberApp({
                   <div className="big">
                     <IconGrid />
                   </div>
-                  You don’t have a row in your profile yet. An admin can add you.
+                  {t('member.noRowProfile')}
                 </div>
               ) : (
                 <div className="field-grid">
@@ -416,7 +422,7 @@ export default function MemberApp({
                   <div className="big">
                     <IconGrid />
                   </div>
-                  You don’t have a row in your profile yet. An admin can add you.
+                  {t('member.noRowProfile')}
                 </div>
               ) : (
                 <div className="field-grid">
@@ -445,7 +451,7 @@ export default function MemberApp({
                   <div className="big">
                     <IconGrid />
                   </div>
-                  You don’t have a row in this tab yet. An admin can add you.
+                  {t('member.noRowTab')}
                 </div>
               )}
 
@@ -497,11 +503,11 @@ export default function MemberApp({
 
       {settingsOpen && (
         <PasswordModal
-          title="Profile settings"
-          description="Change your password. Your initial password is your IGN."
-          currentLabel="Current password"
+          title={t('member.settingsTitle')}
+          description={t('member.settingsDesc')}
+          currentLabel={t('member.currentPassword')}
           onClose={() => setSettingsOpen(false)}
-          onDone={() => toast('Password updated', 'ok')}
+          onDone={() => toast(t('member.passwordUpdated'), 'ok')}
         />
       )}
     </div>

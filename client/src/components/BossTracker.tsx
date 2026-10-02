@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import type { DataResponse, TabData } from '../types';
 import { BOSSES, respawnLabel } from '../bosses';
 import { addRow, ApiError, saveCells, seedBossConfig } from '../api';
+import { useLang } from '../i18n';
 
 interface Props {
   view: 'dashboard' | 'attendance' | 'config';
@@ -16,6 +17,7 @@ function intPoints(value: string | undefined): number {
 }
 
 export default function BossTracker({ view, data, onPatch, toast }: Props) {
+  const { t } = useLang();
   const attendanceTab = data.tabs.find((t) => t.meta.title.toUpperCase() === 'BOSS ATTENDANCE');
   const configTab = data.tabs.find((t) => t.meta.title.toUpperCase() === 'BOSS CONFIG');
 
@@ -45,10 +47,10 @@ export default function BossTracker({ view, data, onPatch, toast }: Props) {
               onPatch('BOSS CONFIG', [{ row: existing.row, col: 1, value: String(points) }]);
             } else {
               await addRow('BOSS CONFIG', [name, String(points)]);
-              toast(`Added ${name}`, 'ok');
+              toast(t('boss.added', { name }), 'ok');
             }
           } catch (err) {
-            toast(err instanceof ApiError ? err.message : 'Could not save', 'err');
+            toast(err instanceof ApiError ? err.message : t('boss.couldNotSave'), 'err');
           }
         }}
         toast={toast}
@@ -82,6 +84,7 @@ function ConfigView({
   onSave: (name: string, points: number) => Promise<void>;
   toast: (msg: string, kind?: 'ok' | 'err') => void;
 }) {
+  const { t } = useLang();
   const seeded = useRef(false);
   const [seeding, setSeeding] = useState(false);
   const empty = !configTab || configTab.rows.length === 0;
@@ -91,7 +94,7 @@ function ConfigView({
       seeded.current = true;
       setSeeding(true);
       seedBossConfig()
-        .catch((err) => toast(err instanceof ApiError ? err.message : 'Could not seed', 'err'))
+        .catch((err) => toast(err instanceof ApiError ? err.message : t('boss.seedErr'), 'err'))
         .finally(() => setSeeding(false));
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -101,14 +104,12 @@ function ConfigView({
     return (
       <div className="boss-view">
         <div className="panel-card">
-          <h3>Boss Config</h3>
+          <h3>{t('admin.bossConfig')}</h3>
           <div className="empty">
             <div className="big">
               <span className="spinner" />
             </div>
-            {seeding
-              ? 'Seeding the boss list…'
-              : 'No bosses configured yet.'}
+            {seeding ? t('boss.seeding') : t('boss.noBosses')}
           </div>
           {!seeding && (
             <div style={{ display: 'flex', justifyContent: 'center', marginTop: 12 }}>
@@ -118,11 +119,11 @@ function ConfigView({
                   seeded.current = false;
                   setSeeding(true);
                   seedBossConfig()
-                    .catch((err) => toast(err instanceof ApiError ? err.message : 'Could not seed', 'err'))
+                    .catch((err) => toast(err instanceof ApiError ? err.message : t('boss.seedErr'), 'err'))
                     .finally(() => setSeeding(false));
                 }}
               >
-                Seed bosses
+                {t('boss.seed')}
               </button>
             </div>
           )}
@@ -136,18 +137,18 @@ function ConfigView({
       <div className="table-card">
         <div className="table-meta">
           <span>
-            <strong>{BOSSES.length}</strong> bosses · set the point value awarded per attendance
+            <strong>{BOSSES.length}</strong> {t('boss.meta')}
           </span>
-          <span className="muted">Changes save to the sheet instantly</span>
+          <span className="muted">{t('boss.changesInstant')}</span>
         </div>
         <div className="table-scroll">
           <table className="grid">
             <thead>
               <tr className="labels single">
-                <th className="ign-col">Boss</th>
-                <th>Level</th>
-                <th>Respawn</th>
-                <th>Points</th>
+                <th className="ign-col">{t('boss.boss')}</th>
+                <th>{t('boss.level')}</th>
+                <th>{t('boss.respawn')}</th>
+                <th>{t('boss.points')}</th>
               </tr>
             </thead>
             <tbody>
@@ -223,6 +224,7 @@ function AttendanceView({
   onPatch: (tabTitle: string, updates: { row: number; col: number; value: string }[]) => void;
   toast: (msg: string, kind?: 'ok' | 'err') => void;
 }) {
+  const { t } = useLang();
   const [bossName, setBossName] = useState(BOSSES[0].name);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [filter, setFilter] = useState('');
@@ -290,13 +292,10 @@ function AttendanceView({
       if (updates.length) await saveCells('BOSS ATTENDANCE', updates);
       for (const cells of adds) await addRow('BOSS ATTENDANCE', cells);
       if (updates.length) onPatch('BOSS ATTENDANCE', updates);
-      toast(
-        `Recorded ${selected.size} member${selected.size > 1 ? 's' : ''} (+${bossPoints} pts each)`,
-        'ok',
-      );
+      toast(t('boss.recordedToast', { n: selected.size, pts: bossPoints }), 'ok');
       setSelected(new Set());
     } catch (err) {
-      toast(err instanceof ApiError ? err.message : 'Could not record attendance', 'err');
+      toast(err instanceof ApiError ? err.message : t('boss.couldNotRecord'), 'err');
     } finally {
       setRecording(false);
     }
@@ -305,10 +304,10 @@ function AttendanceView({
   return (
     <div className="boss-view">
       <div className="panel-card">
-        <h3>Record attendance</h3>
+        <h3>{t('boss.recordTitle')}</h3>
         <div className="att-toolbar">
           <div className="field" style={{ minWidth: 220 }}>
-            <label>Boss</label>
+            <label>{t('boss.boss')}</label>
             <select
               className="select"
               value={bossName}
@@ -316,34 +315,35 @@ function AttendanceView({
             >
               {BOSSES.map((b) => (
                 <option key={b.id} value={b.name}>
-                  {b.name} — {pointsFor(b.name)} pt{pointsFor(b.name) === 1 ? '' : 's'}
+                  {b.name} — {pointsFor(b.name)}{' '}
+                  {pointsFor(b.name) === 1 ? t('boss.pt') : t('boss.pts')}
                 </option>
               ))}
             </select>
           </div>
           <div className="att-summary">
-            <strong>{selected.size}</strong> selected · <strong>+{bossPoints * selected.size}</strong>{' '}
-            pts total
+            <strong>{selected.size}</strong> {t('boss.selected')} ·{' '}
+            <strong>+{bossPoints * selected.size}</strong> {t('boss.ptsTotal')}
           </div>
         </div>
 
         <div className="att-actions">
           <input
             className="input"
-            placeholder="Filter members…"
+            placeholder={t('boss.filterMembers')}
             value={filter}
             onChange={(e) => setFilter(e.target.value)}
             style={{ width: 220 }}
           />
           <button className="btn btn-ghost btn-sm" onClick={() => setSelected(new Set(filtered))}>
-            Select all
+            {t('boss.selectAll')}
           </button>
           <button className="btn btn-ghost btn-sm" onClick={() => setSelected(new Set())}>
-            Clear
+            {t('boss.clear')}
           </button>
           <div className="grow" />
           <button className="btn btn-primary" disabled={recording || selected.size === 0} onClick={() => void record()}>
-            {recording ? <span className="spinner" /> : 'Record attendance'}
+            {recording ? <span className="spinner" /> : t('boss.record')}
           </button>
         </div>
 
@@ -364,7 +364,7 @@ function AttendanceView({
           })}
           {filtered.length === 0 && (
             <div className="empty" style={{ gridColumn: '1 / -1' }}>
-              No members match.
+              {t('boss.noMembersMatch')}
             </div>
           )}
         </div>
@@ -374,6 +374,7 @@ function AttendanceView({
 }
 
 function DashboardView({ attendanceTab }: { attendanceTab: TabData | undefined }) {
+  const { t } = useLang();
   const leaderboard = useMemo(() => {
     return (attendanceTab?.rows ?? [])
       .map((r) => ({ ign: (r.cells[0] || '').trim(), points: intPoints(r.cells[1]) }))
@@ -387,15 +388,15 @@ function DashboardView({ attendanceTab }: { attendanceTab: TabData | undefined }
     <div className="boss-view">
       <div className="stat-row">
         <div className="stat-card">
-          <div className="stat-label">Total points awarded</div>
+          <div className="stat-label">{t('boss.totalAwarded')}</div>
           <div className="stat-value">{totalPoints}</div>
         </div>
         <div className="stat-card">
-          <div className="stat-label">Members with points</div>
+          <div className="stat-label">{t('boss.membersWithPoints')}</div>
           <div className="stat-value">{leaderboard.length}</div>
         </div>
         <div className="stat-card">
-          <div className="stat-label">Bosses tracked</div>
+          <div className="stat-label">{t('boss.bossesTracked')}</div>
           <div className="stat-value">{BOSSES.length}</div>
         </div>
       </div>
@@ -403,7 +404,7 @@ function DashboardView({ attendanceTab }: { attendanceTab: TabData | undefined }
       <div className="table-card">
         <div className="table-meta">
           <span>
-            <strong>{leaderboard.length}</strong> members on the board
+            <strong>{leaderboard.length}</strong> {t('boss.membersOnBoard')}
           </span>
         </div>
         <div className="table-scroll">
@@ -412,7 +413,7 @@ function DashboardView({ attendanceTab }: { attendanceTab: TabData | undefined }
               <tr className="labels single">
                 <th className="rownum">#</th>
                 <th className="ign-col">IGN</th>
-                <th>Points</th>
+                <th>{t('boss.points')}</th>
               </tr>
             </thead>
             <tbody>
@@ -432,7 +433,7 @@ function DashboardView({ attendanceTab }: { attendanceTab: TabData | undefined }
                   <td colSpan={3}>
                     <div className="empty">
                       <div className="big">—</div>
-                      No attendance recorded yet.
+                      {t('boss.noAttendance')}
                     </div>
                   </td>
                 </tr>

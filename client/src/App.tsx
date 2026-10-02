@@ -1,6 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
+import type { ReactNode } from 'react';
 import { ApiError, clearSession, fetchData, getSession } from './api';
 import type { DataResponse, Session } from './types';
+import { LangProvider, loadLang, translate } from './i18n';
+import type { Lang } from './i18n';
 import Login from './components/Login';
 import AdminApp from './components/AdminApp';
 import MemberApp from './components/MemberApp';
@@ -28,6 +31,20 @@ export default function App() {
   const toastId = useRef(1);
   const sessionRef = useRef(session);
   sessionRef.current = session;
+
+  const [lang, setLang] = useState<Lang>(loadLang);
+  const setLangPersist = useCallback((l: Lang) => {
+    setLang(l);
+    try {
+      localStorage.setItem('astra.lang', l);
+    } catch {
+      /* ignore */
+    }
+  }, []);
+  const t = useCallback(
+    (key: string, vars?: Record<string, string | number>) => translate(lang, key, vars),
+    [lang],
+  );
 
   const pushToast = useCallback((msg: string, kind: Toast['kind'] = 'info') => {
     const id = toastId.current++;
@@ -102,7 +119,7 @@ export default function App() {
 
         const quiet = Date.now() - lastWriteAt.current < WRITE_QUIET_MS;
         if (revRef.current && res.rev !== revRef.current && !quiet) {
-          pushToast('Sheet updated — view refreshed', 'info');
+          pushToast(t('app.sheetUpdated'), 'info');
         }
         applyData(res);
       } catch (err) {
@@ -112,7 +129,7 @@ export default function App() {
     }, POLL_MS);
 
     return () => clearInterval(interval);
-  }, [session, applyData, pushToast]);
+  }, [session, applyData, pushToast, t]);
 
   useEffect(() => {
     const i = setInterval(() => setTick((t) => t + 1), 1000);
@@ -155,73 +172,61 @@ export default function App() {
   }
 
   const liveNote =
-    live === 'error' ? 'connection lost' : live === 'stale' ? 'waiting for data…' : 'live';
+    live === 'error' ? t('app.connectionLost') : live === 'stale' ? t('app.waiting') : t('app.live');
 
+  let body: ReactNode;
   if (!session) {
-    return (
-      <>
-        <Login onDone={(s) => setSession(s)} />
-        <Toasts items={toasts} />
-      </>
-    );
-  }
-
-  if (error && !data) {
-    return (
+    body = <Login onDone={(s) => setSession(s)} />;
+  } else if (error && !data) {
+    body = (
       <div className="auth">
         <div className="auth-card">
-          <h1>Connection problem</h1>
+          <h1>{t('app.connectionProblem')}</h1>
           <p className="sub">{error}</p>
           <div style={{ display: 'flex', gap: 10 }}>
             <button className="btn btn-primary" onClick={() => void loadFull()}>
-              Retry
+              {t('app.retry')}
             </button>
             <button className="btn btn-ghost" onClick={logout}>
-              Sign out
+              {t('common.signOut')}
             </button>
           </div>
         </div>
-        <Toasts items={toasts} />
       </div>
     );
-  }
-
-  if (!data) {
-    return (
+  } else if (!data) {
+    body = (
       <div className="auth">
         <div className="auth-card" style={{ textAlign: 'center' }}>
           <span className="spinner" style={{ width: 26, height: 26, color: 'var(--accent)' }} />
           <p className="sub" style={{ marginTop: 16, marginBottom: 0 }}>
-            Loading guild data…
+            {t('app.loadingData')}
           </p>
         </div>
-        <Toasts items={toasts} />
       </div>
     );
-  }
-
-  if (data.tabs.length === 0) {
-    return (
+  } else if (data.tabs.length === 0) {
+    body = (
       <div className="auth">
         <div className="auth-card">
-          <h1>No tabs found</h1>
-          <p className="sub">The spreadsheet has no visible tabs, or the service account lost access.</p>
+          <h1>{t('app.noTabs')}</h1>
+          <p className="sub">{t('app.noTabsDesc')}</p>
           <button className="btn btn-ghost" onClick={logout}>
-            Sign out
+            {t('common.signOut')}
           </button>
         </div>
-        <Toasts items={toasts} />
       </div>
     );
+  } else {
+    const shared = { data, session, live, liveNote, onPatch, toast: pushToast, onLogout: logout };
+    body = session.role === 'ADMIN' ? <AdminApp {...shared} /> : <MemberApp {...shared} />;
   }
 
-  const shared = { data, session, live, liveNote, onPatch, toast: pushToast, onLogout: logout };
-
   return (
-    <>
-      {session.role === 'ADMIN' ? <AdminApp {...shared} /> : <MemberApp {...shared} />}
+    <LangProvider lang={lang} setLang={setLangPersist}>
+      {body}
       <Toasts items={toasts} />
-    </>
+    </LangProvider>
   );
 }
 

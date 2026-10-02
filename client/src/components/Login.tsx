@@ -1,8 +1,10 @@
 import { FormEvent, useState } from 'react';
 import { login, ApiError } from '../api';
 import type { Session } from '../types';
+import { useLang } from '../i18n';
 
 export default function Login({ onDone }: { onDone: (session: Session) => void }) {
+  const { t } = useLang();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -17,7 +19,7 @@ export default function Login({ onDone }: { onDone: (session: Session) => void }
       const session = await login(username, password);
       onDone(session);
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : 'Login failed');
+      setError(err instanceof ApiError ? err.message : t('login.failed'));
     } finally {
       setBusy(false);
     }
@@ -30,29 +32,29 @@ export default function Login({ onDone }: { onDone: (session: Session) => void }
           <img className="mark" src="./assets/logo.png" alt="" />
           <div>
             <div className="name">ASTRA</div>
-            <div className="tag">Guild Manager</div>
+            <div className="tag">{t('login.tag')}</div>
           </div>
         </div>
 
-        <h1>Welcome back</h1>
-        <p className="sub">Sign in to manage the guild roster and your profile.</p>
+        <h1>{t('login.welcome')}</h1>
+        <p className="sub">{t('login.sub')}</p>
 
         <form onSubmit={submit}>
           {error && <div className="error">{error}</div>}
           <div className="field">
-            <label htmlFor="u">Username</label>
+            <label htmlFor="u">{t('login.username')}</label>
             <input
               id="u"
               className="input"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
-              placeholder="admin or your IGN"
+              placeholder={t('login.usernamePh')}
               autoFocus
               autoComplete="username"
             />
           </div>
           <div className="field">
-            <label htmlFor="p">Password</label>
+            <label htmlFor="p">{t('login.password')}</label>
             <input
               id="p"
               className="input"
@@ -64,13 +66,12 @@ export default function Login({ onDone }: { onDone: (session: Session) => void }
             />
           </div>
           <button className="btn btn-primary" type="submit" disabled={busy} style={{ marginTop: 6 }}>
-            {busy ? <span className="spinner" /> : 'Sign in'}
+            {busy ? <span className="spinner" /> : t('login.signIn')}
           </button>
         </form>
 
         <div className="hint">
-          <strong>Members:</strong> your username and initial password are both your IGN. You can
-          change your password from your profile settings after signing in.
+          <strong>{t('login.members')}:</strong> {t('login.hint')}
         </div>
       </div>
     </div>

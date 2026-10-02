@@ -1,5 +1,6 @@
 import { FormEvent, useState } from 'react';
 import { changePassword, ApiError } from '../api';
+import { useLang } from '../i18n';
 
 interface Props {
   title: string;
@@ -12,10 +13,11 @@ interface Props {
 export default function PasswordModal({
   title,
   description,
-  currentLabel = 'Current password',
+  currentLabel,
   onClose,
   onDone,
 }: Props) {
+  const { t } = useLang();
   const [current, setCurrent] = useState('');
   const [next, setNext] = useState('');
   const [confirm, setConfirm] = useState('');
@@ -26,11 +28,11 @@ export default function PasswordModal({
     e.preventDefault();
     setError('');
     if (next !== confirm) {
-      setError('New passwords do not match');
+      setError(t('pw.mismatch'));
       return;
     }
     if (next.length < 6) {
-      setError('New password must be at least 6 characters');
+      setError(t('pw.tooShort'));
       return;
     }
     setBusy(true);
@@ -39,7 +41,7 @@ export default function PasswordModal({
       onDone?.();
       onClose();
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : 'Could not change password');
+      setError(err instanceof ApiError ? err.message : t('pw.couldNot'));
     } finally {
       setBusy(false);
     }
@@ -64,7 +66,7 @@ export default function PasswordModal({
             />
           </div>
           <div className="field">
-            <label>New password</label>
+            <label>{t('pw.newPassword')}</label>
             <input
               className="input"
               type="password"
@@ -74,7 +76,7 @@ export default function PasswordModal({
             />
           </div>
           <div className="field">
-            <label>Confirm new password</label>
+            <label>{t('pw.confirmNew')}</label>
             <input
               className="input"
               type="password"
@@ -85,10 +87,10 @@ export default function PasswordModal({
           </div>
           <div className="row">
             <button type="button" className="btn btn-ghost" onClick={onClose}>
-              Cancel
+              {t('common.cancel')}
             </button>
             <button type="submit" className="btn btn-primary" disabled={busy}>
-              {busy ? <span className="spinner" /> : 'Update password'}
+              {busy ? <span className="spinner" /> : t('pw.update')}
             </button>
           </div>
         </form>
