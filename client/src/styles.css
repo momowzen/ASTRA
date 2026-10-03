@@ -1319,18 +1319,36 @@ table.grid.boss-config th:not(.ign-col) {
 
 /* ---------- admin tools: CP update ---------- */
 
+.cp-update {
+  height: calc(100vh - 120px);
+  min-height: 440px;
+  display: flex;
+  flex-direction: column;
+}
 .cp-layout {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
+  display: flex;
   gap: 16px;
-  align-items: start;
+  flex: 1;
+  min-height: 0;
+  align-items: stretch;
+}
+.cp-layout .panel-card {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+.cp-layout .panel-card + .panel-card {
+  margin-top: 0;
 }
 .cp-list,
 .cp-read-list {
   display: flex;
   flex-direction: column;
   gap: 6px;
-  max-height: 520px;
+  flex: 1;
+  min-height: 0;
   overflow-y: auto;
   margin-top: 12px;
 }
@@ -1358,10 +1376,40 @@ table.grid.boss-config th:not(.ign-col) {
   align-items: center;
   gap: 10px;
   margin-top: 8px;
+  flex-wrap: wrap;
 }
 .cp-upload input[type='file'] {
   color: var(--muted);
   font-size: 13px;
+}
+.cp-thumbs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+}
+.cp-thumb {
+  position: relative;
+}
+.cp-thumb img {
+  height: 64px;
+  border-radius: 6px;
+  border: 1px solid var(--line-soft);
+  display: block;
+}
+.cp-thumb-x {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: none;
+  background: #ff6b7a;
+  color: #fff;
+  font-size: 10px;
+  line-height: 18px;
+  cursor: pointer;
 }
 .cp-reading {
   color: var(--muted);
@@ -1406,7 +1454,14 @@ table.grid.boss-config th:not(.ign-col) {
 }
 
 @media (max-width: 900px) {
+  .cp-update {
+    height: auto;
+  }
   .cp-layout {
-    grid-template-columns: 1fr;
+    flex-direction: column;
+  }
+  .cp-list,
+  .cp-read-list {
+    max-height: 480px;
   }
 }

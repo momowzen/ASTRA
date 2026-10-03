@@ -395,9 +395,9 @@ api.post('/boss/distribute', requireAuth, requireAdmin, async (req, res) => {
 });
 
 async function geminiVision(image: { mimeType: string; base64: string }, prompt: string): Promise<string> {
-  const res = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/${config.geminiModel}:generateContent`,
-    {
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${config.geminiModel}:generateContent`;
+  for (let attempt = 0; attempt < 3; attempt++) {
+    const res = await fetch(url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'x-goog-api-key': config.geminiApiKey },
       body: JSON.stringify({
@@ -411,14 +411,17 @@ async function geminiVision(image: { mimeType: string; base64: string }, prompt:
         ],
         generationConfig: { responseMimeType: 'application/json' },
       }),
-    },
-  );
-  if (!res.ok) {
+    });
+    if (res.ok) {
+      const data = (await res.json()) as { candidates?: { content?: { parts?: { text?: string }[] } }[] };
+      return data.candidates?.[0]?.content?.parts?.map((p) => p.text ?? '').join('') ?? '';
+    }
     const body = await res.text().catch(() => '');
-    throw new Error(`Gemini API ${res.status}: ${body.slice(0, 300)}`);
+    const transient = res.status === 429 || res.status === 500 || res.status === 502 || res.status === 503;
+    if (!transient) throw new Error(`Gemini API ${res.status}: ${body.slice(0, 300)}`);
+    await new Promise((r) => setTimeout(r, 1200 * (attempt + 1)));
   }
-  const data = (await res.json()) as { candidates?: { content?: { parts?: { text?: string }[] } }[] };
-  return data.candidates?.[0]?.content?.parts?.map((p) => p.text ?? '').join('') ?? '';
+  throw new Error('Gemini API is temporarily unavailable (retried 3 times)');
 }
 
 api.post('/cp/read', requireAuth, requireAdmin, async (req, res) => {

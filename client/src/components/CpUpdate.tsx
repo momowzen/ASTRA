@@ -10,6 +10,11 @@ interface Props {
   toast: (msg: string, kind?: 'ok' | 'err') => void;
 }
 
+interface Screenshot {
+  name: string;
+  dataUrl: string;
+}
+
 export default function CpUpdate({ data, toast }: Props) {
   const { t } = useLang();
   const basic = data.tabs.find((tab) => tab.meta.title.toUpperCase() === 'BASIC INFORMATION');
@@ -21,30 +26,61 @@ export default function CpUpdate({ data, toast }: Props) {
       .sort((a, b) => a.ign.localeCompare(b.ign));
   }, [basic]);
 
-  const [image, setImage] = useState('');
+  const [images, setImages] = useState<Screenshot[]>([]);
   const [items, setItems] = useState<CpItem[] | null>(null);
   const [reading, setReading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
-  async function onFile(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    const dataUrl = await new Promise<string>((resolve, reject) => {
-      const fr = new FileReader();
-      fr.onload = () => resolve(String(fr.result));
-      fr.onerror = () => reject(new Error('Could not read the file'));
-      fr.readAsDataURL(file);
-    });
-    setImage(dataUrl);
-    setItems(null);
+  async function onFiles(e: React.ChangeEvent<HTMLInputElement>) {
+    const files = Array.from(e.target.files ?? []);
+    if (files.length === 0) return;
+    const loaded = await Promise.all(
+      files.map(
+        (f) =>
+          new Promise<Screenshot>((resolve, reject) => {
+            const fr = new FileReader();
+            fr.onload = () => resolve({ name: f.name, dataUrl: String(fr.result) });
+            fr.onerror = () => reject(new Error('Could not read the file'));
+            fr.readAsDataURL(f);
+          }),
+      ),
+    );
+    setImages((prev) => [...prev, ...loaded]);
+    if (fileRef.current) fileRef.current.value = '';
+  }
+
+  function removeImage(index: number) {
+    setImages((prev) => prev.filter((_, i) => i !== index));
+  }
+
+  async function readAll() {
+    if (images.length === 0) return;
     setReading(true);
+    setItems(null);
+    const all: CpItem[] = [];
+    let failures = 0;
     try {
-      const res = await readCpImage(dataUrl);
-      setItems(res.items);
-    } catch (err) {
-      toast(err instanceof ApiError ? err.message : t('tools.cpCouldNotRead'), 'err');
+      for (const img of images) {
+        try {
+          const res = await readCpImage(img.dataUrl);
+          for (const it of res.items) {
+            if (!all.some((x) => x.ign.toLowerCase() === it.ign.toLowerCase())) {
+              all.push(it);
+            }
+          }
+        } catch {
+          failures += 1;
+        }
+      }
+      if (all.length > 0) {
+        setItems(all);
+        if (failures > 0) toast(t('tools.cpSomeFailed', { n: failures }), 'err');
+      } else {
+        setItems(null);
+        toast(t('tools.cpCouldNotRead'), 'err');
+      }
     } finally {
       setReading(false);
     }
@@ -67,8 +103,7 @@ export default function CpUpdate({ data, toast }: Props) {
       const res = await updateCp(valid.map((it) => ({ ign: it.ign.trim(), cp: it.cp.trim() })));
       toast(`${t('tools.cpSaved')} · ${res.date}`, 'ok');
       setItems(null);
-      setImage('');
-      if (fileRef.current) fileRef.current.value = '';
+      setImages([]);
     } catch (err) {
       toast(err instanceof ApiError ? err.message : t('tools.cpCouldNotSave'), 'err');
     } finally {
@@ -77,10 +112,12 @@ export default function CpUpdate({ data, toast }: Props) {
   }
 
   const validCount = (items ?? []).filter((it) => it.ign.trim() && it.cp.trim()).length;
-  const matchedCount = (items ?? []).filter((it) => roster.some((r) => r.ign === it.ign.trim()) && it.cp.trim()).length;
+  const matchedCount = (items ?? []).filter(
+    (it) => roster.some((r) => r.ign === it.ign.trim()) && it.cp.trim(),
+  ).length;
 
   return (
-    <div className="boss-view">
+    <div className="cp-update">
       <div className="cp-layout">
         <div className="panel-card">
           <h3>{t('tools.cpLeft')}</h3>
@@ -97,9 +134,28 @@ export default function CpUpdate({ data, toast }: Props) {
         <div className="panel-card">
           <h3>{t('tools.cpRight')}</h3>
           <div className="cp-upload">
-            <input ref={fileRef} type="file" accept="image/*" onChange={(e) => void onFile(e)} />
-            {reading && <span className="spinner" />}
+            <input ref={fileRef} type="file" accept="image/*" multiple onChange={(e) => void onFiles(e)} />
+            <button
+              className="btn btn-primary btn-sm"
+              disabled={reading || images.length === 0}
+              onClick={() => void readAll()}
+            >
+              {reading ? <span className="spinner" /> : t('tools.cpRead')}
+            </button>
           </div>
+
+          {images.length > 0 && (
+            <div className="cp-thumbs">
+              {images.map((img, i) => (
+                <div className="cp-thumb" key={i}>
+                  <img src={img.dataUrl} alt={img.name} title={img.name} />
+                  <button type="button" className="cp-thumb-x" onClick={() => removeImage(i)}>
+                    ✕
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
 
           {reading && <div className="cp-reading">{t('tools.cpReading')}</div>}
 
