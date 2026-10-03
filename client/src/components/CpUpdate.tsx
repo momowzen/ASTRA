@@ -15,6 +15,30 @@ interface Screenshot {
   dataUrl: string;
 }
 
+async function downscaleImage(file: File, maxWidth = 1280): Promise<string> {
+  const objectUrl = URL.createObjectURL(file);
+  try {
+    const img = await new Promise<HTMLImageElement>((resolve, reject) => {
+      const el = new Image();
+      el.onload = () => resolve(el);
+      el.onerror = () => reject(new Error('Could not load image'));
+      el.src = objectUrl;
+    });
+    const scale = Math.min(1, maxWidth / img.naturalWidth);
+    const w = Math.max(1, Math.round(img.naturalWidth * scale));
+    const h = Math.max(1, Math.round(img.naturalHeight * scale));
+    const canvas = document.createElement('canvas');
+    canvas.width = w;
+    canvas.height = h;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) throw new Error('Canvas not supported');
+    ctx.drawImage(img, 0, 0, w, h);
+    return canvas.toDataURL('image/jpeg', 0.85);
+  } finally {
+    URL.revokeObjectURL(objectUrl);
+  }
+}
+
 export default function CpUpdate({ data, toast }: Props) {
   const { t } = useLang();
   const basic = data.tabs.find((tab) => tab.meta.title.toUpperCase() === 'BASIC INFORMATION');
@@ -36,17 +60,14 @@ export default function CpUpdate({ data, toast }: Props) {
   async function onFiles(e: React.ChangeEvent<HTMLInputElement>) {
     const files = Array.from(e.target.files ?? []);
     if (files.length === 0) return;
-    const loaded = await Promise.all(
-      files.map(
-        (f) =>
-          new Promise<Screenshot>((resolve, reject) => {
-            const fr = new FileReader();
-            fr.onload = () => resolve({ name: f.name, dataUrl: String(fr.result) });
-            fr.onerror = () => reject(new Error('Could not read the file'));
-            fr.readAsDataURL(f);
-          }),
-      ),
-    );
+    const loaded: Screenshot[] = [];
+    for (const f of files) {
+      try {
+        loaded.push({ name: f.name, dataUrl: await downscaleImage(f) });
+      } catch {
+        toast(t('tools.cpCouldNotRead'), 'err');
+      }
+    }
     setImages((prev) => [...prev, ...loaded]);
     if (fileRef.current) fileRef.current.value = '';
   }
@@ -62,7 +83,9 @@ export default function CpUpdate({ data, toast }: Props) {
     const all: CpItem[] = [];
     let failures = 0;
     try {
-      for (const img of images) {
+      for (let i = 0; i < images.length; i++) {
+        if (i > 0) await new Promise((r) => setTimeout(r, 350));
+        const img = images[i];
         try {
           const res = await readCpImage(img.dataUrl);
           for (const it of res.items) {

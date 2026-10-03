@@ -396,7 +396,9 @@ api.post('/boss/distribute', requireAuth, requireAdmin, async (req, res) => {
 
 async function geminiVision(image: { mimeType: string; base64: string }, prompt: string): Promise<string> {
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${config.geminiModel}:generateContent`;
-  for (let attempt = 0; attempt < 3; attempt++) {
+  const delays = [0, 1000, 2000, 4000];
+  for (let attempt = 0; attempt < delays.length; attempt++) {
+    if (attempt > 0) await new Promise((r) => setTimeout(r, delays[attempt]));
     const res = await fetch(url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'x-goog-api-key': config.geminiApiKey },
@@ -419,9 +421,8 @@ async function geminiVision(image: { mimeType: string; base64: string }, prompt:
     const body = await res.text().catch(() => '');
     const transient = res.status === 429 || res.status === 500 || res.status === 502 || res.status === 503;
     if (!transient) throw new Error(`Gemini API ${res.status}: ${body.slice(0, 300)}`);
-    await new Promise((r) => setTimeout(r, 1200 * (attempt + 1)));
   }
-  throw new Error('Gemini API is temporarily unavailable (retried 3 times)');
+  throw new Error('Gemini API is temporarily unavailable (retried 4 times)');
 }
 
 api.post('/cp/read', requireAuth, requireAdmin, async (req, res) => {
