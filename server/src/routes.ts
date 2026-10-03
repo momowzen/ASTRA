@@ -327,10 +327,21 @@ api.post('/boss/distribute', requireAuth, requireAdmin, async (req, res) => {
     allocated[0].diamonds += remainder;
 
     const distTab = snap.tabs.find((t) => t.meta.title.toUpperCase() === 'DISTRIBUTION');
-    const header0 = distTab?.meta.headers[0] || ['IGN'];
-    const newColIndex = header0.length;
-    const letter = sheets.columnLetter(newColIndex);
+    const header0 = distTab?.meta.headers[0] || [];
+    const header1 = distTab?.meta.headers[1] || [];
     const date = distributionDate(new Date());
+
+    // Locate today's date group (Points at odd columns) or append a new one.
+    let pointsCol = -1;
+    for (let i = 1; i < header0.length; i += 2) {
+      if ((header0[i] || '').trim() === date) {
+        pointsCol = i;
+        break;
+      }
+    }
+    const appending = pointsCol === -1;
+    if (appending) pointsCol = header1.length > 0 ? header1.length : 1;
+    const rewardCol = pointsCol + 1;
 
     const ignRow = new Map<string, number>();
     for (const r of distTab?.rows ?? []) {
@@ -338,23 +349,31 @@ api.post('/boss/distribute', requireAuth, requireAdmin, async (req, res) => {
       if (ign && !ignRow.has(ign)) ignRow.set(ign, r.row);
     }
 
-    const writes: { a1: string; values: string[][] }[] = [{ a1: `${letter}1`, values: [[date]] }];
+    const writes: { a1: string; values: string[][] }[] = [];
+    if (appending) {
+      writes.push({ a1: `${sheets.columnLetter(pointsCol)}1`, values: [[date]] });
+      writes.push({ a1: `${sheets.columnLetter(pointsCol)}2`, values: [['Points']] });
+      writes.push({ a1: `${sheets.columnLetter(rewardCol)}2`, values: [['Reward']] });
+    }
+
     const newRows: string[][] = [];
     for (const m of allocated) {
       const existing = ignRow.get(m.ign);
       if (existing) {
-        writes.push({ a1: `${letter}${existing}`, values: [[String(m.diamonds)]] });
+        writes.push({ a1: `${sheets.columnLetter(pointsCol)}${existing}`, values: [[String(m.points)]] });
+        writes.push({ a1: `${sheets.columnLetter(rewardCol)}${existing}`, values: [[String(m.diamonds)]] });
       } else {
-        const cells = new Array(newColIndex + 1).fill('');
+        const cells = new Array(rewardCol + 1).fill('');
         cells[0] = m.ign;
-        cells[newColIndex] = String(m.diamonds);
+        cells[pointsCol] = String(m.points);
+        cells[rewardCol] = String(m.diamonds);
         newRows.push(cells);
       }
     }
 
     await sheets.batchUpdateValues('DISTRIBUTION', writes);
     for (const cells of newRows) {
-      await sheets.appendRow('DISTRIBUTION', cells, newColIndex + 1);
+      await sheets.appendRow('DISTRIBUTION', cells, rewardCol + 1);
     }
 
     const reset = attTab.rows.map((r) => ({ a1: `${sheets.columnLetter(1)}${r.row}`, values: [['']] }));

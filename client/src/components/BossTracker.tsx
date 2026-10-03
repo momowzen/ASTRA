@@ -142,7 +142,7 @@ function ConfigView({
           <span className="muted">{t('boss.changesInstant')}</span>
         </div>
         <div className="table-scroll">
-          <table className="grid">
+          <table className="grid boss-config">
             <thead>
               <tr className="labels single">
                 <th className="ign-col">{t('boss.boss')}</th>

@@ -1228,6 +1228,24 @@ table.coll td.ign-col {
   font-weight: 800;
 }
 
+/* Boss Config: compact two-column table (Boss + Points close together). */
+table.grid.boss-config {
+  width: auto;
+  max-width: 100%;
+}
+table.grid.boss-config th.ign-col,
+table.grid.boss-config td.ign-col {
+  position: static;
+  left: 0;
+  min-width: 0;
+}
+table.grid.boss-config th.ign-col {
+  width: 220px;
+}
+table.grid.boss-config th:not(.ign-col) {
+  width: 160px;
+}
+
 /* ---------- admin tools: distribution announcement ---------- */
 
 .announce {
