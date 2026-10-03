@@ -45,6 +45,8 @@ export const config = {
   credentialsTab: process.env.CREDENTIALS_TAB || 'credentials',
   pollIntervalMs: num(process.env.SYNC_POLL_INTERVAL_MS, 5000),
   maxRows: num(process.env.SYNC_MAX_ROWS, 2000),
+  geminiApiKey: process.env.GEMINI_API_KEY || '',
+  geminiModel: process.env.GEMINI_MODEL || 'gemini-3.8-flash',
   adminUsername: 'admin',
   adminInitialPassword: 'astra1221',
 };

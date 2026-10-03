@@ -171,6 +171,26 @@ export async function distribute(pool: number): Promise<DistributionResult> {
   });
 }
 
+export interface CpItem {
+  ign: string;
+  cp: string;
+  matched: boolean;
+}
+
+export async function readCpImage(image: string): Promise<{ ok: boolean; items: CpItem[] }> {
+  return request('/cp/read', {
+    method: 'POST',
+    body: JSON.stringify({ image }),
+  });
+}
+
+export async function updateCp(items: { ign: string; cp: string }[]): Promise<{ ok: boolean; date: string; count: number }> {
+  return request('/cp/update', {
+    method: 'POST',
+    body: JSON.stringify({ items }),
+  });
+}
+
 export async function changePassword(currentPassword: string, newPassword: string): Promise<void> {
   await request('/auth/password', {
     method: 'POST',

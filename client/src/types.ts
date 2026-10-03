@@ -47,4 +47,4 @@ export interface Column {
 export const INTERNAL_TABS = ['BOSS ATTENDANCE', 'BOSS CONFIG'];
 
 /** Sheet tabs hidden from members but visible to admins. */
-export const MEMBER_HIDDEN_TABS = ['BOSS ATTENDANCE', 'BOSS CONFIG', 'DISTRIBUTION HISTORY'];
+export const MEMBER_HIDDEN_TABS = ['BOSS ATTENDANCE', 'BOSS CONFIG', 'DISTRIBUTION HISTORY', 'CP HISTORY'];

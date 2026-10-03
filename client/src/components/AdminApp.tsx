@@ -8,6 +8,7 @@ import { IconGear, IconGrid, IconLogout, IconPlus, IconSearch, IconTrash } from 
 import PasswordModal from './PasswordModal';
 import BossTracker from './BossTracker';
 import AdminTools from './AdminTools';
+import CpUpdate from './CpUpdate';
 import { LangToggle, useLang } from '../i18n';
 
 interface Props {
@@ -129,7 +130,7 @@ export default function AdminApp({
   const [showCol, setShowCol] = useState(-1);
   const [filterVal, setFilterVal] = useState('');
   const [bossView, setBossView] = useState<'dashboard' | 'attendance' | 'config' | null>(null);
-  const [toolView, setToolView] = useState<'distribution' | null>(null);
+  const [toolView, setToolView] = useState<'distribution' | 'cp-update' | null>(null);
   const [editing, setEditing] = useState<{ row: number; col: number } | null>(null);
   const [addOpen, setAddOpen] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState<number | null>(null);
@@ -291,6 +292,21 @@ export default function AdminApp({
           </span>
           {t('tools.distribution')}
         </button>
+        <button
+          className={`nav-item nav-caps ${toolView === 'cp-update' ? 'active' : ''}`}
+          onClick={() => {
+            setToolView('cp-update');
+            setBossView(null);
+            setEditing(null);
+            setShowCol(-1);
+            setFilterVal('');
+          }}
+        >
+          <span className="ico">
+            <IconGrid />
+          </span>
+          {t('tools.cpUpdate')}
+        </button>
 
         <div className="section-label">{t('admin.sheetTabs')}</div>
         {data.tabs
@@ -347,7 +363,7 @@ export default function AdminApp({
                       : t('admin.bossConfig')
                 }`
               : toolView
-                ? `${t('tools.section')} · ${t('tools.distribution')}`
+                ? `${t('tools.section')} · ${toolView === 'cp-update' ? t('tools.cpUpdate') : t('tools.distribution')}`
                 : tab?.meta.title ?? t('member.loading')}
           </h2>
           <div className="grow" />
@@ -426,7 +442,11 @@ export default function AdminApp({
           {bossView ? (
             <BossTracker view={bossView} data={data} onPatch={onPatch} toast={toast} />
           ) : toolView ? (
-            <AdminTools data={data} toast={toast} />
+            toolView === 'cp-update' ? (
+              <CpUpdate data={data} toast={toast} />
+            ) : (
+              <AdminTools data={data} toast={toast} />
+            )
           ) : (
             <div className="table-card">
             <div className="table-meta">

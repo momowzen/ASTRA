@@ -197,6 +197,26 @@ const DICT: Record<string, { en: string; ko: string }> = {
   },
   'tools.ok': { en: 'OK', ko: '확인' },
 
+  // ---- admin tools / CP update ----
+  'tools.cpUpdate': { en: 'CP Update', ko: 'CP 업데이트' },
+  'tools.cpLeft': { en: 'Current CP', ko: '현재 CP' },
+  'tools.cpRight': { en: 'Screenshot reader', ko: '스크린샷 리더' },
+  'tools.cpNoImage': {
+    en: 'Upload a screenshot to auto-read IGN and CP.',
+    ko: '스크린샷을 업로드하면 IGN과 CP를 자동으로 읽습니다.',
+  },
+  'tools.cpMatched': { en: 'Matched', ko: '일치' },
+  'tools.cpUnmatched': { en: 'Unmatched', ko: '불일치' },
+  'tools.cpReading': { en: 'Reading screenshot…', ko: '스크린샷 읽는 중…' },
+  'tools.cpCouldNotRead': { en: 'Could not read the screenshot', ko: '스크린샷을 읽을 수 없습니다' },
+  'tools.cpCouldNotSave': { en: 'Could not update CP', ko: 'CP를 업데이트할 수 없습니다' },
+  'tools.cpConfirmTitle': { en: 'Update CP?', ko: 'CP를 업데이트할까요?' },
+  'tools.cpConfirmHint': {
+    en: 'This will update each member\'s CP in BASIC INFORMATION and record it in CP HISTORY.',
+    ko: '각 멤버의 CP를 BASIC INFORMATION에 업데이트하고 CP HISTORY에 기록합니다.',
+  },
+  'tools.cpSaved': { en: 'Saved to CP HISTORY', ko: 'CP HISTORY에 저장됨' },
+
   // ---- password modal ----
   'pw.newPassword': { en: 'New password', ko: '새 비밀번호' },
   'pw.confirmNew': { en: 'Confirm new password', ko: '새 비밀번호 확인' },

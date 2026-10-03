@@ -18,7 +18,7 @@ const MAX_VALUE_LEN = 1000;
 const MAX_UPDATES = 200;
 
 /** Database-only tabs backing the boss attendance tracker — never shown to any role. */
-const INTERNAL_TABS = ['BOSS ATTENDANCE', 'BOSS CONFIG', 'DISTRIBUTION HISTORY'];
+const INTERNAL_TABS = ['BOSS ATTENDANCE', 'BOSS CONFIG', 'DISTRIBUTION HISTORY', 'CP HISTORY'];
 
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
@@ -29,6 +29,12 @@ function intPoints(value: string | undefined): number {
 
 function distributionDate(d: Date): string {
   return `${MONTHS[d.getMonth()]}. ${d.getDate()}, ${d.getFullYear()}`;
+}
+
+function formatCp(value: string): string {
+  const digits = value.replace(/[^0-9]/g, '');
+  if (!digits) return '';
+  return Number(digits).toLocaleString('en-US');
 }
 
 function bad(res: Response, status: number, message: string): void {
@@ -385,5 +391,151 @@ api.post('/boss/distribute', requireAuth, requireAdmin, async (req, res) => {
   } catch (err) {
     console.error('[boss] distribute failed:', err);
     bad(res, 502, 'Could not distribute diamonds');
+  }
+});
+
+async function geminiVision(image: { mimeType: string; base64: string }, prompt: string): Promise<string> {
+  const res = await fetch(
+    `https://generativelanguage.googleapis.com/v1beta/models/${config.geminiModel}:generateContent`,
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-goog-api-key': config.geminiApiKey },
+      body: JSON.stringify({
+        contents: [
+          {
+            parts: [
+              { text: prompt },
+              { inline_data: { mime_type: image.mimeType, data: image.base64 } },
+            ],
+          },
+        ],
+        generationConfig: { responseMimeType: 'application/json' },
+      }),
+    },
+  );
+  if (!res.ok) {
+    const body = await res.text().catch(() => '');
+    throw new Error(`Gemini API ${res.status}: ${body.slice(0, 300)}`);
+  }
+  const data = (await res.json()) as { candidates?: { content?: { parts?: { text?: string }[] } }[] };
+  return data.candidates?.[0]?.content?.parts?.map((p) => p.text ?? '').join('') ?? '';
+}
+
+api.post('/cp/read', requireAuth, requireAdmin, async (req, res) => {
+  if (!config.geminiApiKey) return bad(res, 500, 'GEMINI_API_KEY is not configured');
+
+  const image = String(req.body?.image ?? '');
+  const m = image.match(/^data:([^;]+);base64,(.+)$/s);
+  if (!m) return bad(res, 400, 'Image must be a base64 data URL');
+
+  try {
+    const snap = getSnapshot();
+    const basic = snap.tabs.find((t) => t.meta.title.toUpperCase() === 'BASIC INFORMATION');
+    if (!basic) return bad(res, 404, 'BASIC INFORMATION tab not found');
+    const roster = basic.rows.map((r) => (r.cells[0] || '').trim()).filter(Boolean);
+
+    const prompt = [
+      'You are reading a game screenshot that lists guild members, one per line, in the form "IGN combat-power".',
+      'Match each line to one of these known IGNs. Use fuzzy matching for minor OCR differences, spacing, or case:',
+      roster.join('\n'),
+      'Return ONLY a JSON object of the form:',
+      '{"items":[{"ign":"<matched known IGN exactly as listed>","cp":"<combat power number>"}]}',
+      'If an IGN cannot be confidently matched to the list, set "ign" to the raw text as it appears. Do not include any commentary.',
+    ].join('\n\n');
+
+    const text = await geminiVision({ mimeType: m[1], base64: m[2] }, prompt);
+    let parsed: { items?: { ign?: unknown; cp?: unknown }[] } = {};
+    try {
+      parsed = JSON.parse(text.replace(/^```(?:json)?/i, '').replace(/```\s*$/i, '').trim());
+    } catch {
+      return bad(res, 502, 'Could not parse the AI response');
+    }
+
+    const items = (Array.isArray(parsed.items) ? parsed.items : [])
+      .map((it) => {
+        const rawIgn = String(it?.ign ?? '').trim();
+        const cp = formatCp(String(it?.cp ?? ''));
+        const rosterMatch = roster.find((r) => r.toLowerCase() === rawIgn.toLowerCase());
+        return { ign: rosterMatch ?? rawIgn, cp, matched: !!rosterMatch && !!cp };
+      })
+      .filter((it) => it.ign);
+
+    res.json({ ok: true, items });
+  } catch (err) {
+    console.error('[cp] read failed:', err);
+    bad(res, 502, err instanceof Error ? err.message : 'Could not read the screenshot');
+  }
+});
+
+api.post('/cp/update', requireAuth, requireAdmin, async (req, res) => {
+  const items = req.body?.items;
+  if (!Array.isArray(items) || items.length === 0) return bad(res, 400, 'No CP items supplied');
+
+  try {
+    const snap = getSnapshot();
+    const basic = snap.tabs.find((t) => t.meta.title.toUpperCase() === 'BASIC INFORMATION');
+    const cpHist = snap.tabs.find((t) => t.meta.title.toUpperCase() === 'CP HISTORY');
+    if (!basic) return bad(res, 404, 'BASIC INFORMATION tab not found');
+    if (!cpHist) return bad(res, 404, 'CP HISTORY tab not found');
+
+    const clean: { ign: string; cp: string }[] = [];
+    for (const it of items) {
+      const ign = String(it?.ign ?? '').trim();
+      const cp = formatCp(String(it?.cp ?? ''));
+      if (!ign || !cp) continue;
+      if (clean.some((c) => c.ign.toLowerCase() === ign.toLowerCase())) continue;
+      clean.push({ ign, cp });
+    }
+    if (clean.length === 0) return bad(res, 400, 'No valid CP items supplied');
+
+    const basicRow = new Map<string, number>();
+    for (const r of basic.rows) {
+      const ign = (r.cells[0] || '').trim();
+      if (ign && !basicRow.has(ign)) basicRow.set(ign, r.row);
+    }
+    const histRow = new Map<string, number>();
+    for (const r of cpHist.rows) {
+      const ign = (r.cells[0] || '').trim();
+      if (ign && !histRow.has(ign)) histRow.set(ign, r.row);
+    }
+
+    const header0 = cpHist.meta.headers[0] || ['IGN'];
+    const newColIndex = header0.length;
+    const letter = sheets.columnLetter(newColIndex);
+    const date = distributionDate(new Date());
+
+    const basicWrites: { a1: string; values: string[][] }[] = [];
+    const histWrites: { a1: string; values: string[][] }[] = [{ a1: `${letter}1`, values: [[date]] }];
+    const newRows: string[][] = [];
+
+    for (const it of clean) {
+      const bRow = basicRow.get(it.ign);
+      if (bRow) basicWrites.push({ a1: `${sheets.columnLetter(1)}${bRow}`, values: [[it.cp]] });
+      const hRow = histRow.get(it.ign);
+      if (hRow) {
+        histWrites.push({ a1: `${letter}${hRow}`, values: [[it.cp]] });
+      } else {
+        const cells = new Array(newColIndex + 1).fill('');
+        cells[0] = it.ign;
+        cells[newColIndex] = it.cp;
+        newRows.push(cells);
+      }
+    }
+
+    await sheets.batchUpdateValues('BASIC INFORMATION', basicWrites);
+    await sheets.batchUpdateValues('CP HISTORY', histWrites);
+    for (const cells of newRows) {
+      await sheets.appendRow('CP HISTORY', cells, newColIndex + 1);
+    }
+    for (const it of clean) {
+      const bRow = basicRow.get(it.ign);
+      if (bRow) noteWrite('BASIC INFORMATION', bRow, 1, it.cp);
+    }
+
+    scheduleRefresh();
+    res.json({ ok: true, date, count: clean.length, items: clean });
+  } catch (err) {
+    console.error('[cp] update failed:', err);
+    bad(res, 502, 'Could not update CP');
   }
 });
