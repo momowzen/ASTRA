@@ -421,6 +421,10 @@ select option {
   border-color: rgba(139, 124, 255, 0.4);
   color: #fff;
 }
+.nav-caps {
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
 .nav-item .ico {
   width: 18px;
   text-align: center;

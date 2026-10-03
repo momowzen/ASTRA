@@ -178,7 +178,7 @@ const DICT: Record<string, { en: string; ko: string }> = {
   'tools.band': { en: 'Top 30% contributors', ko: '상위 30% 기여자' },
   'tools.pool': { en: 'Diamond pool', ko: '다이아몬드 풀' },
   'tools.save': { en: 'Save', ko: '저장' },
-  'tools.savedNote': { en: 'Saved to DISTRIBUTION', ko: 'DISTRIBUTION에 저장됨' },
+  'tools.savedNote': { en: 'Saved to DISTRIBUTION HISTORY', ko: 'DISTRIBUTION HISTORY에 저장됨' },
   'tools.distributedOn': { en: 'Distributed on', ko: '분배일' },
   'tools.points': { en: 'Points', ko: '포인트' },
   'tools.diamonds': { en: 'Diamonds', ko: '다이아몬드' },

@@ -239,7 +239,7 @@ export default function AdminApp({
 
         <div className="section-label">{t('admin.trackerSection')}</div>
         <button
-          className={`nav-item ${bossView === 'dashboard' ? 'active' : ''}`}
+          className={`nav-item nav-caps ${bossView === 'dashboard' ? 'active' : ''}`}
           onClick={() => {
             setBossView('dashboard');
             setToolView(null);
@@ -251,7 +251,7 @@ export default function AdminApp({
           {t('admin.dashboard')}
         </button>
         <button
-          className={`nav-item ${bossView === 'attendance' ? 'active' : ''}`}
+          className={`nav-item nav-caps ${bossView === 'attendance' ? 'active' : ''}`}
           onClick={() => {
             setBossView('attendance');
             setToolView(null);
@@ -263,7 +263,7 @@ export default function AdminApp({
           {t('admin.attendance')}
         </button>
         <button
-          className={`nav-item ${bossView === 'config' ? 'active' : ''}`}
+          className={`nav-item nav-caps ${bossView === 'config' ? 'active' : ''}`}
           onClick={() => {
             setBossView('config');
             setToolView(null);
@@ -277,7 +277,7 @@ export default function AdminApp({
 
         <div className="section-label">{t('tools.section')}</div>
         <button
-          className={`nav-item ${toolView === 'distribution' ? 'active' : ''}`}
+          className={`nav-item nav-caps ${toolView === 'distribution' ? 'active' : ''}`}
           onClick={() => {
             setToolView('distribution');
             setBossView(null);

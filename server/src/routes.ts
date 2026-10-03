@@ -18,7 +18,7 @@ const MAX_VALUE_LEN = 1000;
 const MAX_UPDATES = 200;
 
 /** Database-only tabs backing the boss attendance tracker — never shown to any role. */
-const INTERNAL_TABS = ['BOSS ATTENDANCE', 'BOSS CONFIG', 'DISTRIBUTION'];
+const INTERNAL_TABS = ['BOSS ATTENDANCE', 'BOSS CONFIG', 'DISTRIBUTION HISTORY'];
 
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
@@ -326,7 +326,7 @@ api.post('/boss/distribute', requireAuth, requireAdmin, async (req, res) => {
     const remainder = pool - allocated.reduce((s, m) => s + m.diamonds, 0);
     allocated[0].diamonds += remainder;
 
-    const distTab = snap.tabs.find((t) => t.meta.title.toUpperCase() === 'DISTRIBUTION');
+    const distTab = snap.tabs.find((t) => t.meta.title.toUpperCase() === 'DISTRIBUTION HISTORY');
     const header0 = distTab?.meta.headers[0] || [];
     const header1 = distTab?.meta.headers[1] || [];
     const date = distributionDate(new Date());
@@ -371,9 +371,9 @@ api.post('/boss/distribute', requireAuth, requireAdmin, async (req, res) => {
       }
     }
 
-    await sheets.batchUpdateValues('DISTRIBUTION', writes);
+    await sheets.batchUpdateValues('DISTRIBUTION HISTORY', writes);
     for (const cells of newRows) {
-      await sheets.appendRow('DISTRIBUTION', cells, rewardCol + 1);
+      await sheets.appendRow('DISTRIBUTION HISTORY', cells, rewardCol + 1);
     }
 
     const reset = attTab.rows.map((r) => ({ a1: `${sheets.columnLetter(1)}${r.row}`, values: [['']] }));
