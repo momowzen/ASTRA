@@ -1,5 +1,7 @@
-import { createWorker, PSM } from 'tesseract.js';
+import { createWorker, PSM, setLogging } from 'tesseract.js';
 import type { Worker } from 'tesseract.js';
+
+setLogging(false);
 
 let workerPromise: Promise<Worker> | null = null;
 
@@ -17,14 +19,49 @@ function getWorker(): Promise<Worker> {
   return workerPromise;
 }
 
-/** Upscale the image (Tesseract reads small text much better when enlarged). */
-async function upscale(image: string, factor = 2): Promise<string> {
-  const img = await new Promise<HTMLImageElement>((resolve, reject) => {
+function loadImage(src: string): Promise<HTMLImageElement> {
+  return new Promise((resolve, reject) => {
     const el = new Image();
     el.onload = () => resolve(el);
     el.onerror = () => reject(new Error('Could not load image'));
-    el.src = image;
+    el.src = src;
   });
+}
+
+function otsuThreshold(gray: Uint8ClampedArray, total: number): number {
+  const hist = new Array(256).fill(0);
+  for (let i = 0; i < total; i++) hist[gray[i]]++;
+  let sum = 0;
+  for (let i = 0; i < 256; i++) sum += i * hist[i];
+  let sumB = 0;
+  let wB = 0;
+  let wF = 0;
+  let varMax = 0;
+  let threshold = 127;
+  for (let t = 0; t < 256; t++) {
+    wB += hist[t];
+    if (wB === 0) continue;
+    wF = total - wB;
+    if (wF === 0) break;
+    sumB += t * hist[t];
+    const mB = sumB / wB;
+    const mF = (sum - sumB) / wF;
+    const between = wB * wF * (mB - mF) * (mB - mF);
+    if (between > varMax) {
+      varMax = between;
+      threshold = t;
+    }
+  }
+  return threshold;
+}
+
+/**
+ * Upscale, grayscale, and binarize the image. Tesseract reads enlarged,
+ * high-contrast black-on-white text far more reliably than raw screenshots
+ * (which may be small, low-contrast, or light-on-dark).
+ */
+async function preprocess(image: string, factor = 3): Promise<string> {
+  const img = await loadImage(image);
   const w = Math.max(1, Math.round(img.naturalWidth * factor));
   const h = Math.max(1, Math.round(img.naturalHeight * factor));
   const canvas = document.createElement('canvas');
@@ -33,14 +70,37 @@ async function upscale(image: string, factor = 2): Promise<string> {
   const ctx = canvas.getContext('2d');
   if (!ctx) throw new Error('Canvas not supported');
   ctx.drawImage(img, 0, 0, w, h);
+
+  const imageData = ctx.getImageData(0, 0, w, h);
+  const data = imageData.data;
+  const total = w * h;
+  const gray = new Uint8ClampedArray(total);
+  let sum = 0;
+  for (let i = 0; i < total; i++) {
+    const v = Math.round(0.299 * data[i * 4] + 0.587 * data[i * 4 + 1] + 0.114 * data[i * 4 + 2]);
+    gray[i] = v;
+    sum += v;
+  }
+
+  // Dark UI (light text on dark background) needs inverting so text is dark.
+  const invert = sum / total < 128;
+  if (invert) for (let i = 0; i < total; i++) gray[i] = 255 - gray[i];
+
+  const threshold = otsuThreshold(gray, total);
+  for (let i = 0; i < total; i++) {
+    const v = gray[i] < threshold ? 0 : 255;
+    data[i * 4] = data[i * 4 + 1] = data[i * 4 + 2] = v;
+    data[i * 4 + 3] = 255;
+  }
+  ctx.putImageData(imageData, 0, 0);
   return canvas.toDataURL('image/png');
 }
 
 /** Run OCR on an image data URL and return the raw text. */
 export async function ocrImage(image: string): Promise<string> {
   const worker = await getWorker();
-  const enlarged = await upscale(image, 2);
-  const { data } = await worker.recognize(enlarged);
+  const clean = await preprocess(image);
+  const { data } = await worker.recognize(clean);
   return (data.text ?? '').replace(/\r/g, '');
 }
 
@@ -83,12 +143,10 @@ export function matchIgn(name: string, roster: string[]): { ign: string; matched
   const n = normalize(name);
   if (!n) return { ign: name, matched: false };
 
-  // exact normalized match
   for (const r of roster) {
     if (normalize(r) === n) return { ign: r, matched: true };
   }
 
-  // containment match (OCR often drops/merges a few characters)
   let bestContain = '';
   for (const r of roster) {
     const rn = normalize(r);
@@ -98,7 +156,6 @@ export function matchIgn(name: string, roster: string[]): { ign: string; matched
   }
   if (bestContain) return { ign: bestContain, matched: true };
 
-  // fuzzy (levenshtein ratio)
   let bestIgn = '';
   let bestDist = Infinity;
   for (const r of roster) {
