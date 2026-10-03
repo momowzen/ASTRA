@@ -39,6 +39,7 @@ export default function AdminTools({ data, toast }: Props) {
   const [poolStr, setPoolStr] = useState('');
   const [saved, setSaved] = useState<DistributionResult | null>(null);
   const [saving, setSaving] = useState(false);
+  const [confirmOpen, setConfirmOpen] = useState(false);
 
   const pool = parseInt(poolStr, 10);
   const poolValid = Number.isFinite(pool) && pool > 0;
@@ -77,89 +78,115 @@ export default function AdminTools({ data, toast }: Props) {
   }
 
   return (
-    <div className="boss-view">
-      <div className="announce">
-        <div className="announce-head">
-          <h2>{t('tools.distTitle')}</h2>
-          <div className="announce-sub">{t('tools.band')}</div>
-          {saved && (
-            <div className="announce-date">
-              {t('tools.distributedOn')} {saved.date}
+    <>
+      <div className="boss-view">
+        <div className="announce">
+          <div className="announce-head">
+            <h2>{t('tools.distTitle')}</h2>
+            <div className="announce-sub">{t('tools.band')}</div>
+            {saved && (
+              <div className="announce-date">
+                {t('tools.distributedOn')} {saved.date}
+              </div>
+            )}
+          </div>
+
+          <div className="announce-stats">
+            <div className="stat-card">
+              <div className="stat-label">{t('tools.totalBand')}</div>
+              <div className="stat-value">
+                {saved ? saved.totalBandPoints : band.reduce((s, m) => s + m.points, 0)}
+              </div>
+            </div>
+            <div className="stat-card">
+              <div className="stat-label">{t('tools.members')}</div>
+              <div className="stat-value">{band.length}</div>
+            </div>
+            <div className="stat-card">
+              <div className="stat-label">{t('tools.pool')}</div>
+              <div className="stat-value">{saved ? saved.pool : poolValid ? pool : '—'}</div>
+            </div>
+          </div>
+
+          <div className="announce-table">
+            <table className="grid">
+              <thead>
+                <tr className="labels single">
+                  <th className="rownum">#</th>
+                  <th className="ign-col">IGN</th>
+                  <th>{t('tools.points')}</th>
+                  <th>{t('tools.diamonds')}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {rows.map((m, i) => (
+                  <tr key={m.ign}>
+                    <td className="rownum">{i + 1}</td>
+                    <td className="ign-col">
+                      <div className="cell">{m.ign}</div>
+                    </td>
+                    <td>
+                      <div className="cell">{m.points}</div>
+                    </td>
+                    <td>
+                      <div className={`cell ${showDiamonds ? 'dist-diamond' : ''}`}>
+                        {showDiamonds ? m.diamonds : '—'}
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          {!saved ? (
+            <>
+              <div className="announce-actions">
+                <input
+                  className="input"
+                  type="number"
+                  min="1"
+                  placeholder={t('tools.pool')}
+                  value={poolStr}
+                  onChange={(e) => setPoolStr(e.target.value)}
+                />
+                <button className="btn btn-primary" disabled={saving || !poolValid} onClick={() => setConfirmOpen(true)}>
+                  {saving ? <span className="spinner" /> : t('tools.save')}
+                </button>
+              </div>
+              <div className="announce-note">{t('tools.preview')}</div>
+            </>
+          ) : (
+            <div className="announce-saved">
+              {t('tools.savedNote')} · {saved.date}
             </div>
           )}
         </div>
+      </div>
 
-        <div className="announce-stats">
-          <div className="stat-card">
-            <div className="stat-label">{t('tools.totalBand')}</div>
-            <div className="stat-value">
-              {saved ? saved.totalBandPoints : band.reduce((s, m) => s + m.points, 0)}
-            </div>
-          </div>
-          <div className="stat-card">
-            <div className="stat-label">{t('tools.members')}</div>
-            <div className="stat-value">{band.length}</div>
-          </div>
-          <div className="stat-card">
-            <div className="stat-label">{t('tools.pool')}</div>
-            <div className="stat-value">{saved ? saved.pool : poolValid ? pool : '—'}</div>
-          </div>
-        </div>
-
-        <div className="announce-table">
-          <table className="grid">
-            <thead>
-              <tr className="labels single">
-                <th className="rownum">#</th>
-                <th className="ign-col">IGN</th>
-                <th>{t('tools.points')}</th>
-                <th>{t('tools.diamonds')}</th>
-              </tr>
-            </thead>
-            <tbody>
-              {rows.map((m, i) => (
-                <tr key={m.ign}>
-                  <td className="rownum">{i + 1}</td>
-                  <td className="ign-col">
-                    <div className="cell">{m.ign}</div>
-                  </td>
-                  <td>
-                    <div className="cell">{m.points}</div>
-                  </td>
-                  <td>
-                    <div className={`cell ${showDiamonds ? 'dist-diamond' : ''}`}>
-                      {showDiamonds ? m.diamonds : '—'}
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-
-        {!saved ? (
-          <>
-            <div className="announce-actions">
-              <input
-                className="input"
-                type="number"
-                min="1"
-                placeholder={t('tools.pool')}
-                value={poolStr}
-                onChange={(e) => setPoolStr(e.target.value)}
-              />
-              <button className="btn btn-primary" disabled={saving || !poolValid} onClick={() => void save()}>
-                {saving ? <span className="spinner" /> : t('tools.save')}
+      {confirmOpen && (
+        <div className="overlay" onMouseDown={(e) => e.target === e.currentTarget && setConfirmOpen(false)}>
+          <div className="modal">
+            <h3>{t('tools.confirmTitle')}</h3>
+            <p className="desc">{t('tools.confirmHint')}</p>
+            <div className="row">
+              <button className="btn btn-ghost" onClick={() => setConfirmOpen(false)}>
+                {t('common.cancel')}
+              </button>
+              <button
+                className="btn btn-primary"
+                disabled={saving}
+                onClick={() => {
+                  setConfirmOpen(false);
+                  void save();
+                }}
+              >
+                {t('tools.ok')}
               </button>
             </div>
-            <div className="announce-note">{t('tools.preview')}</div>
-          </>
-        ) : (
-          <div className="announce-saved">
-            {t('tools.savedNote')} · {saved.date}
           </div>
-        )}
-      </div>
-    </div>
+        </div>
+      )}
+    </>
   );
 }

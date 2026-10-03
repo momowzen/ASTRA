@@ -190,6 +190,12 @@ const DICT: Record<string, { en: string; ko: string }> = {
   },
   'tools.preview': { en: 'Preview — nothing saved yet', ko: '미리보기 — 아직 저장되지 않음' },
   'tools.couldNot': { en: 'Could not distribute', ko: '분배를 완료할 수 없습니다' },
+  'tools.confirmTitle': { en: 'Distribute diamonds?', ko: '다이아몬드를 분배할까요?' },
+  'tools.confirmHint': {
+    en: 'This will save the distribution and reset the current attendance points.',
+    ko: '분배 내용을 저장하고 현재 출석 포인트를 초기화합니다.',
+  },
+  'tools.ok': { en: 'OK', ko: '확인' },
 
   // ---- password modal ----
   'pw.newPassword': { en: 'New password', ko: '새 비밀번호' },
