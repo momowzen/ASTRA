@@ -150,6 +150,27 @@ export async function seedBossConfig(): Promise<{ ok: boolean; seeded: boolean; 
   return request('/boss/config/seed', { method: 'POST' });
 }
 
+export interface DistributionBand {
+  ign: string;
+  points: number;
+  diamonds: number;
+}
+
+export interface DistributionResult {
+  ok: boolean;
+  date: string;
+  pool: number;
+  totalBandPoints: number;
+  band: DistributionBand[];
+}
+
+export async function distribute(pool: number): Promise<DistributionResult> {
+  return request('/boss/distribute', {
+    method: 'POST',
+    body: JSON.stringify({ pool }),
+  });
+}
+
 export async function changePassword(currentPassword: string, newPassword: string): Promise<void> {
   await request('/auth/password', {
     method: 'POST',

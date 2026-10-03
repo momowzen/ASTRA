@@ -18,7 +18,18 @@ const MAX_VALUE_LEN = 1000;
 const MAX_UPDATES = 200;
 
 /** Database-only tabs backing the boss attendance tracker — never shown to any role. */
-const INTERNAL_TABS = ['BOSS ATTENDANCE', 'BOSS CONFIG'];
+const INTERNAL_TABS = ['BOSS ATTENDANCE', 'BOSS CONFIG', 'DISTRIBUTION'];
+
+const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+function intPoints(value: string | undefined): number {
+  const n = parseInt(value ?? '', 10);
+  return Number.isFinite(n) && n >= 0 ? n : 0;
+}
+
+function distributionDate(d: Date): string {
+  return `${MONTHS[d.getMonth()]}. ${d.getDate()}, ${d.getFullYear()}`;
+}
 
 function bad(res: Response, status: number, message: string): void {
   res.status(status).json({ error: message });
@@ -282,5 +293,78 @@ api.post('/boss/config/seed', requireAuth, requireAdmin, async (_req, res) => {
   } catch (err) {
     console.error('[boss] seed config failed:', err);
     bad(res, 502, 'Could not seed boss config');
+  }
+});
+
+api.post('/boss/distribute', requireAuth, requireAdmin, async (req, res) => {
+  const pool = Number(req.body?.pool);
+  if (!Number.isFinite(pool) || pool <= 0) {
+    return bad(res, 400, 'A positive diamond pool is required');
+  }
+
+  try {
+    const snap = getSnapshot();
+    const attTab = snap.tabs.find((t) => t.meta.title.toUpperCase() === 'BOSS ATTENDANCE');
+    if (!attTab) return bad(res, 404, 'BOSS ATTENDANCE tab not found');
+
+    const members = attTab.rows
+      .map((r) => ({ ign: (r.cells[0] || '').trim(), points: intPoints(r.cells[1]) }))
+      .filter((m) => m.ign && m.points > 0)
+      .sort((a, b) => b.points - a.points || a.ign.localeCompare(b.ign));
+    const topPoints = members[0]?.points ?? 0;
+    const threshold = topPoints > 0 ? Math.max(1, Math.round(topPoints * 0.3)) : 0;
+    const band = members.filter((m) => threshold > 0 && m.points >= threshold);
+    if (band.length === 0) return bad(res, 400, 'No points to distribute yet');
+
+    const totalBandPoints = band.reduce((s, m) => s + m.points, 0);
+
+    const allocated = band.map((m) => ({
+      ign: m.ign,
+      points: m.points,
+      diamonds: Math.round((pool * m.points) / totalBandPoints),
+    }));
+    const remainder = pool - allocated.reduce((s, m) => s + m.diamonds, 0);
+    allocated[0].diamonds += remainder;
+
+    const distTab = snap.tabs.find((t) => t.meta.title.toUpperCase() === 'DISTRIBUTION');
+    const header0 = distTab?.meta.headers[0] || ['IGN'];
+    const newColIndex = header0.length;
+    const letter = sheets.columnLetter(newColIndex);
+    const date = distributionDate(new Date());
+
+    const ignRow = new Map<string, number>();
+    for (const r of distTab?.rows ?? []) {
+      const ign = (r.cells[0] || '').trim();
+      if (ign && !ignRow.has(ign)) ignRow.set(ign, r.row);
+    }
+
+    const writes: { a1: string; values: string[][] }[] = [{ a1: `${letter}1`, values: [[date]] }];
+    const newRows: string[][] = [];
+    for (const m of allocated) {
+      const existing = ignRow.get(m.ign);
+      if (existing) {
+        writes.push({ a1: `${letter}${existing}`, values: [[String(m.diamonds)]] });
+      } else {
+        const cells = new Array(newColIndex + 1).fill('');
+        cells[0] = m.ign;
+        cells[newColIndex] = String(m.diamonds);
+        newRows.push(cells);
+      }
+    }
+
+    await sheets.batchUpdateValues('DISTRIBUTION', writes);
+    for (const cells of newRows) {
+      await sheets.appendRow('DISTRIBUTION', cells, newColIndex + 1);
+    }
+
+    const reset = attTab.rows.map((r) => ({ a1: `${sheets.columnLetter(1)}${r.row}`, values: [['']] }));
+    await sheets.batchUpdateValues('BOSS ATTENDANCE', reset);
+    for (const r of attTab.rows) noteWrite('BOSS ATTENDANCE', r.row, 1, '');
+
+    scheduleRefresh();
+    res.json({ ok: true, date, pool, totalBandPoints, band: allocated });
+  } catch (err) {
+    console.error('[boss] distribute failed:', err);
+    bad(res, 502, 'Could not distribute diamonds');
   }
 });

@@ -7,6 +7,7 @@ import { addRow as apiAddRow, deleteRow as apiDeleteRow, saveCells, ApiError } f
 import { IconGear, IconGrid, IconLogout, IconPlus, IconSearch, IconTrash } from './icons';
 import PasswordModal from './PasswordModal';
 import BossTracker from './BossTracker';
+import AdminTools from './AdminTools';
 import { LangToggle, useLang } from '../i18n';
 
 interface Props {
@@ -128,6 +129,7 @@ export default function AdminApp({
   const [showCol, setShowCol] = useState(-1);
   const [filterVal, setFilterVal] = useState('');
   const [bossView, setBossView] = useState<'dashboard' | 'attendance' | 'config' | null>(null);
+  const [toolView, setToolView] = useState<'distribution' | null>(null);
   const [editing, setEditing] = useState<{ row: number; col: number } | null>(null);
   const [addOpen, setAddOpen] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState<number | null>(null);
@@ -238,7 +240,10 @@ export default function AdminApp({
         <div className="section-label">{t('admin.trackerSection')}</div>
         <button
           className={`nav-item ${bossView === 'dashboard' ? 'active' : ''}`}
-          onClick={() => setBossView('dashboard')}
+          onClick={() => {
+            setBossView('dashboard');
+            setToolView(null);
+          }}
         >
           <span className="ico">
             <IconGrid />
@@ -247,7 +252,10 @@ export default function AdminApp({
         </button>
         <button
           className={`nav-item ${bossView === 'attendance' ? 'active' : ''}`}
-          onClick={() => setBossView('attendance')}
+          onClick={() => {
+            setBossView('attendance');
+            setToolView(null);
+          }}
         >
           <span className="ico">
             <IconPlus />
@@ -256,12 +264,32 @@ export default function AdminApp({
         </button>
         <button
           className={`nav-item ${bossView === 'config' ? 'active' : ''}`}
-          onClick={() => setBossView('config')}
+          onClick={() => {
+            setBossView('config');
+            setToolView(null);
+          }}
         >
           <span className="ico">
             <IconGear />
           </span>
           {t('admin.bossConfig')}
+        </button>
+
+        <div className="section-label">{t('tools.section')}</div>
+        <button
+          className={`nav-item ${toolView === 'distribution' ? 'active' : ''}`}
+          onClick={() => {
+            setToolView('distribution');
+            setBossView(null);
+            setEditing(null);
+            setShowCol(-1);
+            setFilterVal('');
+          }}
+        >
+          <span className="ico">
+            <IconGear />
+          </span>
+          {t('tools.distribution')}
         </button>
 
         <div className="section-label">{t('admin.sheetTabs')}</div>
@@ -270,10 +298,11 @@ export default function AdminApp({
           .map((t) => (
             <button
               key={t.meta.title}
-              className={`nav-item ${bossView === null && t.meta.title === tab?.meta.title ? 'active' : ''}`}
+              className={`nav-item ${bossView === null && toolView === null && t.meta.title === tab?.meta.title ? 'active' : ''}`}
               onClick={() => {
                 setActiveTitle(t.meta.title);
                 setBossView(null);
+                setToolView(null);
                 setEditing(null);
                 setShowCol(-1);
                 setFilterVal('');
@@ -317,10 +346,12 @@ export default function AdminApp({
                       ? t('admin.attendance')
                       : t('admin.bossConfig')
                 }`
-              : tab?.meta.title ?? t('member.loading')}
+              : toolView
+                ? `${t('tools.section')} · ${t('tools.distribution')}`
+                : tab?.meta.title ?? t('member.loading')}
           </h2>
           <div className="grow" />
-          {!bossView && (
+          {!bossView && !toolView && (
             <div className="toolbar">
               <div className="search">
                 <IconSearch />
@@ -394,6 +425,8 @@ export default function AdminApp({
         <div className="content">
           {bossView ? (
             <BossTracker view={bossView} data={data} onPatch={onPatch} toast={toast} />
+          ) : toolView ? (
+            <AdminTools data={data} toast={toast} />
           ) : (
             <div className="table-card">
             <div className="table-meta">

@@ -171,6 +171,26 @@ const DICT: Record<string, { en: string; ko: string }> = {
   'boss.pts': { en: 'pts', ko: '점' },
   'boss.weekly': { en: 'Weekly', ko: '주간' },
 
+  // ---- admin tools / distribution ----
+  'tools.section': { en: 'ADMIN TOOLS', ko: '관리자 도구' },
+  'tools.distribution': { en: 'Boss attendance distribution', ko: '보스 출석 분배' },
+  'tools.distTitle': { en: 'Boss Attendance Distribution', ko: '보스 출석 분배' },
+  'tools.band': { en: 'Top 30% contributors', ko: '상위 30% 기여자' },
+  'tools.pool': { en: 'Diamond pool', ko: '다이아몬드 풀' },
+  'tools.save': { en: 'Save', ko: '저장' },
+  'tools.savedNote': { en: 'Saved to DISTRIBUTION', ko: 'DISTRIBUTION에 저장됨' },
+  'tools.distributedOn': { en: 'Distributed on', ko: '분배일' },
+  'tools.points': { en: 'Points', ko: '포인트' },
+  'tools.diamonds': { en: 'Diamonds', ko: '다이아몬드' },
+  'tools.totalBand': { en: 'Total band points', ko: '밴드 총 포인트' },
+  'tools.members': { en: 'members', ko: '명' },
+  'tools.empty': {
+    en: 'No attendance points recorded yet.',
+    ko: '아직 기록된 출석 포인트가 없습니다.',
+  },
+  'tools.preview': { en: 'Preview — nothing saved yet', ko: '미리보기 — 아직 저장되지 않음' },
+  'tools.couldNot': { en: 'Could not distribute', ko: '분배를 완료할 수 없습니다' },
+
   // ---- password modal ----
   'pw.newPassword': { en: 'New password', ko: '새 비밀번호' },
   'pw.confirmNew': { en: 'Confirm new password', ko: '새 비밀번호 확인' },
