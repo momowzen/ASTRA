@@ -1,9 +1,10 @@
 import { useMemo, useRef, useState } from 'react';
 import type { DataResponse } from '../types';
-import { ApiError, readCpImage, updateCp } from '../api';
+import { ApiError, updateCp } from '../api';
 import type { CpItem } from '../api';
 import { formatCp } from '../utils';
 import { useLang } from '../i18n';
+import { ocrImage, parseCpLine, matchIgn } from '../ocr';
 
 interface Props {
   data: DataResponse;
@@ -15,28 +16,13 @@ interface Screenshot {
   dataUrl: string;
 }
 
-async function downscaleImage(file: File, maxWidth = 1280): Promise<string> {
-  const objectUrl = URL.createObjectURL(file);
-  try {
-    const img = await new Promise<HTMLImageElement>((resolve, reject) => {
-      const el = new Image();
-      el.onload = () => resolve(el);
-      el.onerror = () => reject(new Error('Could not load image'));
-      el.src = objectUrl;
-    });
-    const scale = Math.min(1, maxWidth / img.naturalWidth);
-    const w = Math.max(1, Math.round(img.naturalWidth * scale));
-    const h = Math.max(1, Math.round(img.naturalHeight * scale));
-    const canvas = document.createElement('canvas');
-    canvas.width = w;
-    canvas.height = h;
-    const ctx = canvas.getContext('2d');
-    if (!ctx) throw new Error('Canvas not supported');
-    ctx.drawImage(img, 0, 0, w, h);
-    return canvas.toDataURL('image/jpeg', 0.85);
-  } finally {
-    URL.revokeObjectURL(objectUrl);
-  }
+function fileToDataUrl(file: File): Promise<string> {
+  return new Promise<string>((resolve, reject) => {
+    const fr = new FileReader();
+    fr.onload = () => resolve(String(fr.result));
+    fr.onerror = () => reject(new Error('Could not read the file'));
+    fr.readAsDataURL(file);
+  });
 }
 
 export default function CpUpdate({ data, toast }: Props) {
@@ -63,7 +49,7 @@ export default function CpUpdate({ data, toast }: Props) {
     const loaded: Screenshot[] = [];
     for (const f of files) {
       try {
-        loaded.push({ name: f.name, dataUrl: await downscaleImage(f) });
+        loaded.push({ name: f.name, dataUrl: await fileToDataUrl(f) });
       } catch {
         toast(t('tools.cpCouldNotRead'), 'err');
       }
@@ -81,29 +67,28 @@ export default function CpUpdate({ data, toast }: Props) {
     setReading(true);
     setItems(null);
     const all: CpItem[] = [];
-    let failures = 0;
     try {
-      for (let i = 0; i < images.length; i++) {
-        if (i > 0) await new Promise((r) => setTimeout(r, 350));
-        const img = images[i];
-        try {
-          const res = await readCpImage(img.dataUrl);
-          for (const it of res.items) {
-            if (!all.some((x) => x.ign.toLowerCase() === it.ign.toLowerCase())) {
-              all.push(it);
-            }
-          }
-        } catch {
-          failures += 1;
+      for (const img of images) {
+        const text = await ocrImage(img.dataUrl);
+        for (const line of text.split('\n')) {
+          const parsed = parseCpLine(line);
+          if (!parsed) continue;
+          const { ign, matched } = matchIgn(parsed.name, roster.map((r) => r.ign));
+          const cp = formatCp(parsed.cp);
+          if (!ign || !cp) continue;
+          if (all.some((x) => x.ign.toLowerCase() === ign.toLowerCase())) continue;
+          all.push({ ign, cp, matched });
         }
       }
       if (all.length > 0) {
         setItems(all);
-        if (failures > 0) toast(t('tools.cpSomeFailed', { n: failures }), 'err');
       } else {
         setItems(null);
         toast(t('tools.cpCouldNotRead'), 'err');
       }
+    } catch {
+      setItems(null);
+      toast(t('tools.cpCouldNotRead'), 'err');
     } finally {
       setReading(false);
     }
