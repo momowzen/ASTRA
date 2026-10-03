@@ -81,6 +81,7 @@ export default function CpUpdate({ data, toast }: Props) {
         }
       }
       if (all.length > 0) {
+        all.sort((a, b) => Number(a.matched) - Number(b.matched));
         setItems(all);
       } else {
         setItems(null);

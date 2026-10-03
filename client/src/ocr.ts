@@ -104,9 +104,13 @@ export async function ocrImage(image: string): Promise<string> {
   return (data.text ?? '').replace(/\r/g, '');
 }
 
-/** Normalize for matching: lowercase and keep only letters + numbers. */
+/** Normalize for matching: lowercase, unify confusable chars, keep only letters + numbers. */
 export function normalize(s: string): string {
-  return s.toLowerCase().replace(/[^\p{L}\p{N}]/gu, '');
+  return s
+    .toLowerCase()
+    .replace(/[øØ]/g, 'o')
+    .replace(/[ー一丨]/g, '')
+    .replace(/[^\p{L}\p{N}]/gu, '');
 }
 
 function levenshtein(a: string, b: string): number {
