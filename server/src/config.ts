@@ -47,8 +47,13 @@ export const config = {
   maxRows: num(process.env.SYNC_MAX_ROWS, 2000),
   adminUsername: 'admin',
   adminInitialPassword: 'astra1221',
-  // AI reader for attendance scans: 'gemini' (free-tier friendly) or 'deepseek'.
-  aiProvider: (process.env.AI_PROVIDER || 'gemini').toLowerCase(),
+  // Ordered AI reader providers for attendance scans, e.g. 'groq,gemini'.
+  // Each entry falls through to the next when its key is missing or it fails.
+  aiProviders: (process.env.AI_PROVIDER || 'gemini')
+    .split(',')
+    .map((s) => s.trim().toLowerCase())
+    .filter(Boolean),
+  groqApiKey: process.env.GROQ_API_KEY || '',
   geminiApiKey: process.env.GEMINI_API_KEY || '',
   deepseekApiKey: process.env.DEEPSEEK_API_KEY || '',
 };

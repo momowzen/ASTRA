@@ -408,9 +408,45 @@ interface DeepSeekResponse {
   choices?: { message?: { content?: string } }[];
 }
 
+interface GroqResponse {
+  error?: { message?: string };
+  choices?: { message?: { content?: string } }[];
+}
+
 interface GeminiResponse {
   error?: { code?: number; message?: string };
   candidates?: { content?: { parts?: { text?: string }[] } }[];
+}
+
+async function readWithGroq(image: string): Promise<string> {
+  const upstream = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${config.groqApiKey}` },
+    body: JSON.stringify({
+      model: 'qwen/qwen3.8-27b',
+      messages: [
+        { role: 'system', content: ATTENDANCE_PROMPT },
+        {
+          role: 'user',
+          content: [
+            { type: 'text', text: 'Transcribe the player names in this screenshot.' },
+            { type: 'image_url', image_url: { url: image } },
+          ],
+        },
+      ],
+      temperature: 0,
+      reasoning_format: 'hidden',
+      max_tokens: 1000,
+    }),
+    signal: AbortSignal.timeout(60_000),
+  });
+  const data = (await upstream.json().catch(() => null)) as GroqResponse | null;
+  if (!upstream.ok) {
+    throw new Error(String(data?.error?.message ?? `HTTP ${upstream.status}`));
+  }
+  const text = String(data?.choices?.[0]?.message?.content ?? '');
+  if (!text.trim()) throw new Error('empty reading');
+  return text;
 }
 
 /**
@@ -511,6 +547,19 @@ async function readWithGemini(image: string): Promise<string> {
   throw new Error(lastError || 'Gemini request failed');
 }
 
+function readerFor(provider: string): { name: string; key: string; read: (image: string) => Promise<string> } | null {
+  switch (provider) {
+    case 'groq':
+      return { name: 'Groq', key: config.groqApiKey, read: readWithGroq };
+    case 'gemini':
+      return { name: 'Gemini', key: config.geminiApiKey, read: readWithGemini };
+    case 'deepseek':
+      return { name: 'DeepSeek', key: config.deepseekApiKey, read: readWithDeepSeek };
+    default:
+      return null;
+  }
+}
+
 api.post('/ocr/attendance', requireAuth, requireAdmin, async (req, res) => {
   const image = String(req.body?.image ?? '');
   if (!image.startsWith('data:image/') || !image.includes(';base64,')) {
@@ -518,19 +567,26 @@ api.post('/ocr/attendance', requireAuth, requireAdmin, async (req, res) => {
   }
   if (image.length > 12_000_000) return bad(res, 413, 'Image is too large');
 
-  const deepseek = config.aiProvider === 'deepseek';
-  const provider = deepseek ? 'DeepSeek' : 'Gemini';
-  if (!(deepseek ? config.deepseekApiKey : config.geminiApiKey)) {
-    return bad(res, 503, `${deepseek ? 'DEEPSEEK' : 'GEMINI'}_API_KEY is not configured on the server`);
+  const chosen = config.aiProviders.map(readerFor);
+  if (chosen.some((r) => r === null)) {
+    return bad(res, 400, `Unknown AI_PROVIDER value: ${config.aiProviders.join(', ')}`);
+  }
+  const ready = chosen.filter((r): r is NonNullable<typeof r> => r !== null && r.key !== '');
+  if (ready.length === 0) {
+    return bad(res, 503, 'No AI reader key is configured on the server');
   }
 
-  try {
-    const text = deepseek ? await readWithDeepSeek(image) : await readWithGemini(image);
-    res.json({ text });
-  } catch (err) {
-    console.error(`[ocr] ${provider} failed:`, err);
-    bad(res, 502, `${provider}: ${(err as Error).message}`);
+  const errors: string[] = [];
+  for (const reader of ready) {
+    try {
+      const text = await reader.read(image);
+      return res.json({ text });
+    } catch (err) {
+      console.error(`[ocr] ${reader.name} failed:`, err);
+      errors.push(`${reader.name}: ${(err as Error).message}`);
+    }
   }
+  bad(res, 502, errors.join(' | '));
 });
 
 api.post('/cp/update', requireAuth, requireAdmin, async (req, res) => {
