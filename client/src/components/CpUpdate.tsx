@@ -4,7 +4,8 @@ import { ApiError, updateCp } from '../api';
 import type { CpItem } from '../api';
 import { formatCp } from '../utils';
 import { useLang } from '../i18n';
-import { ocrImage, parseCpLine, matchIgn } from '../ocr';
+import { ocrVariants, mergeVariants } from '../ocr';
+import type { ScannedRow } from '../ocr';
 
 interface Props {
   data: DataResponse;
@@ -66,20 +67,25 @@ export default function CpUpdate({ data, toast }: Props) {
     if (images.length === 0) return;
     setReading(true);
     setItems(null);
-    const all: CpItem[] = [];
     try {
+      const igns = roster.map((r) => r.ign);
+      const best = new Map<string, ScannedRow>();
       for (const img of images) {
-        const text = await ocrImage(img.dataUrl);
-        for (const line of text.split('\n')) {
-          const parsed = parseCpLine(line);
-          if (!parsed) continue;
-          const { ign, matched } = matchIgn(parsed.name, roster.map((r) => r.ign));
-          const cp = formatCp(parsed.cp);
-          if (!ign || !cp) continue;
-          if (all.some((x) => x.ign.toLowerCase() === ign.toLowerCase())) continue;
-          all.push({ ign, cp, matched });
+        const variants = await ocrVariants(img.dataUrl);
+        for (const row of mergeVariants(variants, igns)) {
+          if (!row.ign || !row.cp) continue;
+          const key = row.ign.toLowerCase();
+          const prev = best.get(key);
+          if (!prev || row.score > prev.score || (row.score === prev.score && row.size > prev.size)) {
+            best.set(key, row);
+          }
         }
       }
+      const all: CpItem[] = [...best.values()].map((row) => ({
+        ign: row.ign,
+        cp: formatCp(row.cp),
+        matched: row.matched,
+      }));
       if (all.length > 0) {
         all.sort((a, b) => Number(a.matched) - Number(b.matched));
         setItems(all);
