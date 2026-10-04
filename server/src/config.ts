@@ -47,5 +47,8 @@ export const config = {
   maxRows: num(process.env.SYNC_MAX_ROWS, 2000),
   adminUsername: 'admin',
   adminInitialPassword: 'astra1221',
+  // AI reader for attendance scans: 'gemini' (free-tier friendly) or 'deepseek'.
+  aiProvider: (process.env.AI_PROVIDER || 'gemini').toLowerCase(),
+  geminiApiKey: process.env.GEMINI_API_KEY || '',
   deepseekApiKey: process.env.DEEPSEEK_API_KEY || '',
 };

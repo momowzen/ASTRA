@@ -408,48 +408,128 @@ interface DeepSeekResponse {
   choices?: { message?: { content?: string } }[];
 }
 
+interface GeminiResponse {
+  error?: { code?: number; message?: string };
+  candidates?: { content?: { parts?: { text?: string }[] } }[];
+}
+
+/**
+ * Free-tier friendly: models are tried in order, so a per-model daily quota
+ * (429) or a transient overload (503) falls through to the next one. The
+ * lite models reject thinkingConfig (400) and are retried without it.
+ */
+const GEMINI_MODELS = [
+  'gemini-3.5-flash',
+  'gemini-3.6-flash',
+  'gemini-3.7-flash',
+  'gemini-3.8-flash',
+  'gemini-3.5-flash-lite',
+  'gemini-flash-lite-latest',
+  'gemini-3.1-flash-lite',
+];
+
+async function readWithDeepSeek(image: string): Promise<string> {
+  const upstream = await fetch('https://api.deepseek.com/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${config.deepseekApiKey}`,
+    },
+    body: JSON.stringify({
+      model: 'deepseek-flash',
+      messages: [
+        { role: 'system', content: ATTENDANCE_PROMPT },
+        {
+          role: 'user',
+          content: [
+            { type: 'text', text: 'Transcribe the player names in this screenshot.' },
+            { type: 'image_url', image_url: { url: image } },
+          ],
+        },
+      ],
+      stream: false,
+    }),
+    signal: AbortSignal.timeout(60_000),
+  });
+  const data = (await upstream.json().catch(() => null)) as DeepSeekResponse | null;
+  if (!upstream.ok) {
+    throw new Error(String(data?.error?.message ?? `HTTP ${upstream.status}`));
+  }
+  const text = String(data?.choices?.[0]?.message?.content ?? '');
+  if (!text.trim()) throw new Error('empty reading');
+  return text;
+}
+
+async function readWithGemini(image: string): Promise<string> {
+  const mime = image.slice(image.indexOf('data:') + 5, image.indexOf(';'));
+  const data = image.slice(image.indexOf(',') + 1);
+  let lastError = '';
+  for (const model of GEMINI_MODELS) {
+    for (const thinking of [true, false]) {
+      let status = 0;
+      let message = '';
+      try {
+        const upstream = await fetch(
+          `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`,
+          {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'x-goog-api-key': config.geminiApiKey },
+            body: JSON.stringify({
+              contents: [
+                {
+                  parts: [
+                    { text: 'Transcribe the player names in this image.' },
+                    { inline_data: { mime_type: mime, data } },
+                  ],
+                },
+              ],
+              systemInstruction: { parts: [{ text: ATTENDANCE_PROMPT }] },
+              ...(thinking ? { generationConfig: { thinkingConfig: { thinkingBudget: 0 } } } : {}),
+            }),
+            signal: AbortSignal.timeout(60_000),
+          },
+        );
+        const body = (await upstream.json().catch(() => null)) as GeminiResponse | null;
+        status = body?.error?.code ?? upstream.status;
+        if (upstream.ok) {
+          const text = (body?.candidates?.[0]?.content?.parts ?? []).map((p) => p.text ?? '').join('\n');
+          if (text.trim()) return text;
+          lastError = `${model}: empty reading`;
+          break;
+        }
+        message = String(body?.error?.message ?? '').split('\n')[0];
+      } catch (err) {
+        message = (err as Error).message;
+      }
+      lastError = `${model}: ${message || `HTTP ${status}`}`;
+      // Key or permission problems are provider-wide — other models won't help.
+      if (status === 401 || status === 403) throw new Error(lastError);
+      // Only a 400 is worth retrying without thinkingConfig (lite models).
+      if (status !== 400 || !thinking) break;
+    }
+  }
+  throw new Error(lastError || 'Gemini request failed');
+}
+
 api.post('/ocr/attendance', requireAuth, requireAdmin, async (req, res) => {
   const image = String(req.body?.image ?? '');
   if (!image.startsWith('data:image/') || !image.includes(';base64,')) {
     return bad(res, 400, 'A base64 image data URL is required');
   }
   if (image.length > 12_000_000) return bad(res, 413, 'Image is too large');
-  if (!config.deepseekApiKey) return bad(res, 503, 'DEEPSEEK_API_KEY is not configured on the server');
+
+  const deepseek = config.aiProvider === 'deepseek';
+  const provider = deepseek ? 'DeepSeek' : 'Gemini';
+  if (!(deepseek ? config.deepseekApiKey : config.geminiApiKey)) {
+    return bad(res, 503, `${deepseek ? 'DEEPSEEK' : 'GEMINI'}_API_KEY is not configured on the server`);
+  }
 
   try {
-    const upstream = await fetch('https://api.deepseek.com/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${config.deepseekApiKey}`,
-      },
-      body: JSON.stringify({
-        model: 'deepseek-flash',
-        messages: [
-          { role: 'system', content: ATTENDANCE_PROMPT },
-          {
-            role: 'user',
-            content: [
-              { type: 'text', text: 'Transcribe the player names in this screenshot.' },
-              { type: 'image_url', image_url: { url: image } },
-            ],
-          },
-        ],
-        stream: false,
-      }),
-      signal: AbortSignal.timeout(60_000),
-    });
-    const data = (await upstream.json().catch(() => null)) as DeepSeekResponse | null;
-    if (!upstream.ok) {
-      const message = String(data?.error?.message ?? `HTTP ${upstream.status}`);
-      return bad(res, 502, `DeepSeek: ${message}`);
-    }
-    const text = String(data?.choices?.[0]?.message?.content ?? '');
-    if (!text.trim()) return bad(res, 502, 'DeepSeek returned an empty reading');
+    const text = deepseek ? await readWithDeepSeek(image) : await readWithGemini(image);
     res.json({ text });
   } catch (err) {
-    console.error('[ocr] DeepSeek request failed:', err);
-    bad(res, 502, 'Could not reach the AI reader');
+    console.error(`[ocr] ${provider} failed:`, err);
+    bad(res, 502, `${provider}: ${(err as Error).message}`);
   }
 });
 
