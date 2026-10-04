@@ -81,6 +81,18 @@ const OPTION_PALETTE: Record<string, string> = {
   epic: '#8b7cff',
   legend: '#f5b942',
   mythic: '#ff6b7a',
+  'guild leader': '#f5b942',
+  'co-leader': '#ff9d3d',
+  officer: '#8b7cff',
+  'guild support': '#58a6ff',
+  senior: '#a5e34b',
+  core: '#8b7cff',
+  active: '#3ddc97',
+  busy: '#f5b942',
+  reserve: '#58a6ff',
+  probation: '#ff9d3d',
+  'pending transfer': '#ff79c6',
+  inactive: '#ff6b7a',
 };
 
 export function optionColor(value: string): string | undefined {
