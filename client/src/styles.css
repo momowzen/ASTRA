@@ -1485,16 +1485,16 @@ button.cp-ign:hover {
   color: var(--muted);
   font-variant-numeric: tabular-nums;
 }
+.grow {
+  flex: 1;
+  min-width: 0;
+}
 .cp-upload {
   display: flex;
   align-items: center;
   gap: 10px;
   margin-top: 8px;
   flex-wrap: wrap;
-}
-.cp-upload input[type='file'] {
-  color: var(--muted);
-  font-size: 13px;
 }
 .cp-thumbs {
   display: flex;

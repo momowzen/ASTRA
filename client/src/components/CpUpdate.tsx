@@ -180,14 +180,29 @@ export default function CpUpdate({ data, toast }: Props) {
         <div className="panel-card">
           <h3>{t('tools.cpRight')}</h3>
           <div className="cp-upload">
-            <input ref={fileRef} type="file" accept="image/*" multiple onChange={(e) => void onFiles(e)} />
+            <input
+              ref={fileRef}
+              type="file"
+              accept="image/*"
+              multiple
+              hidden
+              onChange={(e) => void onFiles(e)}
+            />
             <button
-              className="btn btn-primary btn-sm"
-              disabled={reading || images.length === 0}
-              onClick={() => void readAll()}
+              className={images.length > 0 ? 'btn' : 'btn btn-primary'}
+              onClick={() => fileRef.current?.click()}
             >
-              {reading ? <span className="spinner" /> : t('tools.cpRead')}
+              {t('tools.cpUpload')}
             </button>
+            {images.length > 0 && (
+              <>
+                <div className="grow" />
+                <button className="btn btn-primary" disabled={reading} onClick={() => void readAll()}>
+                  {reading && <span className="spinner" />}
+                  {t('tools.cpRead')}
+                </button>
+              </>
+            )}
           </div>
 
           {images.length > 0 && (

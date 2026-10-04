@@ -236,7 +236,8 @@ const DICT: Record<string, { en: string; ko: string }> = {
   // ---- admin tools / CP update ----
   'tools.cpUpdate': { en: 'CP Update', ko: 'CP 업데이트' },
   'tools.cpLeft': { en: 'Current CP', ko: '현재 CP' },
-  'tools.cpRight': { en: 'Screenshot reader', ko: '스크린샷 리더' },
+  'tools.cpRight': { en: 'UPLOAD SCREENSHOT', ko: '업로드 스크린샷' },
+  'tools.cpUpload': { en: 'Upload screenshot', ko: '스크린샷 업로드' },
   'tools.cpNoImage': {
     en: 'Upload a screenshot to auto-read IGN and CP.',
     ko: '스크린샷을 업로드하면 IGN과 CP를 자동으로 읽습니다.',
