@@ -172,7 +172,7 @@ export function normalize(s: string): string {
   return s
     .toLowerCase()
     .replace(/[øØ]/g, 'o')
-    .replace(/[ー一丨]/g, '')
+    .replace(/[ー一丨卍]/g, '')
     .replace(/[^\p{L}\p{N}]/gu, '');
 }
 
