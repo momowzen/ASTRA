@@ -4,7 +4,7 @@ import { INTERNAL_TABS } from '../types';
 import type { Column, DataResponse, Session } from '../types';
 import { buildColumns, formatCp, isCpLabel, optionColor } from '../utils';
 import { addRow as apiAddRow, deleteRow as apiDeleteRow, saveCells, ApiError } from '../api';
-import { IconGear, IconGrid, IconLogout, IconPlus, IconSearch, IconTrash } from './icons';
+import { IconBulb, IconGear, IconGrid, IconLogout, IconPlus, IconSearch, IconTrash } from './icons';
 import PasswordModal from './PasswordModal';
 import BossTracker from './BossTracker';
 import GuildRoster from './GuildRoster';
@@ -137,6 +137,7 @@ export default function AdminApp({
   const [addOpen, setAddOpen] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState<number | null>(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [tipOpen, setTipOpen] = useState(false);
   const [busy, setBusy] = useState(false);
 
   const { t } = useLang();
@@ -161,6 +162,7 @@ export default function AdminApp({
   }, []);
 
   const tab = data.tabs.find((t) => t.meta.title === activeTitle) || data.tabs[0];
+  const isBasic = (tab?.meta.title ?? '').toUpperCase() === 'BASIC INFORMATION';
   const allCols = useMemo(() => (tab ? buildColumns(tab.meta) : []), [tab]);
   const projecting = showCol >= 0;
   const cols = useMemo(
@@ -510,7 +512,14 @@ export default function AdminApp({
                   ? t('admin.showingCols', { a: cols.length, b: allCols.length })
                   : t('admin.columnsCount', { a: cols.length })}
               </span>
-              <span className="muted">{t('admin.editHint')}</span>
+              <div className="table-meta-right">
+                <span className="muted">{t('admin.editHint')}</span>
+                {isBasic && (
+                  <button className="btn btn-ghost btn-sm" onClick={() => setTipOpen(true)}>
+                    <IconBulb /> {t('admin.tip')}
+                  </button>
+                )}
+              </div>
             </div>
             <div className="table-scroll">
               <table className="grid">
@@ -644,6 +653,56 @@ export default function AdminApp({
           onClose={() => setSettingsOpen(false)}
           onDone={() => toast(t('admin.passwordUpdated'), 'ok')}
         />
+      )}
+
+      {tipOpen && (
+        <div className="overlay" onMouseDown={(e) => e.target === e.currentTarget && setTipOpen(false)}>
+          <div className="modal wide">
+            <h3>{t('admin.tipTitle')}</h3>
+            <div className="tip-section">
+              <div className="tip-section-title">{t('admin.tipStatus')}</div>
+              {(
+                [
+                  ['Core', 'admin.tipStCore'],
+                  ['Active', 'admin.tipStActive'],
+                  ['Busy', 'admin.tipStBusy'],
+                  ['Reserve', 'admin.tipStReserve'],
+                  ['Probation', 'admin.tipStProbation'],
+                  ['Pending Transfer', 'admin.tipStPending'],
+                  ['Inactive', 'admin.tipStInactive'],
+                ] as const
+              ).map(([label, key]) => (
+                <div className="tip-row" key={label}>
+                  <span className="tip-key">{label}</span>
+                  <span className="tip-desc">{t(key)}</span>
+                </div>
+              ))}
+            </div>
+            <div className="tip-section">
+              <div className="tip-section-title">{t('admin.tipRoles')}</div>
+              {(
+                [
+                  ['Guild Leader', 'admin.tipRoleLeader'],
+                  ['Co-Leader', 'admin.tipRoleCoLeader'],
+                  ['Officer', 'admin.tipRoleOfficer'],
+                  ['Guild Support', 'admin.tipRoleSupport'],
+                  ['Senior', 'admin.tipRoleSenior'],
+                  ['Member', 'admin.tipRoleMember'],
+                ] as const
+              ).map(([label, key]) => (
+                <div className="tip-row" key={label}>
+                  <span className="tip-key">{label}</span>
+                  <span className="tip-desc">{t(key)}</span>
+                </div>
+              ))}
+            </div>
+            <div className="row">
+              <button className="btn btn-primary" onClick={() => setTipOpen(false)}>
+                {t('admin.tipClose')}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

@@ -614,6 +614,11 @@ select option {
   gap: 12px;
   flex-wrap: wrap;
 }
+.table-meta-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
 .table-scroll {
   overflow: auto;
   max-height: calc(100vh - 220px);
@@ -1106,6 +1111,36 @@ table.coll td.ign-col {
   gap: 10px;
   justify-content: flex-end;
   margin-top: 6px;
+}
+.tip-section + .tip-section {
+  margin-top: 18px;
+}
+.tip-section-title {
+  font-family: var(--display);
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--accent);
+  margin-bottom: 6px;
+}
+.tip-row {
+  display: grid;
+  grid-template-columns: 150px 1fr;
+  gap: 12px;
+  align-items: baseline;
+  padding: 7px 0;
+  border-bottom: 1px solid var(--line-soft);
+  font-size: 13px;
+}
+.tip-row:last-child {
+  border-bottom: 0;
+}
+.tip-key {
+  font-weight: 700;
+  white-space: nowrap;
+}
+.tip-desc {
+  color: var(--muted);
 }
 .form-grid {
   display: grid;

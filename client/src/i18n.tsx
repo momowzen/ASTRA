@@ -70,6 +70,60 @@ const DICT: Record<string, { en: string; ko: string }> = {
     en: 'Click any cell to edit · changes save to the sheet instantly',
     ko: '셀을 클릭해 편집하세요 · 변경 사항이 시트에 즉시 저장됩니다',
   },
+  'admin.tip': { en: 'TIP', ko: '팁' },
+  'admin.tipTitle': { en: 'Roles & Status Guide', ko: '역할 · 상태 가이드' },
+  'admin.tipStatus': { en: 'Status', ko: '상태' },
+  'admin.tipRoles': { en: 'Roles', ko: '역할' },
+  'admin.tipClose': { en: 'Close', ko: '닫기' },
+  'admin.tipStCore': {
+    en: '≥30% attendance + High CP (150k+).',
+    ko: '출석 30% 이상 + 높은 CP (15만 이상).',
+  },
+  'admin.tipStActive': {
+    en: '≥30% attendance. Regular participant.',
+    ko: '출석 30% 이상. 정기 참여자.',
+  },
+  'admin.tipStBusy': {
+    en: 'Dropped below 30% directly from Core or Active.',
+    ko: 'Core 또는 Active에서 바로 30% 미만으로 하락.',
+  },
+  'admin.tipStReserve': {
+    en: '<30% attendance. No track record, or unexplained low attendance over time.',
+    ko: '출석 30% 미만. 이력이 없거나, 기간 내내 설명되지 않는 저조한 출석.',
+  },
+  'admin.tipStProbation': {
+    en: 'New member (2–3 weeks observation).',
+    ko: '신규 멤버 (2–3주 관찰 기간).',
+  },
+  'admin.tipStPending': {
+    en: 'Discord approved; waiting for in-game application.',
+    ko: '디스코드 승인 완료; 인게임 신청 대기 중.',
+  },
+  'admin.tipStInactive': {
+    en: 'Absent without notice (14+ consecutive days).',
+    ko: '통보 없이 부재 (14일 이상 연속).',
+  },
+  'admin.tipRoleLeader': { en: 'Final decision-making authority.', ko: '최종 결정권을 가짐.' },
+  'admin.tipRoleCoLeader': {
+    en: 'Leads alongside the Guild Leader and supports guild oversight.',
+    ko: '길드 리더와 함께 이끌며 길드 감독을 지원.',
+  },
+  'admin.tipRoleOfficer': {
+    en: 'Works directly with the Guild Leader and Co-Leader on guild planning and coordination. Is kept informed of guild plans first.',
+    ko: '길드 리더 및 Co-Leader와 직접 함께 길드 계획과 조율을 담당하며, 길드 계획을 가장 먼저 공유받음.',
+  },
+  'admin.tipRoleSupport': {
+    en: 'Helps with Discord tasks and member concerns. May lead battles or parties when leaders and Officers are unavailable.',
+    ko: '디스코드 업무와 멤버 문의를 돕습니다. 리더와 Officer이 부재 시 배틀이나 파티를 이끌 수 있음.',
+  },
+  'admin.tipRoleSenior': {
+    en: 'Leader-appointed for proven reliability, consistent contribution, and clear communication. A respected voice.',
+    ko: '리더가 임명. 입증된 신뢰성, 꾸준한 기여, 명확한 소통. 존중받는 목소리.',
+  },
+  'admin.tipRoleMember': {
+    en: 'Standard member role. Everyone starts here.',
+    ko: '표준 멤버 직책. 모든 멤버는 여기서 시작합니다.',
+  },
   'admin.noRows': { en: 'No rows match your filters.', ko: '필터 조건에 맞는 행이 없습니다.' },
   'admin.addRowDesc': {
     en: 'The first column (IGN) is required and must be unique. Leave the rest empty to fill in later.',
