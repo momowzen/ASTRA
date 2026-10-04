@@ -244,9 +244,9 @@ export default function MemberApp({
     data.tabs.find((t) => t.meta.title.toUpperCase() === 'BASIC INFORMATION') ||
     data.tabs.find((t) => (t.meta.headers[0]?.[0] || '').trim().toUpperCase() === 'IGN');
 
-  const equipTab = data.tabs.find((t) => t.meta.title.toUpperCase() === 'EQUIPMENTS');
+  const equipTab = data.tabs.find((t) => t.meta.title.toUpperCase() === 'EQUIPMENT');
 
-  const DASHBOARD_TITLES = ['BASIC INFORMATION', 'EQUIPMENTS'];
+  const DASHBOARD_TITLES = ['BASIC INFORMATION', 'EQUIPMENT'];
   const memberTabs = data.tabs.filter(
     (t) =>
       !DASHBOARD_TITLES.includes(t.meta.title.toUpperCase()) &&
