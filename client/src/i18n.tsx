@@ -237,7 +237,7 @@ const DICT: Record<string, { en: string; ko: string }> = {
   'tools.cpUpdate': { en: 'CP Update', ko: 'CP 업데이트' },
   'tools.cpLeft': { en: 'Current CP', ko: '현재 CP' },
   'tools.cpRight': { en: 'UPLOAD SCREENSHOT', ko: '업로드 스크린샷' },
-  'tools.cpUpload': { en: 'Upload screenshot', ko: '스크린샷 업로드' },
+  'tools.cpUpload': { en: 'Upload', ko: '업로드' },
   'tools.cpNoImage': {
     en: 'Upload a screenshot to auto-read IGN and CP.',
     ko: '스크린샷을 업로드하면 IGN과 CP를 자동으로 읽습니다.',
@@ -245,7 +245,6 @@ const DICT: Record<string, { en: string; ko: string }> = {
   'tools.cpMatched': { en: 'Matched', ko: '일치' },
   'tools.cpUnmatched': { en: 'Unmatched', ko: '불일치' },
   'tools.cpReading': { en: 'Reading screenshot…', ko: '스크린샷 읽는 중…' },
-  'tools.cpRead': { en: 'Read', ko: '읽기' },
   'tools.cpCouldNotRead': { en: 'Could not read the screenshot', ko: '스크린샷을 읽을 수 없습니다' },
   'tools.cpSomeFailed': { en: '{n} screenshot(s) failed to read', ko: '스크린샷 {n}개를 읽지 못했습니다' },
   'tools.cpCouldNotSave': { en: 'Could not update CP', ko: 'CP를 업데이트할 수 없습니다' },

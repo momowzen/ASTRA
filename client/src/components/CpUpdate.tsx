@@ -46,6 +46,8 @@ export default function CpUpdate({ data, toast }: Props) {
   const [manualCp, setManualCp] = useState('');
   const [manualSaving, setManualSaving] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
+  const readingRef = useRef(false);
+  const pendingRead = useRef<Screenshot[] | null>(null);
 
   function openManual(ign: string, cp: string) {
     setManual(ign);
@@ -79,22 +81,29 @@ export default function CpUpdate({ data, toast }: Props) {
         toast(t('tools.cpCouldNotRead'), 'err');
       }
     }
-    setImages((prev) => [...prev, ...loaded]);
+    const merged = [...images, ...loaded];
+    setImages(merged);
     if (fileRef.current) fileRef.current.value = '';
+    if (loaded.length > 0) void readAll(merged);
   }
 
   function removeImage(index: number) {
     setImages((prev) => prev.filter((_, i) => i !== index));
   }
 
-  async function readAll() {
-    if (images.length === 0) return;
+  async function readAll(list: Screenshot[] = images) {
+    if (list.length === 0) return;
+    if (readingRef.current) {
+      pendingRead.current = list;
+      return;
+    }
+    readingRef.current = true;
     setReading(true);
     setItems(null);
     try {
       const igns = roster.map((r) => r.ign);
       const best = new Map<string, ScannedRow>();
-      for (const img of images) {
+      for (const img of list) {
         const variants = await ocrVariants(img.dataUrl);
         for (const row of mergeVariants(variants, igns)) {
           if (!row.ign || !row.cp) continue;
@@ -121,7 +130,13 @@ export default function CpUpdate({ data, toast }: Props) {
       setItems(null);
       toast(t('tools.cpCouldNotRead'), 'err');
     } finally {
+      readingRef.current = false;
       setReading(false);
+      const next = pendingRead.current;
+      if (next) {
+        pendingRead.current = null;
+        void readAll(next);
+      }
     }
   }
 
@@ -188,21 +203,9 @@ export default function CpUpdate({ data, toast }: Props) {
               hidden
               onChange={(e) => void onFiles(e)}
             />
-            <button
-              className={images.length > 0 ? 'btn' : 'btn btn-primary'}
-              onClick={() => fileRef.current?.click()}
-            >
+            <button className="btn btn-primary" onClick={() => fileRef.current?.click()}>
               {t('tools.cpUpload')}
             </button>
-            {images.length > 0 && (
-              <>
-                <div className="grow" />
-                <button className="btn btn-primary" disabled={reading} onClick={() => void readAll()}>
-                  {reading && <span className="spinner" />}
-                  {t('tools.cpRead')}
-                </button>
-              </>
-            )}
           </div>
 
           {images.length > 0 && (
