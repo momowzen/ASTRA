@@ -394,6 +394,65 @@ api.post('/boss/distribute', requireAuth, requireAdmin, async (req, res) => {
   }
 });
 
+const ATTENDANCE_PROMPT = `You transcribe player names from a game guild screenshot.
+Output ONLY the player names visible in the image, one per line, in reading order.
+Rules:
+- Transcribe each name exactly as displayed, including decorations, spaces, punctuation, symbols and mixed scripts (e.g. "A \u00b7 \u536dTotik\u536d", "A . y").
+- Do NOT correct spelling, do NOT translate.
+- Do not output CP numbers, stat values, UI labels, headers, buttons, guild names or anything that is not a player name.
+- No numbering, no bullets, no quotes, no commentary.
+- If no player names are visible, output nothing.`;
+
+interface DeepSeekResponse {
+  error?: { message?: string };
+  choices?: { message?: { content?: string } }[];
+}
+
+api.post('/ocr/attendance', requireAuth, requireAdmin, async (req, res) => {
+  const image = String(req.body?.image ?? '');
+  if (!image.startsWith('data:image/') || !image.includes(';base64,')) {
+    return bad(res, 400, 'A base64 image data URL is required');
+  }
+  if (image.length > 12_000_000) return bad(res, 413, 'Image is too large');
+  if (!config.deepseekApiKey) return bad(res, 503, 'DEEPSEEK_API_KEY is not configured on the server');
+
+  try {
+    const upstream = await fetch('https://api.deepseek.com/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${config.deepseekApiKey}`,
+      },
+      body: JSON.stringify({
+        model: 'deepseek-flash',
+        messages: [
+          { role: 'system', content: ATTENDANCE_PROMPT },
+          {
+            role: 'user',
+            content: [
+              { type: 'text', text: 'Transcribe the player names in this screenshot.' },
+              { type: 'image_url', image_url: { url: image } },
+            ],
+          },
+        ],
+        stream: false,
+      }),
+      signal: AbortSignal.timeout(60_000),
+    });
+    const data = (await upstream.json().catch(() => null)) as DeepSeekResponse | null;
+    if (!upstream.ok) {
+      const message = String(data?.error?.message ?? `HTTP ${upstream.status}`);
+      return bad(res, 502, `DeepSeek: ${message}`);
+    }
+    const text = String(data?.choices?.[0]?.message?.content ?? '');
+    if (!text.trim()) return bad(res, 502, 'DeepSeek returned an empty reading');
+    res.json({ text });
+  } catch (err) {
+    console.error('[ocr] DeepSeek request failed:', err);
+    bad(res, 502, 'Could not reach the AI reader');
+  }
+});
+
 api.post('/cp/update', requireAuth, requireAdmin, async (req, res) => {
   const items = req.body?.items;
   if (!Array.isArray(items) || items.length === 0) return bad(res, 400, 'No CP items supplied');

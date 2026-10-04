@@ -47,4 +47,5 @@ export const config = {
   maxRows: num(process.env.SYNC_MAX_ROWS, 2000),
   adminUsername: 'admin',
   adminInitialPassword: 'astra1221',
+  deepseekApiKey: process.env.DEEPSEEK_API_KEY || '',
 };

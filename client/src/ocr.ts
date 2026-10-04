@@ -1,5 +1,6 @@
 import { createWorker, PSM, setLogging } from 'tesseract.js';
 import type { Worker } from 'tesseract.js';
+import { request } from './api';
 
 setLogging(false);
 
@@ -147,6 +148,10 @@ async function runPasses(image: string, psm: PSM, korBinarize: boolean): Promise
  *   mode splits (and sometimes drops entirely).
  * Sequential rounds keep same-worker setParameters calls race-free.
  */
+/**
+ * Tesseract attendance reader. Disabled while ATTENDANCE_READER is 'ai';
+ * flip the flag to 'tesseract' to restore these passes (e.g. offline).
+ */
 async function ocrAttendance(image: string): Promise<string[]> {
   const binarized = await preprocess(image, 3, true);
   const gray4 = await preprocess(image, 4, false);
@@ -162,9 +167,27 @@ async function ocrAttendance(image: string): Promise<string[]> {
   return [eng, kor, jpn, korBig, engBlock];
 }
 
-/** Run every OCR language pass on one image and return the raw text of each. */
+/**
+ * Reader for attendance scans: 'ai' sends the screenshot to the server's
+ * DeepSeek vision route (returns names as text); 'tesseract' runs the local
+ * multi-language passes above.
+ */
+export const ATTENDANCE_READER: 'ai' | 'tesseract' = 'ai';
+
+async function ocrAttendanceAI(image: string): Promise<string[]> {
+  const { text } = await request<{ text: string }>('/ocr/attendance', {
+    method: 'POST',
+    body: JSON.stringify({ image }),
+  });
+  return [text];
+}
+
+/** Run the configured reader for one image and return the raw text of each pass. */
 export async function ocrVariants(image: string, flow: OcrFlow = 'cp'): Promise<string[]> {
-  return flow === 'attendance' ? ocrAttendance(image) : runPasses(image, PSM.SINGLE_BLOCK, false);
+  if (flow === 'attendance') {
+    return ATTENDANCE_READER === 'ai' ? ocrAttendanceAI(image) : ocrAttendance(image);
+  }
+  return runPasses(image, PSM.SINGLE_BLOCK, false);
 }
 
 /** Normalize for matching: lowercase, unify confusable chars, keep only letters + numbers. */

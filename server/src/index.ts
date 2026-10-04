@@ -8,7 +8,8 @@ import { ensureCredentialsTab } from './credentials';
 async function main(): Promise<void> {
   const app = express();
   app.set('trust proxy', 1);
-  app.use(express.json({ limit: '1mb' }));
+  // 10mb: attendance OCR forwards base64 screenshots to the AI reader.
+  app.use(express.json({ limit: '10mb' }));
   app.use(
     cors({
       origin(origin, cb) {

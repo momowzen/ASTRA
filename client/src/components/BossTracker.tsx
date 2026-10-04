@@ -287,17 +287,19 @@ function AttendanceView({
     setScanning(true);
     try {
       const found = new Set<string>();
+      let scanErr = '';
       for (const f of files) {
         try {
           const dataUrl = await fileToDataUrl(f);
           const variants = await ocrVariants(dataUrl, 'attendance');
           for (const ign of scanPartyIgns(variants, memberNames)) found.add(ign);
-        } catch {
-          /* unreadable file — keep going with the rest */
+        } catch (err) {
+          /* unreadable file or reader failure — keep going with the rest */
+          if (!scanErr) scanErr = err instanceof ApiError ? err.message : (err as Error)?.message || '';
         }
       }
       if (found.size === 0) {
-        toast(t('boss.scanNone'), 'err');
+        toast(scanErr || t('boss.scanNone'), 'err');
       } else {
         setSelected((prev) => new Set([...prev, ...found]));
         toast(t('boss.scanDone', { n: found.size }), 'ok');
