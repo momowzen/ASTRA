@@ -132,7 +132,7 @@ export default function AdminApp({
   const [filterVal, setFilterVal] = useState('');
   const [bossView, setBossView] = useState<'dashboard' | 'attendance' | 'config' | null>(null);
   const [toolView, setToolView] = useState<'distribution' | 'cp-update' | null>(null);
-  const [rosterView, setRosterView] = useState(false);
+  const [rosterView, setRosterView] = useState(true);
   const [editing, setEditing] = useState<{ row: number; col: number } | null>(null);
   const [addOpen, setAddOpen] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState<number | null>(null);

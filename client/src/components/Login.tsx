@@ -1,7 +1,7 @@
 import { FormEvent, useState } from 'react';
 import { login, ApiError } from '../api';
 import type { Session } from '../types';
-import { useLang } from '../i18n';
+import { LangToggle, useLang } from '../i18n';
 
 export default function Login({ onDone }: { onDone: (session: Session) => void }) {
   const { t } = useLang();
@@ -28,6 +28,9 @@ export default function Login({ onDone }: { onDone: (session: Session) => void }
   return (
     <div className="auth">
       <div className="auth-card">
+        <div className="auth-lang">
+          <LangToggle />
+        </div>
         <div className="brand">
           <img className="mark" src="./assets/logo.png" alt="" />
           <div>
