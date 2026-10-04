@@ -199,7 +199,7 @@ function CollectionCell({
 
   if (empty) {
     return (
-      <button className="cell-btn" title={t('cell.mark')} onClick={() => void onCommit('o')}>
+      <button className="cell-btn" title={t('cell.mark')} onClick={() => void onCommit('✔')}>
         ·
       </button>
     );

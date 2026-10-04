@@ -30,7 +30,21 @@ export function buildColumns(meta: TabMeta): Column[] {
   return cols;
 }
 
-const MARKS = new Set(['o', 'v', 'x', '✓', '√', '1', 'y', 'yes', 'true', 'ok', 'done']);
+const MARKS = new Set([
+  'o',
+  'v',
+  'x',
+  '✔',
+  '✘',
+  '✓',
+  '√',
+  '1',
+  'y',
+  'yes',
+  'true',
+  'ok',
+  'done',
+]);
 
 export function isMark(value: string): boolean {
   return MARKS.has(value.trim().toLowerCase());
@@ -61,6 +75,8 @@ export function formatCp(value: string): string {
 const OPTION_PALETTE: Record<string, string> = {
   o: '#3ddc97',
   x: '#ff6b7a',
+  '✔': '#3ddc97',
+  '✘': '#ff6b7a',
   rare: '#58a6ff',
   epic: '#8b7cff',
   legend: '#f5b942',
