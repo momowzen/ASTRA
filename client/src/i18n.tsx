@@ -199,7 +199,7 @@ const DICT: Record<string, { en: string; ko: string; ja: string }> = {
   'roster.bracket5': { en: '≥ 200K', ko: '≥ 200K', ja: "≥ 200K" },
   'roster.topMeta': { en: 'TOP 10 CP', ko: 'TOP 10 CP', ja: "TOP 10 CP" },
   'roster.cp': { en: 'CP', ko: 'CP', ja: "CP" },
-  'roster.mainWeapon': { en: 'Main weapon', ko: '메인 무기', ja: "メイン武器" },
+  'roster.mainWeapon': { en: 'Main Weapon', ko: '메인 무기', ja: "メイン武器" },
   'roster.role': { en: 'Role', ko: '역할', ja: "役割" },
   'roster.status': { en: 'Status', ko: '상태', ja: "ステータス" },
   'roster.summaryMeta': {
@@ -341,7 +341,7 @@ const DICT: Record<string, { en: string; ko: string; ja: string }> = {
   'col.status': { en: 'Status', ko: '상태', ja: "ステータス" },
   'col.nickname': { en: 'Nickname', ko: '닉네임', ja: "ニックネーム" },
   'col.notes': { en: 'Notes', ko: '메모', ja: "メモ" },
-  'col.mainWeapon': { en: 'Main weapon', ko: '메인 무기', ja: "メイン武器" },
+  'col.mainWeapon': { en: 'Main Weapon', ko: '메인 무기', ja: "メイン武器" },
   'col.subWeapon': { en: 'Sub weapon', ko: '보조 무기', ja: "サブ武器" },
   'col.armor': { en: 'Armor', ko: '방어구', ja: "アーマー" },
   'col.necklace': { en: 'Necklace', ko: '목걸이', ja: "ネックレス" },
