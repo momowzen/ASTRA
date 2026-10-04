@@ -127,11 +127,6 @@ async function recognize(lang: OcrLanguage, image: string, psm: PSM): Promise<st
  */
 export type OcrFlow = 'cp' | 'attendance';
 
-const FLOW_PSM: Record<OcrFlow, PSM> = {
-  cp: PSM.SINGLE_BLOCK,
-  attendance: PSM.SPARSE_TEXT,
-};
-
 async function runPasses(image: string, psm: PSM, korBinarize: boolean): Promise<string[]> {
   const binarized = await preprocess(image, 3, true);
   const grayscale = await preprocess(image, 3, false);
@@ -143,9 +138,33 @@ async function runPasses(image: string, psm: PSM, korBinarize: boolean): Promise
   return [eng, kor, jpn];
 }
 
+/**
+ * Attendance scans union three tuned passes on top of the base passes, because
+ * game-UI lists and app tables break differently:
+ * - sparse binarized (base) reads latin roster names in app tables;
+ * - kor on 4x grayscale reads Hangul names like 꾸뀨꾸뀨 that binarize into mush;
+ * - eng as a single block rejoins "A - VIZ" with its trailing CP, which sparse
+ *   mode splits (and sometimes drops entirely).
+ * Sequential rounds keep same-worker setParameters calls race-free.
+ */
+async function ocrAttendance(image: string): Promise<string[]> {
+  const binarized = await preprocess(image, 3, true);
+  const gray4 = await preprocess(image, 4, false);
+  const [eng, kor, jpn] = await Promise.all([
+    recognize('eng', binarized, PSM.SPARSE_TEXT),
+    recognize('kor', binarized, PSM.SPARSE_TEXT),
+    recognize('jpn', binarized, PSM.SPARSE_TEXT),
+  ]);
+  const [korBig, engBlock] = await Promise.all([
+    recognize('kor', gray4, PSM.SPARSE_TEXT),
+    recognize('eng', binarized, PSM.SINGLE_BLOCK),
+  ]);
+  return [eng, kor, jpn, korBig, engBlock];
+}
+
 /** Run every OCR language pass on one image and return the raw text of each. */
 export async function ocrVariants(image: string, flow: OcrFlow = 'cp'): Promise<string[]> {
-  return runPasses(image, FLOW_PSM[flow], flow === 'attendance');
+  return flow === 'attendance' ? ocrAttendance(image) : runPasses(image, PSM.SINGLE_BLOCK, false);
 }
 
 /** Normalize for matching: lowercase, unify confusable chars, keep only letters + numbers. */

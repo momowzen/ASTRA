@@ -1328,11 +1328,6 @@ table.coll td.ign-col {
   white-space: nowrap;
   font-weight: 500;
 }
-.att-pts {
-  color: var(--faint);
-  font-variant-numeric: tabular-nums;
-  font-size: 12px;
-}
 .top-cell {
   color: #f5b942;
   font-weight: 800;

@@ -405,7 +405,6 @@ function AttendanceView({
               >
                 <input type="checkbox" checked={on} readOnly />
                 <span className="att-ign">{name}</span>
-                <span className="att-pts">{pointsByIgn.get(name) ?? 0}</span>
               </div>
             );
           })}
