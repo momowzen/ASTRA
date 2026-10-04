@@ -224,7 +224,6 @@ const DICT: Record<string, { en: string; ko: string }> = {
     en: 'No attendance points recorded yet.',
     ko: '아직 기록된 출석 포인트가 없습니다.',
   },
-  'tools.preview': { en: 'Preview — nothing saved yet', ko: '미리보기 — 아직 저장되지 않음' },
   'tools.couldNot': { en: 'Could not distribute', ko: '분배를 완료할 수 없습니다' },
   'tools.confirmTitle': { en: 'Distribute diamonds?', ko: '다이아몬드를 분배할까요?' },
   'tools.confirmHint': {
@@ -236,7 +235,7 @@ const DICT: Record<string, { en: string; ko: string }> = {
   // ---- admin tools / CP update ----
   'tools.cpUpdate': { en: 'CP Update', ko: 'CP 업데이트' },
   'tools.cpLeft': { en: 'Current CP', ko: '현재 CP' },
-  'tools.cpRight': { en: 'UPLOAD SCREENSHOT', ko: '업로드 스크린샷' },
+  'tools.cpRight': { en: 'Screenshot', ko: '스크린샷' },
   'tools.cpUpload': { en: 'Upload', ko: '업로드' },
   'tools.cpNoImage': {
     en: 'Upload a screenshot to auto-read IGN and CP.',

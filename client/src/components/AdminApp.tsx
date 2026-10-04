@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import type { RefObject } from 'react';
 import { INTERNAL_TABS } from '../types';
 import type { Column, DataResponse, Session } from '../types';
@@ -140,6 +140,25 @@ export default function AdminApp({
   const [busy, setBusy] = useState(false);
 
   const { t } = useLang();
+
+  // Views that should fill the viewport exactly: the page never scrolls and the
+  // panels keep a uniform 22px gap on every side (list bodies scroll instead).
+  const fit = toolView === 'distribution' || toolView === 'cp-update' || (!rosterView && !bossView && !toolView);
+
+  useLayoutEffect(() => {
+    const el = document.querySelector<HTMLElement>('.topbar');
+    if (!el) return;
+    const measure = () =>
+      document.documentElement.style.setProperty('--topbar-h', `${Math.round(el.getBoundingClientRect().height)}px`);
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(el);
+    window.addEventListener('resize', measure);
+    return () => {
+      ro.disconnect();
+      window.removeEventListener('resize', measure);
+    };
+  }, []);
 
   const tab = data.tabs.find((t) => t.meta.title === activeTitle) || data.tabs[0];
   const allCols = useMemo(() => (tab ? buildColumns(tab.meta) : []), [tab]);
@@ -467,7 +486,7 @@ export default function AdminApp({
           <LangToggle />
         </header>
 
-        <div className="content">
+        <div className={fit ? 'content content-fit' : 'content'}>
           {rosterView ? (
             <GuildRoster data={data} />
           ) : bossView ? (

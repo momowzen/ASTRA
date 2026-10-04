@@ -154,7 +154,6 @@ export default function AdminTools({ data, toast }: Props) {
                   {saving ? <span className="spinner" /> : t('tools.save')}
                 </button>
               </div>
-              <div className="announce-note">{t('tools.preview')}</div>
             </>
           ) : (
             <div className="announce-saved">

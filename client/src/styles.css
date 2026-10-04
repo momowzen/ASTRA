@@ -531,11 +531,67 @@ select option {
   padding: 22px;
   flex: 1;
   min-width: 0;
+  display: flex;
+  flex-direction: column;
 }
 .shell-member .content {
   display: flex;
   flex-direction: column;
   min-height: 0;
+}
+
+/* Views flagged .content-fit (sheet tabs, CP update, distribution) fill the
+   viewport exactly: --topbar-h is measured at runtime by AdminApp, so the card
+   keeps a uniform 22px gap on all four sides and only inner lists scroll. */
+@media (min-width: 901px) {
+  .content-fit {
+    flex: none;
+    height: calc(100vh - var(--topbar-h, 66px));
+    overflow: hidden;
+  }
+  .content-fit > .table-card {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+  }
+  .content-fit .table-meta {
+    flex: none;
+  }
+  .content-fit .table-scroll {
+    flex: 1;
+    min-height: 0;
+    max-height: none;
+  }
+  .content-fit > .cp-update {
+    height: auto;
+    flex: 1;
+    min-height: 0;
+  }
+  .content-fit > .boss-view {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  .content-fit .announce {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+  }
+  .content-fit .announce-head,
+  .content-fit .announce-stats,
+  .content-fit .announce-actions,
+  .content-fit .announce-saved {
+    flex: none;
+  }
+  .content-fit .announce-table {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+  }
 }
 
 /* ---------- data table ---------- */
@@ -1359,11 +1415,11 @@ table.grid.boss-config th:not(.ign-col) {
   border: 1px solid var(--line-soft);
   border-radius: var(--radius);
   box-shadow: 0 12px 34px rgba(0, 0, 0, 0.25);
-  padding: 30px 28px;
+  padding: 24px 26px;
 }
 .announce-head {
   text-align: center;
-  margin-bottom: 20px;
+  margin-bottom: 16px;
 }
 .announce-head h2 {
   font-family: var(--display);
@@ -1385,13 +1441,21 @@ table.grid.boss-config th:not(.ign-col) {
   gap: 12px;
   justify-content: center;
   flex-wrap: wrap;
-  margin-bottom: 20px;
+  margin-bottom: 16px;
 }
 .announce-stats .stat-card {
-  flex: 0 1 180px;
+  flex: 0 1 160px;
+  padding: 10px 16px;
+}
+.announce-stats .stat-label {
+  font-size: 10px;
+}
+.announce-stats .stat-value {
+  font-size: 20px;
+  margin-top: 2px;
 }
 .announce-table {
-  margin-bottom: 22px;
+  margin-bottom: 16px;
 }
 .dist-diamond {
   color: #f5b942;
@@ -1402,15 +1466,10 @@ table.grid.boss-config th:not(.ign-col) {
   gap: 10px;
   justify-content: center;
   align-items: center;
+  padding-top: 4px;
 }
 .announce-actions .input {
   width: 200px;
-}
-.announce-note {
-  text-align: center;
-  color: var(--faint);
-  font-size: 12px;
-  margin-top: 12px;
 }
 .announce-saved {
   text-align: center;
