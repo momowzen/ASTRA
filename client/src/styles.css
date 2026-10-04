@@ -1182,6 +1182,70 @@ table.coll td.ign-col {
   margin-top: 6px;
 }
 
+/* ---------- guild roster ---------- */
+
+.roster-view {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.panel-card h3 + .dist-list,
+.panel-card h3 + .muted,
+.panel-card h3 + .empty {
+  margin-top: 14px;
+}
+
+.dist-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.dist-row {
+  display: grid;
+  grid-template-columns: 130px 1fr 64px;
+  gap: 12px;
+  align-items: center;
+  font-size: 13px;
+}
+.dist-label {
+  color: var(--muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.dist-track {
+  height: 8px;
+  background: var(--panel-3);
+  border-radius: 99px;
+  overflow: hidden;
+}
+.dist-fill {
+  display: block;
+  height: 100%;
+  min-width: 2px;
+  background: linear-gradient(90deg, var(--accent), rgba(139, 124, 255, 0.45));
+  border-radius: 99px;
+}
+.dist-count {
+  text-align: right;
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+}
+.roster-coverage-meta {
+  font-size: 13px;
+}
+.roster-view .panel-card {
+  flex: none;
+}
+
+@media (max-width: 640px) {
+  .dist-row {
+    grid-template-columns: 96px 1fr 56px;
+    gap: 8px;
+  }
+}
+
 .att-toolbar {
   display: flex;
   align-items: flex-end;

@@ -7,6 +7,7 @@ import { addRow as apiAddRow, deleteRow as apiDeleteRow, saveCells, ApiError } f
 import { IconGear, IconGrid, IconLogout, IconPlus, IconSearch, IconTrash } from './icons';
 import PasswordModal from './PasswordModal';
 import BossTracker from './BossTracker';
+import GuildRoster from './GuildRoster';
 import AdminTools from './AdminTools';
 import CpUpdate from './CpUpdate';
 import { LangToggle, useLang } from '../i18n';
@@ -131,6 +132,7 @@ export default function AdminApp({
   const [filterVal, setFilterVal] = useState('');
   const [bossView, setBossView] = useState<'dashboard' | 'attendance' | 'config' | null>(null);
   const [toolView, setToolView] = useState<'distribution' | 'cp-update' | null>(null);
+  const [rosterView, setRosterView] = useState(false);
   const [editing, setEditing] = useState<{ row: number; col: number } | null>(null);
   const [addOpen, setAddOpen] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState<number | null>(null);
@@ -238,12 +240,31 @@ export default function AdminApp({
           </div>
         </div>
 
+        <div className="section-label">{t('admin.rosterSection')}</div>
+        <button
+          className={`nav-item nav-caps ${rosterView ? 'active' : ''}`}
+          onClick={() => {
+            setRosterView(true);
+            setBossView(null);
+            setToolView(null);
+            setEditing(null);
+            setShowCol(-1);
+            setFilterVal('');
+          }}
+        >
+          <span className="ico">
+            <IconGrid />
+          </span>
+          {t('admin.rosterOverview')}
+        </button>
+
         <div className="section-label">{t('admin.trackerSection')}</div>
         <button
           className={`nav-item nav-caps ${bossView === 'dashboard' ? 'active' : ''}`}
           onClick={() => {
             setBossView('dashboard');
             setToolView(null);
+            setRosterView(false);
           }}
         >
           <span className="ico">
@@ -256,6 +277,7 @@ export default function AdminApp({
           onClick={() => {
             setBossView('attendance');
             setToolView(null);
+            setRosterView(false);
           }}
         >
           <span className="ico">
@@ -268,6 +290,7 @@ export default function AdminApp({
           onClick={() => {
             setBossView('config');
             setToolView(null);
+            setRosterView(false);
           }}
         >
           <span className="ico">
@@ -282,6 +305,7 @@ export default function AdminApp({
           onClick={() => {
             setToolView('distribution');
             setBossView(null);
+            setRosterView(false);
             setEditing(null);
             setShowCol(-1);
             setFilterVal('');
@@ -297,6 +321,7 @@ export default function AdminApp({
           onClick={() => {
             setToolView('cp-update');
             setBossView(null);
+            setRosterView(false);
             setEditing(null);
             setShowCol(-1);
             setFilterVal('');
@@ -315,11 +340,12 @@ export default function AdminApp({
             .map((t) => (
               <button
                 key={t.meta.title}
-                className={`nav-item ${bossView === null && toolView === null && t.meta.title === tab?.meta.title ? 'active' : ''}`}
+                className={`nav-item ${!bossView && !toolView && !rosterView && t.meta.title === tab?.meta.title ? 'active' : ''}`}
                 onClick={() => {
                   setActiveTitle(t.meta.title);
                   setBossView(null);
                   setToolView(null);
+                  setRosterView(false);
                   setEditing(null);
                   setShowCol(-1);
                   setFilterVal('');
@@ -355,20 +381,22 @@ export default function AdminApp({
       <main className="main">
         <header className="topbar">
           <h2>
-            {bossView
-              ? `${t('admin.bossTitle')} · ${
-                  bossView === 'dashboard'
-                    ? t('admin.dashboard')
-                    : bossView === 'attendance'
-                      ? t('admin.attendance')
-                      : t('admin.bossConfig')
-                }`
-              : toolView
-                ? `${t('tools.section')} · ${toolView === 'cp-update' ? t('tools.cpUpdate') : t('tools.distribution')}`
-                : tab?.meta.title ?? t('member.loading')}
+            {rosterView
+              ? `${t('admin.rosterSection')} · ${t('admin.rosterOverview')}`
+              : bossView
+                ? `${t('admin.bossTitle')} · ${
+                    bossView === 'dashboard'
+                      ? t('admin.dashboard')
+                      : bossView === 'attendance'
+                        ? t('admin.attendance')
+                        : t('admin.bossConfig')
+                  }`
+                : toolView
+                  ? `${t('tools.section')} · ${toolView === 'cp-update' ? t('tools.cpUpdate') : t('tools.distribution')}`
+                  : tab?.meta.title ?? t('member.loading')}
           </h2>
           <div className="grow" />
-          {!bossView && !toolView && (
+          {!bossView && !toolView && !rosterView && (
             <div className="toolbar">
               <div className="search">
                 <IconSearch />
@@ -440,7 +468,9 @@ export default function AdminApp({
         </header>
 
         <div className="content">
-          {bossView ? (
+          {rosterView ? (
+            <GuildRoster data={data} />
+          ) : bossView ? (
             <BossTracker view={bossView} data={data} onPatch={onPatch} toast={toast} />
           ) : toolView ? (
             toolView === 'cp-update' ? (

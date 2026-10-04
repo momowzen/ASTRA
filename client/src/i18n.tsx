@@ -48,6 +48,8 @@ const DICT: Record<string, { en: string; ko: string }> = {
 
   // ---- admin ----
   'admin.trackerSection': { en: 'Boss Attendance Tracker', ko: '보스 출석 트래커' },
+  'admin.rosterSection': { en: 'Guild Roster', ko: '길드 로스터' },
+  'admin.rosterOverview': { en: 'Overview', ko: '개요' },
   'admin.dashboard': { en: 'Dashboard', ko: '대시보드' },
   'admin.attendance': { en: 'Attendance', ko: '출석' },
   'admin.bossConfig': { en: 'Boss Config', ko: '보스 설정' },
@@ -127,6 +129,35 @@ const DICT: Record<string, { en: string; ko: string }> = {
   'cell.mark': { en: 'Click to mark', ko: '클릭하여 표시' },
   'cell.clear': { en: 'Click to clear', ko: '클릭하여 해제' },
   'cell.edit': { en: 'Click to edit', ko: '클릭하여 편집' },
+
+  // ---- guild roster ----
+  'roster.members': { en: 'Members', ko: '멤버' },
+  'roster.totalCp': { en: 'Total CP', ko: '총 CP' },
+  'roster.avgCp': { en: 'Average CP', ko: '평균 CP' },
+  'roster.topCp': { en: 'Top CP', ko: '최고 CP' },
+  'roster.distTitle': { en: 'CP distribution', ko: 'CP 분포' },
+  'roster.noCp': { en: 'No CP recorded yet.', ko: '아직 기록된 CP가 없습니다.' },
+  'roster.bracket0': { en: '< 100K', ko: '< 100K' },
+  'roster.bracket1': { en: '100K – 125K', ko: '100K – 125K' },
+  'roster.bracket2': { en: '125K – 150K', ko: '125K – 150K' },
+  'roster.bracket3': { en: '150K – 175K', ko: '150K – 175K' },
+  'roster.bracket4': { en: '175K – 200K', ko: '175K – 200K' },
+  'roster.bracket5': { en: '≥ 200K', ko: '≥ 200K' },
+  'roster.topMeta': { en: 'highest CP members', ko: '최고 CP 멤버' },
+  'roster.cp': { en: 'CP', ko: 'CP' },
+  'roster.coverageTitle': { en: 'Equipment coverage', ko: '장비 커버리지' },
+  'roster.equippedMeta': {
+    en: '{n} of {m} members · {f} of {s} slots filled',
+    ko: '{m}명 중 {n}명 장착 · {s}칸 중 {f}칸 채워짐',
+  },
+  'roster.equippedMeta2': {
+    en: 'Members with equipment: {n}',
+    ko: '장비 보유 멤버: {n}',
+  },
+  'roster.noEquipment': {
+    en: 'No equipment recorded yet.',
+    ko: '아직 기록된 장비가 없습니다.',
+  },
 
   // ---- boss tracker ----
   'boss.seeding': { en: 'Seeding the boss list…', ko: '보스 목록 생성 중…' },
