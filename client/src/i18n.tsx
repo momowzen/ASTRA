@@ -177,6 +177,13 @@ const DICT: Record<string, { en: string; ko: string }> = {
   'boss.filterMembers': { en: 'Filter members…', ko: '멤버 검색…' },
   'boss.selectAll': { en: 'Select all', ko: '전체 선택' },
   'boss.clear': { en: 'Clear', ko: '해제' },
+  'boss.scan': { en: 'Scan party screenshot', ko: '파티 스크린샷 스캔' },
+  'boss.scanning': { en: 'Reading screenshots…', ko: '스크린샷 읽는 중…' },
+  'boss.scanDone': { en: '{n} members selected from screenshots', ko: '스크린샷에서 {n}명 선택됨' },
+  'boss.scanNone': {
+    en: 'No roster members found in the screenshots.',
+    ko: '스크린샷에서 길드 멤버를 찾지 못했습니다.',
+  },
   'boss.record': { en: 'Record attendance', ko: '출석 기록하기' },
   'boss.recordedToast': {
     en: 'Recorded {n} members (+{pts} pts each)',

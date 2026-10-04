@@ -314,3 +314,30 @@ export function mergeVariants(variants: string[], roster: string[]): ScannedRow[
   }
   return rows;
 }
+
+/**
+ * Find roster IGNs in party screenshots: run every language pass, take each
+ * line (with and without a trailing CP number) as a candidate, and keep the
+ * roster names that score at least MATCH_THRESHOLD.
+ */
+export function scanPartyIgns(variants: string[], roster: string[]): string[] {
+  const best = new Map<string, number>();
+  for (const text of variants) {
+    for (const raw of text.split('\n')) {
+      const line = raw.trim();
+      if (!line || line.length > 60) continue;
+      const candidates: string[] = [];
+      const cpRow = parseCpLine(line);
+      if (cpRow) candidates.push(cpRow.name);
+      candidates.push(line);
+      for (const cand of candidates) {
+        const n = normalize(cand);
+        if (n.length < 2 || /^\d+$/.test(n)) continue;
+        const { ign, score } = scoreIgn(cand, roster);
+        if (score < MATCH_THRESHOLD) continue;
+        if (score > (best.get(ign) ?? 0)) best.set(ign, score);
+      }
+    }
+  }
+  return [...best.keys()];
+}

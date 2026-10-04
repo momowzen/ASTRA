@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import type { DataResponse, TabData } from '../types';
 import { BOSSES } from '../bosses';
 import { addRow, ApiError, saveCells, seedBossConfig } from '../api';
+import { ocrVariants, scanPartyIgns } from '../ocr';
 import { useLang } from '../i18n';
 
 interface Props {
@@ -14,6 +15,15 @@ interface Props {
 function intPoints(value: string | undefined): number {
   const n = parseInt(value ?? '', 10);
   return Number.isFinite(n) && n >= 0 ? n : 0;
+}
+
+function fileToDataUrl(file: File): Promise<string> {
+  return new Promise<string>((resolve, reject) => {
+    const fr = new FileReader();
+    fr.onload = () => resolve(String(fr.result));
+    fr.onerror = () => reject(new Error('Could not read the file'));
+    fr.readAsDataURL(file);
+  });
 }
 
 export default function BossTracker({ view, data, onPatch, toast }: Props) {
@@ -221,6 +231,8 @@ function AttendanceView({
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [filter, setFilter] = useState('');
   const [recording, setRecording] = useState(false);
+  const [scanning, setScanning] = useState(false);
+  const scanRef = useRef<HTMLInputElement>(null);
 
   const roster = data.tabs.find((t) => t.meta.title.toUpperCase() === 'BASIC INFORMATION');
 
@@ -267,6 +279,33 @@ function AttendanceView({
       else next.add(name);
       return next;
     });
+  }
+
+  async function onScanFiles(e: React.ChangeEvent<HTMLInputElement>) {
+    const files = Array.from(e.target.files ?? []);
+    if (files.length === 0) return;
+    setScanning(true);
+    try {
+      const found = new Set<string>();
+      for (const f of files) {
+        try {
+          const dataUrl = await fileToDataUrl(f);
+          const variants = await ocrVariants(dataUrl);
+          for (const ign of scanPartyIgns(variants, memberNames)) found.add(ign);
+        } catch {
+          /* unreadable file — keep going with the rest */
+        }
+      }
+      if (found.size === 0) {
+        toast(t('boss.scanNone'), 'err');
+      } else {
+        setSelected((prev) => new Set([...prev, ...found]));
+        toast(t('boss.scanDone', { n: found.size }), 'ok');
+      }
+    } finally {
+      setScanning(false);
+      if (scanRef.current) scanRef.current.value = '';
+    }
   }
 
   async function record() {
@@ -332,6 +371,22 @@ function AttendanceView({
           </button>
           <button className="btn btn-ghost btn-sm" onClick={() => setSelected(new Set())}>
             {t('boss.clear')}
+          </button>
+          <input
+            ref={scanRef}
+            type="file"
+            accept="image/*"
+            multiple
+            hidden
+            onChange={(e) => void onScanFiles(e)}
+          />
+          <button
+            className="btn btn-ghost btn-sm"
+            disabled={scanning}
+            onClick={() => scanRef.current?.click()}
+          >
+            {scanning && <span className="spinner" />}
+            {scanning ? t('boss.scanning') : t('boss.scan')}
           </button>
           <div className="grow" />
           <button className="btn btn-primary" disabled={recording || selected.size === 0} onClick={() => void record()}>
