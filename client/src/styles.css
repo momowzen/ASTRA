@@ -384,7 +384,7 @@ select option {
   position: sticky;
   top: 0;
   height: 100vh;
-  overflow-y: auto;
+  overflow: hidden auto;
 }
 .sidebar .brand {
   padding: 4px 8px 18px;
@@ -432,6 +432,15 @@ select option {
 }
 .sidebar .spacer {
   flex: 1;
+}
+/* Only the sheet-tab list scrolls; everything else stays pinned. */
+.sidebar .tab-scroll {
+  flex: 1;
+  min-height: 120px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
 }
 .sidebar .userbox {
   border-top: 1px solid var(--line-soft);
@@ -1110,6 +1119,9 @@ table.coll td.ign-col {
   .sidebar .section-label,
   .sidebar .spacer {
     display: none;
+  }
+  .sidebar .tab-scroll {
+    display: contents;
   }
   .sidebar .userbox {
     flex-direction: row;

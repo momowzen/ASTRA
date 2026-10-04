@@ -309,29 +309,30 @@ export default function AdminApp({
         </button>
 
         <div className="section-label">{t('admin.sheetTabs')}</div>
-        {data.tabs
-          .filter((t) => !INTERNAL_TABS.includes(t.meta.title.toUpperCase()))
-          .map((t) => (
-            <button
-              key={t.meta.title}
-              className={`nav-item ${bossView === null && toolView === null && t.meta.title === tab?.meta.title ? 'active' : ''}`}
-              onClick={() => {
-                setActiveTitle(t.meta.title);
-                setBossView(null);
-                setToolView(null);
-                setEditing(null);
-                setShowCol(-1);
-                setFilterVal('');
-              }}
-            >
-              <span className="ico">
-                <IconGrid />
-              </span>
-              {t.meta.title}
-            </button>
-          ))}
+        <div className="tab-scroll">
+          {data.tabs
+            .filter((t) => !INTERNAL_TABS.includes(t.meta.title.toUpperCase()))
+            .map((t) => (
+              <button
+                key={t.meta.title}
+                className={`nav-item ${bossView === null && toolView === null && t.meta.title === tab?.meta.title ? 'active' : ''}`}
+                onClick={() => {
+                  setActiveTitle(t.meta.title);
+                  setBossView(null);
+                  setToolView(null);
+                  setEditing(null);
+                  setShowCol(-1);
+                  setFilterVal('');
+                }}
+              >
+                <span className="ico">
+                  <IconGrid />
+                </span>
+                {t.meta.title}
+              </button>
+            ))}
+        </div>
 
-        <div className="spacer" />
         <div className="userbox">
           <div className="section-label" style={{ paddingTop: 0 }}>
             {t('admin.signedInAs', { user: session.username })}
