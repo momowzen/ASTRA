@@ -1604,6 +1604,9 @@ button.cp-ign:hover {
 .cp-read-list .input {
   width: 110px;
 }
+.cp-read-list .icon-btn {
+  opacity: 1;
+}
 .cp-badge {
   font-size: 10px;
   text-transform: uppercase;
