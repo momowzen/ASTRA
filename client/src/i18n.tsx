@@ -145,18 +145,16 @@ const DICT: Record<string, { en: string; ko: string }> = {
   'roster.bracket5': { en: '≥ 200K', ko: '≥ 200K' },
   'roster.topMeta': { en: 'highest CP members', ko: '최고 CP 멤버' },
   'roster.cp': { en: 'CP', ko: 'CP' },
-  'roster.coverageTitle': { en: 'Equipment coverage', ko: '장비 커버리지' },
-  'roster.equippedMeta': {
-    en: '{n} of {m} members · {f} of {s} slots filled',
-    ko: '{m}명 중 {n}명 장착 · {s}칸 중 {f}칸 채워짐',
+  'roster.mainWeapon': { en: 'Main weapon', ko: '메인 무기' },
+  'roster.role': { en: 'Role', ko: '역할' },
+  'roster.status': { en: 'Status', ko: '상태' },
+  'roster.summaryMeta': {
+    en: '{n} of {m} filled',
+    ko: '{m}행 중 {n}행 기입',
   },
-  'roster.equippedMeta2': {
-    en: 'Members with equipment: {n}',
-    ko: '장비 보유 멤버: {n}',
-  },
-  'roster.noEquipment': {
-    en: 'No equipment recorded yet.',
-    ko: '아직 기록된 장비가 없습니다.',
+  'roster.noData': {
+    en: 'No data recorded yet.',
+    ko: '아직 기록된 데이터가 없습니다.',
   },
 
   // ---- boss tracker ----

@@ -1,5 +1,5 @@
-import { useMemo } from 'react';
-import type { DataResponse } from '../types';
+import { useEffect, useMemo, useState } from 'react';
+import type { DataResponse, TabData } from '../types';
 import { buildColumns, formatCp } from '../utils';
 import { useLang } from '../i18n';
 
@@ -45,11 +45,72 @@ function DistList({
   );
 }
 
+interface ColumnSummary {
+  filled: number;
+  total: number;
+  rows: { label: string; value: number; count: string }[];
+}
+
+function columnSummary(tab: TabData | undefined, label: string): ColumnSummary | null {
+  if (!tab) return null;
+  const col = buildColumns(tab.meta).find((c) => c.label.trim().toUpperCase() === label);
+  if (!col) return null;
+  const counts = new Map<string, number>();
+  let filled = 0;
+  for (const r of tab.rows) {
+    const v = (r.cells[col.index] ?? '').trim();
+    if (!v) continue;
+    filled += 1;
+    counts.set(v, (counts.get(v) ?? 0) + 1);
+  }
+  const rows = [...counts.entries()]
+    .map(([value, n]) => ({ label: value, value: n, count: String(n) }))
+    .sort((a, b) => b.value - a.value || a.label.localeCompare(b.label));
+  return { filled, total: tab.rows.length, rows };
+}
+
+function SummaryPanel({ titleKey, data }: { titleKey: string; data: ColumnSummary | null }) {
+  const { t } = useLang();
+  const rows = data?.rows ?? [];
+  return (
+    <div className="panel-card">
+      <h3>{t(titleKey)}</h3>
+      {rows.length > 0 ? (
+        <>
+          <div className="muted roster-summary-meta">
+            {t('roster.summaryMeta', { n: data?.filled ?? 0, m: data?.total ?? 0 })}
+          </div>
+          <DistList rows={rows} />
+        </>
+      ) : (
+        <div className="empty">{t('roster.noData')}</div>
+      )}
+    </div>
+  );
+}
+
 export default function GuildRoster({ data }: Props) {
   const { t } = useLang();
 
   const basic = data.tabs.find((tb) => tb.meta.title.toUpperCase() === 'BASIC INFORMATION');
   const equipment = data.tabs.find((tb) => tb.meta.title.toUpperCase() === 'EQUIPMENT');
+
+  const [topOffset, setTopOffset] = useState(58);
+  useEffect(() => {
+    const measure = () => {
+      const el = document.querySelector<HTMLElement>('.topbar');
+      if (el) setTopOffset(el.getBoundingClientRect().height);
+    };
+    measure();
+    const el = document.querySelector<HTMLElement>('.topbar');
+    const ro = el ? new ResizeObserver(measure) : null;
+    if (el && ro) ro.observe(el);
+    window.addEventListener('resize', measure);
+    return () => {
+      ro?.disconnect();
+      window.removeEventListener('resize', measure);
+    };
+  }, []);
 
   const members = useMemo(() => {
     return (basic?.rows ?? [])
@@ -62,11 +123,7 @@ export default function GuildRoster({ data }: Props) {
   const stats = useMemo(() => {
     const total = withCp.reduce((s, m) => s + m.cp, 0);
     const top = withCp.reduce((best, m) => Math.max(best, m.cp), 0);
-    return {
-      total,
-      avg: withCp.length ? Math.round(total / withCp.length) : 0,
-      top,
-    };
+    return { total, avg: withCp.length ? Math.round(total / withCp.length) : 0, top };
   }, [withCp]);
 
   const brackets = useMemo(() => {
@@ -83,35 +140,13 @@ export default function GuildRoster({ data }: Props) {
     [withCp],
   );
 
-  const slotCols = useMemo(
-    () => (equipment ? buildColumns(equipment.meta).filter((c) => c.index > 0) : []),
-    [equipment],
-  );
-
-  const equipped = useMemo(() => {
-    return (equipment?.rows ?? [])
-      .map((r) => ({
-        ign: (r.cells[0] || '').trim(),
-        cells: slotCols.map((c) => (r.cells[c.index] || '').trim()),
-      }))
-      .filter((row) => row.ign && row.cells.some(Boolean))
-      .sort((a, b) => (cpByIgn(b.ign) - cpByIgn(a.ign)) || a.ign.localeCompare(b.ign));
-    function cpByIgn(ign: string): number {
-      return members.find((m) => m.ign === ign)?.cp ?? 0;
-    }
-  }, [equipment, slotCols, members]);
-
-  const slotFilled = useMemo(
-    () => slotCols.map((c) => (equipment?.rows ?? []).filter((r) => (r.cells[c.index] || '').trim()).length),
-    [equipment, slotCols],
-  );
-
-  const filledSlots = slotFilled.reduce((s, n) => s + n, 0);
-  const totalSlots = slotCols.length * members.length;
+  const weaponSummary = useMemo(() => columnSummary(equipment, 'MAIN WEAPON'), [equipment]);
+  const roleSummary = useMemo(() => columnSummary(basic, 'ROLE'), [basic]);
+  const statusSummary = useMemo(() => columnSummary(basic, 'STATUS'), [basic]);
 
   return (
     <div className="roster-view">
-      <div className="stat-row">
+      <div className="stat-row" style={{ top: topOffset }}>
         <div className="stat-card">
           <div className="stat-label">{t('roster.members')}</div>
           <div className="stat-value">{members.length}</div>
@@ -128,6 +163,12 @@ export default function GuildRoster({ data }: Props) {
           <div className="stat-label">{t('roster.topCp')}</div>
           <div className="stat-value">{withCp.length ? formatCp(String(stats.top)) : '—'}</div>
         </div>
+      </div>
+
+      <div className="roster-summaries">
+        <SummaryPanel titleKey="roster.mainWeapon" data={weaponSummary} />
+        <SummaryPanel titleKey="roster.role" data={roleSummary} />
+        <SummaryPanel titleKey="roster.status" data={statusSummary} />
       </div>
 
       <div className="panel-card">
@@ -170,71 +211,6 @@ export default function GuildRoster({ data }: Props) {
                 <tr>
                   <td colSpan={3}>
                     <div className="empty">{t('roster.noCp')}</div>
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      <div className="panel-card">
-        <h3>{t('roster.coverageTitle')}</h3>
-        <div className="muted roster-coverage-meta">
-          {t('roster.equippedMeta', {
-            n: equipped.length,
-            m: members.length,
-            f: filledSlots,
-            s: totalSlots,
-          })}
-        </div>
-        {slotCols.length > 0 ? (
-          <DistList
-            max={members.length}
-            rows={slotCols.map((c, i) => ({
-              label: c.label,
-              value: slotFilled[i],
-              count: `${slotFilled[i]}/${members.length}`,
-            }))}
-          />
-        ) : (
-          <div className="empty">{t('roster.noEquipment')}</div>
-        )}
-      </div>
-
-      <div className="table-card">
-        <div className="table-meta">
-          <span>{t('roster.equippedMeta2', { n: equipped.length })}</span>
-        </div>
-        <div className="table-scroll">
-          <table className="grid">
-            <thead>
-              <tr className="labels single">
-                <th className="rownum">#</th>
-                <th className="ign-col">IGN</th>
-                {slotCols.map((c) => (
-                  <th key={c.index}>{c.label}</th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {equipped.map((row, i) => (
-                <tr key={row.ign}>
-                  <td className="rownum">{i + 1}</td>
-                  <td className="ign-col">
-                    <div className="cell">{row.ign}</div>
-                  </td>
-                  {row.cells.map((v, j) => (
-                    <td key={slotCols[j].index}>
-                      <div className="cell">{v || '—'}</div>
-                    </td>
-                  ))}
-                </tr>
-              ))}
-              {equipped.length === 0 && (
-                <tr>
-                  <td colSpan={slotCols.length + 2}>
-                    <div className="empty">{t('roster.noEquipment')}</div>
                   </td>
                 </tr>
               )}

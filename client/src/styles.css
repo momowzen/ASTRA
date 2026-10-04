@@ -1190,10 +1190,36 @@ table.coll td.ign-col {
   gap: 16px;
 }
 
+/* Stat cards stay pinned under the topbar while the roster scrolls. */
+.roster-view .stat-row {
+  position: sticky;
+  z-index: 20;
+  padding: 12px;
+  margin: -12px;
+  background: rgba(7, 10, 18, 0.85);
+  backdrop-filter: blur(10px);
+  border-radius: var(--radius);
+}
+
+.roster-summaries {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 16px;
+}
+.roster-summaries .panel-card + .panel-card {
+  margin-top: 0;
+}
+.roster-summary-meta {
+  font-size: 13px;
+}
+
 .panel-card h3 + .dist-list,
 .panel-card h3 + .muted,
 .panel-card h3 + .empty {
   margin-top: 14px;
+}
+.panel-card h3 + .muted + .dist-list {
+  margin-top: 10px;
 }
 
 .dist-list {
@@ -1231,9 +1257,6 @@ table.coll td.ign-col {
   text-align: right;
   color: var(--text);
   font-variant-numeric: tabular-nums;
-}
-.roster-coverage-meta {
-  font-size: 13px;
 }
 .roster-view .panel-card {
   flex: none;
