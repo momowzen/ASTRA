@@ -11,6 +11,7 @@ import GuildRoster from './GuildRoster';
 import AdminTools from './AdminTools';
 import CpUpdate from './CpUpdate';
 import { LangToggle, useLang } from '../i18n';
+import { colLabel, tabLabel } from '../display';
 
 interface Props {
   data: DataResponse;
@@ -140,7 +141,7 @@ export default function AdminApp({
   const [tipOpen, setTipOpen] = useState(false);
   const [busy, setBusy] = useState(false);
 
-  const { t } = useLang();
+  const { t, lang } = useLang();
 
   // Views that should fill the viewport exactly: the page never scrolls and the
   // panels keep a uniform 22px gap on every side (list bodies scroll instead).
@@ -218,7 +219,7 @@ export default function AdminApp({
     try {
       await apiAddRow(tab.meta.title, cells);
       setAddOpen(false);
-      toast(t('admin.addedRow', { ign: cells[0], title: tab.meta.title }), 'ok');
+      toast(t('admin.addedRow', { ign: cells[0], title: tabLabel(tab.meta.title, t, lang) }), 'ok');
     } catch (err) {
       toast(err instanceof ApiError ? err.message : t('admin.couldNotAddRow'), 'err');
     } finally {
@@ -357,13 +358,13 @@ export default function AdminApp({
         <div className="section-label">{t('admin.sheetTabs')}</div>
         <div className="tab-scroll">
           {data.tabs
-            .filter((t) => !INTERNAL_TABS.includes(t.meta.title.toUpperCase()))
-            .map((t) => (
+            .filter((tb) => !INTERNAL_TABS.includes(tb.meta.title.toUpperCase()))
+            .map((tb) => (
               <button
-                key={t.meta.title}
-                className={`nav-item ${!bossView && !toolView && !rosterView && t.meta.title === tab?.meta.title ? 'active' : ''}`}
+                key={tb.meta.title}
+                className={`nav-item ${!bossView && !toolView && !rosterView && tb.meta.title === tab?.meta.title ? 'active' : ''}`}
                 onClick={() => {
-                  setActiveTitle(t.meta.title);
+                  setActiveTitle(tb.meta.title);
                   setBossView(null);
                   setToolView(null);
                   setRosterView(false);
@@ -375,7 +376,7 @@ export default function AdminApp({
                 <span className="ico">
                   <IconGrid />
                 </span>
-                {t.meta.title}
+                {tabLabel(tb.meta.title, t, lang)}
               </button>
             ))}
         </div>
@@ -414,7 +415,9 @@ export default function AdminApp({
                   }`
                 : toolView
                   ? `${t('tools.section')} · ${toolView === 'cp-update' ? t('tools.cpUpdate') : t('tools.distribution')}`
-                  : tab?.meta.title ?? t('member.loading')}
+                  : tab
+                  ? tabLabel(tab.meta.title, t, lang)
+                  : t('member.loading')}
           </h2>
           <div className="grow" />
           {!bossView && !toolView && !rosterView && (
@@ -441,14 +444,16 @@ export default function AdminApp({
                   <option value={-1}>{t('admin.allColumns')}</option>
                   {allCols.map((c) => (
                     <option key={c.index} value={c.index}>
-                      {c.label}
+                      {colLabel(c.label, t, lang)}
                     </option>
                   ))}
                 </select>
                 {showCol >= 0 && (
                   <select
                     className="select val-filter"
-                    title={t('admin.filterBy', { col: cols.find((c) => c.index === showCol)?.label ?? '' })}
+                    title={t('admin.filterBy', {
+                      col: colLabel(cols.find((c) => c.index === showCol)?.label ?? '', t, lang),
+                    })}
                     value={filterVal}
                     onChange={(e) => {
                       setFilterVal(e.target.value);
@@ -531,27 +536,27 @@ export default function AdminApp({
                           #
                         </th>
                         <th className="ign-col" rowSpan={2}>
-                          {cols[0]?.label}
+                          {colLabel(cols[0]?.label ?? '', t, lang)}
                         </th>
                         {groupRuns.map((g, i) => (
                           <th key={i} colSpan={g.span}>
-                            {g.label}
+                            {colLabel(g.label, t, lang)}
                           </th>
                         ))}
                         <th className="actions" rowSpan={2} />
                       </tr>
                       <tr className="labels">
                         {cols.slice(1).map((c) => (
-                          <th key={c.index}>{c.label}</th>
+                          <th key={c.index}>{colLabel(c.label, t, lang)}</th>
                         ))}
                       </tr>
                     </>
                   ) : (
                     <tr className="labels single">
                       <th className="rownum">#</th>
-                      <th className="ign-col">{cols[0]?.label ?? 'IGN'}</th>
+                      <th className="ign-col">{colLabel(cols[0]?.label ?? 'IGN', t, lang)}</th>
                       {cols.slice(1).map((c) => (
-                        <th key={c.index}>{c.label}</th>
+                        <th key={c.index}>{colLabel(c.label, t, lang)}</th>
                       ))}
                       <th className="actions" />
                     </tr>
@@ -632,7 +637,7 @@ export default function AdminApp({
         <div className="overlay" onMouseDown={(e) => e.target === e.currentTarget && setConfirmDelete(null)}>
           <div className="modal">
             <h3>{t('admin.deleteRowTitle', { n: confirmDelete })}</h3>
-            <p className="desc">{t('admin.deleteRowDesc', { title: tab.meta.title })}</p>
+            <p className="desc">{t('admin.deleteRowDesc', { title: tabLabel(tab.meta.title, t, lang) })}</p>
             <div className="row">
               <button className="btn btn-ghost" onClick={() => setConfirmDelete(null)}>
                 {t('common.cancel')}
@@ -721,7 +726,7 @@ function AddRowModal({
   onClose: () => void;
   onSubmit: (cells: string[]) => Promise<void>;
 }) {
-  const { t } = useLang();
+  const { t, lang } = useLang();
   const [values, setValues] = useState<string[]>(() => columns.map(() => ''));
 
   return (
@@ -743,7 +748,7 @@ function AddRowModal({
               return (
                 <div className="field" key={i}>
                   <label>
-                    {col.label}
+                    {colLabel(col.label, t, lang)}
                     {i === 0 ? ' *' : ''}
                   </label>
                   {opts ? (

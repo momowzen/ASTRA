@@ -6,6 +6,7 @@ import { ApiError, saveCells } from '../api';
 import { IconGear, IconGrid, IconLogout } from './icons';
 import PasswordModal from './PasswordModal';
 import { LangToggle, useLang } from '../i18n';
+import { colLabel, tabLabel } from '../display';
 
 interface Props {
   data: DataResponse;
@@ -238,7 +239,8 @@ export default function MemberApp({
   const [activeTitle, setActiveTitle] = useState('');
   const [settingsOpen, setSettingsOpen] = useState(false);
 
-  const { t } = useLang();
+  const { t, lang } = useLang();
+  const tabText = (raw: string) => tabLabel(raw, t, lang, prettyTitle);
 
   const rosterTab =
     data.tabs.find((t) => t.meta.title.toUpperCase() === 'BASIC INFORMATION') ||
@@ -333,7 +335,7 @@ export default function MemberApp({
             <span className="ico">
               <IconGrid />
             </span>
-            {prettyTitle(t.meta.title)}
+            {tabText(t.meta.title)}
           </button>
         ))}
 
@@ -356,7 +358,7 @@ export default function MemberApp({
 
       <main className="main">
         <header className="topbar">
-          <h2>{isDashboard ? t('member.profile') : activeTab ? prettyTitle(activeTab.meta.title) : t('member.loading')}</h2>
+          <h2>{isDashboard ? t('member.profile') : activeTab ? tabText(activeTab.meta.title) : t('member.loading')}</h2>
           <div className="grow" />
           <span className={`live ${live === 'live' ? '' : live}`}>
             <span className="dot" />
@@ -388,7 +390,7 @@ export default function MemberApp({
 
           {isDashboard && rosterTab && (
             <div className="panel-card">
-              <h3>Basic Information</h3>
+              <h3>{tabText('BASIC INFORMATION')}</h3>
               {!rosterRow ? (
                 <div className="empty">
                   <div className="big">
@@ -401,7 +403,7 @@ export default function MemberApp({
                   {rosterCols.slice(1).map((c) => (
                     <Field
                       key={c.index}
-                      label={c.label}
+                      label={colLabel(c.label, t, lang)}
                       value={rosterRow.cells[c.index] ?? ''}
                       options={rosterTab.meta.options?.[c.index]}
                       readOnly={MEMBER_READONLY.has(c.label.trim().toUpperCase())}
@@ -416,7 +418,7 @@ export default function MemberApp({
 
           {isDashboard && equipTab && (
             <div className="panel-card">
-              <h3>Equipment</h3>
+              <h3>{tabText('EQUIPMENT')}</h3>
               {!equipRow ? (
                 <div className="empty">
                   <div className="big">
@@ -429,7 +431,7 @@ export default function MemberApp({
                   {equipCols.slice(1).map((c) => (
                     <Field
                       key={c.index}
-                      label={c.label}
+                      label={colLabel(c.label, t, lang)}
                       value={equipRow.cells[c.index] ?? ''}
                       options={equipTab.meta.options?.[c.index]}
                       readOnly={MEMBER_READONLY.has(c.label.trim().toUpperCase())}
@@ -444,7 +446,7 @@ export default function MemberApp({
 
           {!isDashboard && activeTab && (
             <div className="panel-card">
-              <h3>{prettyTitle(activeTab.meta.title)}</h3>
+              <h3>{tabText(activeTab.meta.title)}</h3>
 
               {!row && (
                 <div className="empty">
@@ -460,7 +462,7 @@ export default function MemberApp({
                   {cols.slice(1).map((c) => (
                     <Field
                       key={c.index}
-                      label={c.label}
+                      label={colLabel(c.label, t, lang)}
                       value={row.cells[c.index] ?? ''}
                       options={activeTab.meta.options?.[c.index]}
                       readOnly={MEMBER_READONLY.has(c.label.trim().toUpperCase())}
@@ -475,11 +477,14 @@ export default function MemberApp({
                 <div className="coll-grid">
                   {collectionGroups.map((g) => (
                     <section className="coll-card" key={g.label}>
-                      <div className="coll-card-title">{g.label}</div>
+                      <div className="coll-card-title">{colLabel(g.label, t, lang)}</div>
                       <div className="coll-items">
                         {g.cols.map((c) => {
-                          const sub =
-                            (activeTab.meta.headers[1]?.[c.index] || '').trim() || c.label;
+                          const sub = colLabel(
+                            (activeTab.meta.headers[1]?.[c.index] || '').trim() || c.label,
+                            t,
+                            lang,
+                          );
                           return (
                             <div className="coll-item" key={c.index}>
                               <span className="coll-sub">{sub}</span>

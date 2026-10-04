@@ -4,6 +4,7 @@ import { ApiError, updateCp } from '../api';
 import type { CpItem } from '../api';
 import { formatCp } from '../utils';
 import { useLang } from '../i18n';
+import { tabLabel } from '../display';
 import { ocrVariants, mergeVariants } from '../ocr';
 import type { ScannedRow } from '../ocr';
 
@@ -27,8 +28,10 @@ function fileToDataUrl(file: File): Promise<string> {
 }
 
 export default function CpUpdate({ data, toast }: Props) {
-  const { t } = useLang();
+  const { t, lang } = useLang();
   const basic = data.tabs.find((tab) => tab.meta.title.toUpperCase() === 'BASIC INFORMATION');
+  const basicTitle = tabLabel('BASIC INFORMATION', t, lang);
+  const historyTitle = tabLabel('CP HISTORY', t, lang);
 
   const roster = useMemo(() => {
     return (basic?.rows ?? [])
@@ -61,7 +64,7 @@ export default function CpUpdate({ data, toast }: Props) {
     setManualSaving(true);
     try {
       const res = await updateCp([{ ign: manual, cp }]);
-      toast(`${t('tools.cpSaved')} · ${res.date}`, 'ok');
+      toast(`${t('tools.cpSaved', { history: historyTitle })} · ${res.date}`, 'ok');
       setManual(null);
     } catch (err) {
       toast(err instanceof ApiError ? err.message : t('tools.cpCouldNotSave'), 'err');
@@ -155,7 +158,7 @@ export default function CpUpdate({ data, toast }: Props) {
     setSaving(true);
     try {
       const res = await updateCp(valid.map((it) => ({ ign: it.ign.trim(), cp: it.cp.trim() })));
-      toast(`${t('tools.cpSaved')} · ${res.date}`, 'ok');
+      toast(`${t('tools.cpSaved', { history: historyTitle })} · ${res.date}`, 'ok');
       setItems(null);
       setImages([]);
     } catch (err) {
@@ -288,7 +291,7 @@ export default function CpUpdate({ data, toast }: Props) {
         <div className="overlay" onMouseDown={(e) => e.target === e.currentTarget && setManual(null)}>
           <div className="modal">
             <h3>{manual}</h3>
-            <p className="desc">{t('tools.cpManualHint')}</p>
+            <p className="desc">{t('tools.cpManualHint', { basic: basicTitle, history: historyTitle })}</p>
             <div className="field">
               <label htmlFor="manual-cp">{t('tools.cpManualLabel')}</label>
               <input
@@ -327,7 +330,7 @@ export default function CpUpdate({ data, toast }: Props) {
         <div className="overlay" onMouseDown={(e) => e.target === e.currentTarget && setConfirmOpen(false)}>
           <div className="modal">
             <h3>{t('tools.cpConfirmTitle')}</h3>
-            <p className="desc">{t('tools.cpConfirmHint')}</p>
+            <p className="desc">{t('tools.cpConfirmHint', { basic: basicTitle, history: historyTitle })}</p>
             <div className="row">
               <button className="btn btn-ghost" onClick={() => setConfirmOpen(false)}>
                 {t('common.cancel')}

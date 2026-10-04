@@ -3,6 +3,7 @@ import type { DataResponse } from '../types';
 import { ApiError, distribute } from '../api';
 import type { DistributionBand, DistributionResult } from '../api';
 import { useLang } from '../i18n';
+import { tabLabel } from '../display';
 
 interface Props {
   data: DataResponse;
@@ -34,7 +35,8 @@ function allocate(band: { ign: string; points: number }[], pool: number): Distri
 }
 
 export default function AdminTools({ data, toast }: Props) {
-  const { t } = useLang();
+  const { t, lang } = useLang();
+  const distTitle = tabLabel('DISTRIBUTION HISTORY', t, lang);
   const band = useMemo(() => bandFromData(data), [data]);
   const [poolStr, setPoolStr] = useState('');
   const [saved, setSaved] = useState<DistributionResult | null>(null);
@@ -58,7 +60,7 @@ export default function AdminTools({ data, toast }: Props) {
     try {
       const res = await distribute(pool);
       setSaved(res);
-      toast(`${t('tools.savedNote')} · ${res.date}`, 'ok');
+      toast(`${t('tools.savedNote', { title: distTitle })} · ${res.date}`, 'ok');
     } catch (err) {
       toast(err instanceof ApiError ? err.message : t('tools.couldNot'), 'err');
     } finally {
@@ -157,7 +159,7 @@ export default function AdminTools({ data, toast }: Props) {
             </>
           ) : (
             <div className="announce-saved">
-              {t('tools.savedNote')} · {saved.date}
+              {t('tools.savedNote', { title: distTitle })} · {saved.date}
             </div>
           )}
         </div>

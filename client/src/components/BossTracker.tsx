@@ -4,6 +4,7 @@ import { BOSSES } from '../bosses';
 import { addRow, ApiError, saveCells, seedBossConfig } from '../api';
 import { ocrVariants, scanPartyIgns } from '../ocr';
 import { useLang } from '../i18n';
+import { bossLabel } from '../display';
 
 interface Props {
   view: 'dashboard' | 'attendance' | 'config';
@@ -27,7 +28,7 @@ function fileToDataUrl(file: File): Promise<string> {
 }
 
 export default function BossTracker({ view, data, onPatch, toast }: Props) {
-  const { t } = useLang();
+  const { t, lang } = useLang();
   const attendanceTab = data.tabs.find((t) => t.meta.title.toUpperCase() === 'BOSS ATTENDANCE');
   const configTab = data.tabs.find((t) => t.meta.title.toUpperCase() === 'BOSS CONFIG');
 
@@ -57,7 +58,7 @@ export default function BossTracker({ view, data, onPatch, toast }: Props) {
               onPatch('BOSS CONFIG', [{ row: existing.row, col: 1, value: String(points) }]);
             } else {
               await addRow('BOSS CONFIG', [name, String(points)]);
-              toast(t('boss.added', { name }), 'ok');
+              toast(t('boss.added', { name: bossLabel(name, t, lang) }), 'ok');
             }
           } catch (err) {
             toast(err instanceof ApiError ? err.message : t('boss.couldNotSave'), 'err');
@@ -94,7 +95,7 @@ function ConfigView({
   onSave: (name: string, points: number) => Promise<void>;
   toast: (msg: string, kind?: 'ok' | 'err') => void;
 }) {
-  const { t } = useLang();
+  const { t, lang } = useLang();
   const seeded = useRef(false);
   const [seeding, setSeeding] = useState(false);
   const empty = !configTab || configTab.rows.length === 0;
@@ -163,7 +164,7 @@ function ConfigView({
               {BOSSES.map((b) => (
                 <tr key={b.id}>
                   <td className="ign-col">
-                    <div className="cell">{b.name}</div>
+                    <div className="cell">{bossLabel(b.name, t, lang)}</div>
                   </td>
                   <td onClick={(e) => e.stopPropagation()}>
                     <PointsCell
@@ -226,7 +227,7 @@ function AttendanceView({
   onPatch: (tabTitle: string, updates: { row: number; col: number; value: string }[]) => void;
   toast: (msg: string, kind?: 'ok' | 'err') => void;
 }) {
-  const { t } = useLang();
+  const { t, lang } = useLang();
   const [bossName, setBossName] = useState(BOSSES[0].name);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [filter, setFilter] = useState('');
@@ -348,7 +349,7 @@ function AttendanceView({
             >
               {BOSSES.map((b) => (
                 <option key={b.id} value={b.name}>
-                  {b.name} — {pointsFor(b.name)}{' '}
+                  {bossLabel(b.name, t, lang)} — {pointsFor(b.name)}{' '}
                   {pointsFor(b.name) === 1 ? t('boss.pt') : t('boss.pts')}
                 </option>
               ))}
