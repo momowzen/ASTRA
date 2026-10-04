@@ -427,12 +427,17 @@ api.post('/cp/update', requireAuth, requireAdmin, async (req, res) => {
     }
 
     const header0 = cpHist.meta.headers[0] || ['IGN'];
-    const newColIndex = header0.length;
-    const letter = sheets.columnLetter(newColIndex);
     const date = distributionDate(new Date());
+    // Reuse today's dated column when it already exists instead of adding a duplicate.
+    const existingCol = header0.findIndex((h) => String(h ?? '').trim() === date);
+    const reusedColumn = existingCol >= 0;
+    const colIndex = reusedColumn ? existingCol : header0.length;
+    const letter = sheets.columnLetter(colIndex);
 
     const basicWrites: { a1: string; values: string[][] }[] = [];
-    const histWrites: { a1: string; values: string[][] }[] = [{ a1: `${letter}1`, values: [[date]] }];
+    const histWrites: { a1: string; values: string[][] }[] = reusedColumn
+      ? []
+      : [{ a1: `${letter}1`, values: [[date]] }];
     const newRows: string[][] = [];
 
     for (const it of clean) {
@@ -442,9 +447,9 @@ api.post('/cp/update', requireAuth, requireAdmin, async (req, res) => {
       if (hRow) {
         histWrites.push({ a1: `${letter}${hRow}`, values: [[it.cp]] });
       } else {
-        const cells = new Array(newColIndex + 1).fill('');
+        const cells = new Array(colIndex + 1).fill('');
         cells[0] = it.ign;
-        cells[newColIndex] = it.cp;
+        cells[colIndex] = it.cp;
         newRows.push(cells);
       }
     }
@@ -452,7 +457,7 @@ api.post('/cp/update', requireAuth, requireAdmin, async (req, res) => {
     await sheets.batchUpdateValues('BASIC INFORMATION', basicWrites);
     await sheets.batchUpdateValues('CP HISTORY', histWrites);
     for (const cells of newRows) {
-      await sheets.appendRow('CP HISTORY', cells, newColIndex + 1);
+      await sheets.appendRow('CP HISTORY', cells, colIndex + 1);
     }
     for (const it of clean) {
       const bRow = basicRow.get(it.ign);
@@ -460,7 +465,7 @@ api.post('/cp/update', requireAuth, requireAdmin, async (req, res) => {
     }
 
     scheduleRefresh();
-    res.json({ ok: true, date, count: clean.length, items: clean });
+    res.json({ ok: true, date, count: clean.length, items: clean, reusedColumn });
   } catch (err) {
     console.error('[cp] update failed:', err);
     bad(res, 502, 'Could not update CP');

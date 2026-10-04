@@ -42,7 +42,31 @@ export default function CpUpdate({ data, toast }: Props) {
   const [reading, setReading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
+  const [manual, setManual] = useState<string | null>(null);
+  const [manualCp, setManualCp] = useState('');
+  const [manualSaving, setManualSaving] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
+
+  function openManual(ign: string, cp: string) {
+    setManual(ign);
+    setManualCp(cp.replace(/[^\d]/g, ''));
+  }
+
+  async function saveManual() {
+    if (!manual) return;
+    const cp = formatCp(manualCp);
+    if (!cp) return;
+    setManualSaving(true);
+    try {
+      const res = await updateCp([{ ign: manual, cp }]);
+      toast(`${t('tools.cpSaved')} · ${res.date}`, 'ok');
+      setManual(null);
+    } catch (err) {
+      toast(err instanceof ApiError ? err.message : t('tools.cpCouldNotSave'), 'err');
+    } finally {
+      setManualSaving(false);
+    }
+  }
 
   async function onFiles(e: React.ChangeEvent<HTMLInputElement>) {
     const files = Array.from(e.target.files ?? []);
@@ -139,7 +163,14 @@ export default function CpUpdate({ data, toast }: Props) {
           <div className="cp-list">
             {roster.map((r) => (
               <div className="cp-row" key={r.ign}>
-                <span className="cp-ign">{r.ign}</span>
+                <button
+                  type="button"
+                  className="cp-ign"
+                  title={t('tools.cpManualEdit')}
+                  onClick={() => openManual(r.ign, r.cp)}
+                >
+                  {r.ign}
+                </button>
                 <span className="cp-val">{r.cp || '—'}</span>
               </div>
             ))}
@@ -234,6 +265,45 @@ export default function CpUpdate({ data, toast }: Props) {
           )}
         </div>
       </div>
+
+      {manual && (
+        <div className="overlay" onMouseDown={(e) => e.target === e.currentTarget && setManual(null)}>
+          <div className="modal">
+            <h3>{manual}</h3>
+            <p className="desc">{t('tools.cpManualHint')}</p>
+            <div className="field">
+              <label htmlFor="manual-cp">{t('tools.cpManualLabel')}</label>
+              <input
+                id="manual-cp"
+                className="input"
+                inputMode="numeric"
+                value={manualCp}
+                autoFocus
+                onFocus={(e) => e.target.select()}
+                onChange={(e) => setManualCp(e.target.value.replace(/[^\d]/g, ''))}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    void saveManual();
+                  }
+                }}
+              />
+            </div>
+            <div className="row">
+              <button className="btn btn-ghost" onClick={() => setManual(null)}>
+                {t('common.cancel')}
+              </button>
+              <button
+                className="btn btn-primary"
+                disabled={manualSaving || !manualCp}
+                onClick={() => void saveManual()}
+              >
+                {manualSaving ? <span className="spinner" /> : t('tools.save')}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {confirmOpen && (
         <div className="overlay" onMouseDown={(e) => e.target === e.currentTarget && setConfirmOpen(false)}>

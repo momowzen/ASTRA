@@ -135,7 +135,7 @@ const DICT: Record<string, { en: string; ko: string }> = {
   'roster.totalCp': { en: 'Total CP', ko: '총 CP' },
   'roster.avgCp': { en: 'Average CP', ko: '평균 CP' },
   'roster.topCp': { en: 'Top CP', ko: '최고 CP' },
-  'roster.distTitle': { en: 'CP distribution', ko: 'CP 분포' },
+  'roster.distTitle': { en: 'Combat Power Distribution', ko: '전투력 분포' },
   'roster.noCp': { en: 'No CP recorded yet.', ko: '아직 기록된 CP가 없습니다.' },
   'roster.bracket0': { en: '< 100K', ko: '< 100K' },
   'roster.bracket1': { en: '100K – 125K', ko: '100K – 125K' },
@@ -143,7 +143,7 @@ const DICT: Record<string, { en: string; ko: string }> = {
   'roster.bracket3': { en: '150K – 175K', ko: '150K – 175K' },
   'roster.bracket4': { en: '175K – 200K', ko: '175K – 200K' },
   'roster.bracket5': { en: '≥ 200K', ko: '≥ 200K' },
-  'roster.topMeta': { en: 'highest CP members', ko: '최고 CP 멤버' },
+  'roster.topMeta': { en: 'TOP 10 CP', ko: 'TOP 10 CP' },
   'roster.cp': { en: 'CP', ko: 'CP' },
   'roster.mainWeapon': { en: 'Main weapon', ko: '메인 무기' },
   'roster.role': { en: 'Role', ko: '역할' },
@@ -247,6 +247,12 @@ const DICT: Record<string, { en: string; ko: string }> = {
     ko: '각 멤버의 CP를 BASIC INFORMATION에 업데이트하고 CP HISTORY에 기록합니다.',
   },
   'tools.cpSaved': { en: 'Saved to CP HISTORY', ko: 'CP HISTORY에 저장됨' },
+  'tools.cpManualEdit': { en: 'Edit CP', ko: 'CP 편집' },
+  'tools.cpManualLabel': { en: 'New CP', ko: '새 CP' },
+  'tools.cpManualHint': {
+    en: "Saves to BASIC INFORMATION and records today's date in CP HISTORY.",
+    ko: 'BASIC INFORMATION에 저장하고 CP HISTORY에 오늘 날짜로 기록합니다.',
+  },
 
   // ---- password modal ----
   'pw.newPassword': { en: 'New password', ko: '새 비밀번호' },

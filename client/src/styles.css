@@ -1195,12 +1195,14 @@ table.coll td.ign-col {
   gap: 16px;
 }
 
-/* Stat cards stay pinned under the topbar while the roster scrolls. */
+/* Stat cards stay pinned under the topbar and never move with scrolling:
+   the negative top margin cancels .content's padding so the band's natural
+   position equals its sticky position. */
 .roster-view .stat-row {
   position: sticky;
   z-index: 20;
+  margin: -22px -12px -12px;
   padding: 12px;
-  margin: -12px;
   background: rgba(7, 10, 18, 0.85);
   backdrop-filter: blur(10px);
   border-radius: var(--radius);
@@ -1470,6 +1472,19 @@ table.grid.boss-config th:not(.ign-col) {
   text-overflow: ellipsis;
   white-space: nowrap;
   font-weight: 500;
+}
+button.cp-ign {
+  background: none;
+  border: 0;
+  padding: 0;
+  text-align: left;
+  cursor: pointer;
+  color: inherit;
+  font: inherit;
+}
+button.cp-ign:hover {
+  color: var(--accent);
+  text-decoration: underline;
 }
 .cp-val {
   color: var(--muted);

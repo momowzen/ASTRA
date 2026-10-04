@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useLayoutEffect, useMemo, useState } from 'react';
 import type { DataResponse, TabData } from '../types';
 import { buildColumns, formatCp } from '../utils';
 import { useLang } from '../i18n';
@@ -96,7 +96,7 @@ export default function GuildRoster({ data }: Props) {
   const equipment = data.tabs.find((tb) => tb.meta.title.toUpperCase() === 'EQUIPMENT');
 
   const [topOffset, setTopOffset] = useState(58);
-  useEffect(() => {
+  useLayoutEffect(() => {
     const measure = () => {
       const el = document.querySelector<HTMLElement>('.topbar');
       if (el) setTopOffset(el.getBoundingClientRect().height);
@@ -182,9 +182,7 @@ export default function GuildRoster({ data }: Props) {
 
       <div className="table-card">
         <div className="table-meta">
-          <span>
-            <strong>{top10.length}</strong> {t('roster.topMeta')}
-          </span>
+          <span>{t('roster.topMeta')}</span>
         </div>
         <div className="table-scroll">
           <table className="grid">
