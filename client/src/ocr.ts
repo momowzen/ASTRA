@@ -15,11 +15,7 @@ const workers = new Map<OcrLanguage, Promise<Worker>>();
 function getWorker(lang: OcrLanguage): Promise<Worker> {
   let pending = workers.get(lang);
   if (!pending) {
-    pending = (async () => {
-      const worker = await createWorker(lang);
-      await worker.setParameters({ tessedit_pageseg_mode: PSM.SINGLE_BLOCK });
-      return worker;
-    })().catch((err) => {
+    pending = createWorker(lang).catch((err) => {
       workers.delete(lang);
       throw err;
     });
@@ -113,9 +109,10 @@ async function preprocess(image: string, factor = 3, binarize = true): Promise<s
   return canvas.toDataURL('image/png');
 }
 
-async function recognize(lang: OcrLanguage, image: string): Promise<string> {
+async function recognize(lang: OcrLanguage, image: string, psm: PSM): Promise<string> {
   try {
     const worker = await getWorker(lang);
+    await worker.setParameters({ tessedit_pageseg_mode: psm });
     const { data } = await worker.recognize(image);
     return (data.text ?? '').replace(/\r/g, '');
   } catch {
@@ -123,16 +120,32 @@ async function recognize(lang: OcrLanguage, image: string): Promise<string> {
   }
 }
 
-/** Run every OCR language pass on one image and return the raw text of each. */
-export async function ocrVariants(image: string): Promise<string[]> {
+/**
+ * Page-segmentation mode per flow. CP screenshots (a name+CP list) read best
+ * as one dense block; attendance screenshots are full-app captures with
+ * sidebar, cards, and tables, so sparse-text detection reads their rows better.
+ */
+export type OcrFlow = 'cp' | 'attendance';
+
+const FLOW_PSM: Record<OcrFlow, PSM> = {
+  cp: PSM.SINGLE_BLOCK,
+  attendance: PSM.SPARSE_TEXT,
+};
+
+async function runPasses(image: string, psm: PSM, korBinarize: boolean): Promise<string[]> {
   const binarized = await preprocess(image, 3, true);
   const grayscale = await preprocess(image, 3, false);
   const [eng, kor, jpn] = await Promise.all([
-    recognize('eng', binarized),
-    recognize('kor', grayscale),
-    recognize('jpn', binarized),
+    recognize('eng', binarized, psm),
+    recognize('kor', korBinarize ? binarized : grayscale, psm),
+    recognize('jpn', binarized, psm),
   ]);
   return [eng, kor, jpn];
+}
+
+/** Run every OCR language pass on one image and return the raw text of each. */
+export async function ocrVariants(image: string, flow: OcrFlow = 'cp'): Promise<string[]> {
+  return runPasses(image, FLOW_PSM[flow], flow === 'attendance');
 }
 
 /** Normalize for matching: lowercase, unify confusable chars, keep only letters + numbers. */
@@ -318,7 +331,12 @@ export function mergeVariants(variants: string[], roster: string[]): ScannedRow[
 /**
  * Find roster IGNs in party screenshots: run every language pass, take each
  * line (with and without a trailing CP number) as a candidate, and keep the
- * roster names that score at least MATCH_THRESHOLD.
+ * roster names that score well enough to trust. Exact reads (after
+ * normalize/jamoFold) always count. Near-misses must clear a higher bar than
+ * MATCH_THRESHOLD because OCR noise like "A-RERT" ~ "A · Zer0" (0.6) or
+ * "NATION" ~ "Kaion" (0.667) would otherwise auto-check the wrong members.
+ * Short fragments (under 4 normalized chars, e.g. "pt") need an almost-exact
+ * hit; they are usually one-off noise, not a roster name.
  */
 export function scanPartyIgns(variants: string[], roster: string[]): string[] {
   const best = new Map<string, number>();
@@ -334,7 +352,8 @@ export function scanPartyIgns(variants: string[], roster: string[]): string[] {
         const n = normalize(cand);
         if (n.length < 2 || /^\d+$/.test(n)) continue;
         const { ign, score } = scoreIgn(cand, roster);
-        if (score < MATCH_THRESHOLD) continue;
+        const accepted = score >= 1 || (n.length < 4 ? score >= 0.8 : score >= 0.68);
+        if (!accepted) continue;
         if (score > (best.get(ign) ?? 0)) best.set(ign, score);
       }
     }

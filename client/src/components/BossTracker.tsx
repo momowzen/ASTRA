@@ -290,7 +290,7 @@ function AttendanceView({
       for (const f of files) {
         try {
           const dataUrl = await fileToDataUrl(f);
-          const variants = await ocrVariants(dataUrl);
+          const variants = await ocrVariants(dataUrl, 'attendance');
           for (const ign of scanPartyIgns(variants, memberNames)) found.add(ign);
         } catch {
           /* unreadable file — keep going with the rest */
