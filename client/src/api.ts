@@ -125,13 +125,83 @@ export async function fetchData(lastRev?: string): Promise<DataResponse> {
   return request<DataResponse>(`/data${query}`);
 }
 
-export async function saveCells(
+export interface CellUpdate {
+  row: number;
+  col: number;
+  value: string;
+}
+
+const FLUSH_DELAY_MS = 1000;
+const FLUSH_MAX_CELLS = 150;
+
+interface WriteBatch {
+  cells: Map<string, CellUpdate>;
+  waiters: { resolve: () => void; reject: (err: unknown) => void }[];
+  timer: ReturnType<typeof setTimeout> | null;
+}
+
+const writeBatches = new Map<string, WriteBatch>();
+let flushChain: Promise<void> = Promise.resolve();
+
+function flushWriteBatch(tabTitle: string, keepalive = false): void {
+  const batch = writeBatches.get(tabTitle);
+  if (!batch) return;
+  writeBatches.delete(tabTitle);
+  if (batch.timer) clearTimeout(batch.timer);
+  const updates = [...batch.cells.values()];
+  const settle = () =>
+    request('/tabs/' + encodeURIComponent(tabTitle) + '/values', {
+      method: 'PUT',
+      body: JSON.stringify({ updates }),
+      ...(keepalive ? { keepalive: true } : {}),
+    });
+  const task = flushChain.then(settle, settle);
+  flushChain = task.then(
+    () => undefined,
+    () => undefined,
+  );
+  task.then(
+    () => {
+      for (const w of batch.waiters) w.resolve();
+    },
+    (err) => {
+      for (const w of batch.waiters) w.reject(err);
+    },
+  );
+}
+
+function flushAllWrites(keepalive: boolean): void {
+  for (const tabTitle of [...writeBatches.keys()]) flushWriteBatch(tabTitle, keepalive);
+}
+
+if (typeof window !== 'undefined') {
+  window.addEventListener('pagehide', () => flushAllWrites(true));
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'hidden') flushAllWrites(true);
+  });
+}
+
+export function saveCells(
   tabTitle: string,
   updates: { row: number; col: number; value: string }[],
 ): Promise<void> {
-  await request('/tabs/' + encodeURIComponent(tabTitle) + '/values', {
-    method: 'PUT',
-    body: JSON.stringify({ updates }),
+  return new Promise<void>((resolve, reject) => {
+    let batch = writeBatches.get(tabTitle);
+    if (!batch) {
+      batch = { cells: new Map(), waiters: [], timer: null };
+      writeBatches.set(tabTitle, batch);
+    }
+    for (const u of updates) batch.cells.set(`${u.row}:${u.col}`, u);
+    batch.waiters.push({ resolve, reject });
+    if (batch.cells.size >= FLUSH_MAX_CELLS) {
+      flushWriteBatch(tabTitle);
+      return;
+    }
+    if (batch.timer) clearTimeout(batch.timer);
+    batch.timer = setTimeout(() => {
+      batch!.timer = null;
+      flushWriteBatch(tabTitle);
+    }, FLUSH_DELAY_MS);
   });
 }
 

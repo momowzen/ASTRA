@@ -3,7 +3,7 @@ import { config } from './config';
 import * as sheets from './sheets';
 import { findCredential, deleteCredential, setPassword, verifyCredential } from './credentials';
 import { rateLimit, requireAdmin, requireAuth, signToken } from './auth';
-import { findIgn, getSnapshot, getTab, scheduleRefresh, noteWrite, lastError } from './store';
+import { applyLocalWrite, findIgn, getSnapshot, getTab, rowBelongsTo, scheduleRefresh, noteWrite, lastError } from './store';
 import { BOSS_NAMES } from './bosses';
 
 class ForbiddenRow extends Error {
@@ -202,14 +202,23 @@ api.put('/tabs/:title/values', requireAuth, async (req, res) => {
     if (!isAdmin) {
       const rows = [...new Set(clean.map((u) => u.row))];
       if (rows.length > 50) return bad(res, 400, 'Too many rows');
-      const ranges = rows.map((r) => `${sheets.q(title)}!A${r}`);
-      const live = await sheets.getCells(ranges);
-      rows.forEach((rowNum, i) => {
-        const owner = ((live[i] || [])[0] || '').trim().toLowerCase();
-        if (owner !== s.ign.trim().toLowerCase()) {
-          throw new ForbiddenRow(rowNum);
+      const unknown: number[] = [];
+      for (const rowNum of rows) {
+        if (tab.rows.some((r) => r.row === rowNum)) {
+          if (!rowBelongsTo(tab, rowNum, s.ign)) throw new ForbiddenRow(rowNum);
+        } else {
+          unknown.push(rowNum);
         }
-      });
+      }
+      if (unknown.length > 0) {
+        const live = await sheets.getCells(unknown.map((r) => `${sheets.q(title)}!A${r}`));
+        unknown.forEach((rowNum, i) => {
+          const owner = ((live[i] || [])[0] || '').trim().toLowerCase();
+          if (owner !== s.ign.trim().toLowerCase()) {
+            throw new ForbiddenRow(rowNum);
+          }
+        });
+      }
     }
 
     await sheets.batchUpdateValues(
@@ -217,7 +226,7 @@ api.put('/tabs/:title/values', requireAuth, async (req, res) => {
       clean.map((u) => ({ a1: `${sheets.columnLetter(u.col)}${u.row}`, values: [[u.value]] })),
     );
     for (const u of clean) noteWrite(title, u.row, u.col, u.value);
-    scheduleRefresh();
+    for (const u of clean) applyLocalWrite(title, u.row, u.col, u.value);
     res.json({ ok: true });
   } catch (err) {
     if (err instanceof ForbiddenRow) {

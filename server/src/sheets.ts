@@ -7,6 +7,41 @@ const BASE = 'https://sheets.googleapis.com/v4';
 let client: JWT | null = null;
 let cachedToken: { value: string; expiresAt: number } | null = null;
 
+export class QuotaError extends Error {
+  constructor(message: string, public retryAfterMs: number) {
+    super(message);
+    this.name = 'QuotaError';
+  }
+}
+
+let quotaBlockedUntil = 0;
+
+export function isQuotaBlocked(): boolean {
+  return Date.now() < quotaBlockedUntil;
+}
+
+export function quotaRetryAfterMs(): number {
+  return Math.max(quotaBlockedUntil - Date.now(), 0);
+}
+
+let readAttempts = 0;
+
+export function consumeReadAttempts(): number {
+  const n = readAttempts;
+  readAttempts = 0;
+  return n;
+}
+
+function parseRetryDelayMs(body: unknown): number | null {
+  const details = (body as { error?: { details?: { retryInfo?: { retryDelay?: string } }[] } })?.error?.details;
+  const raw = details?.find((d) => d?.retryInfo?.retryDelay)?.retryInfo?.retryDelay;
+  if (!raw) return null;
+  const m = /^([0-9.]+)s$/.exec(raw.trim());
+  if (m) return Math.ceil(Number(m[1]) * 1000);
+  const n = Number(raw);
+  return Number.isFinite(n) && n > 0 ? Math.ceil(n * 1000) : null;
+}
+
 async function getClient(): Promise<JWT> {
   if (!client) {
     client = new JWT({
@@ -33,6 +68,8 @@ async function getToken(): Promise<string> {
 
 export async function sheetsRequest<T>(path: string, init?: RequestInit): Promise<T> {
   const token = await getToken();
+  const method = (init?.method || 'GET').toUpperCase();
+  if (method !== 'POST') readAttempts++;
   const res = await fetch(`${BASE}${path}`, {
     ...init,
     headers: {
@@ -44,6 +81,11 @@ export async function sheetsRequest<T>(path: string, init?: RequestInit): Promis
   const body = await res.json().catch(() => ({}));
   if (!res.ok) {
     const message = (body as { error?: { message?: string } })?.error?.message || res.statusText;
+    if (res.status === 429) {
+      const delayMs = parseRetryDelayMs(body) ?? 60_000;
+      quotaBlockedUntil = Math.max(quotaBlockedUntil, Date.now() + delayMs);
+      throw new QuotaError(`Google Sheets API 429: ${message}`, delayMs);
+    }
     throw new Error(`Google Sheets API ${res.status}: ${message}`);
   }
   return body as T;
@@ -97,10 +139,10 @@ interface CellValidation {
 /**
  * Read data-validation (dropdown) rules for the given sheets.
  * Options are collected from the first ~20 rows, which is where sheets
- * typically carry the rule for the whole column. Failures never throw —
- * a missing options map simply means free-text inputs in the UI.
+ * typically carry the rule for the whole column. Returns null on failure so
+ * the caller can keep serving its previous cache.
  */
-export async function fetchValidations(titles: string[]): Promise<ValidationOptions> {
+export async function fetchValidations(titles: string[]): Promise<ValidationOptions | null> {
   const out: ValidationOptions = {};
   if (titles.length === 0) return out;
   try {
@@ -140,7 +182,8 @@ export async function fetchValidations(titles: string[]): Promise<ValidationOpti
       if (Object.keys(perCol).length > 0) out[title] = perCol;
     }
   } catch (err) {
-    console.warn('[sync] validation fetch failed (dropdowns unavailable):', err instanceof Error ? err.message : err);
+    console.warn('[sync] validation fetch failed (keeping cached dropdowns):', err instanceof Error ? err.message : err);
+    return null;
   }
   return out;
 }
@@ -160,11 +203,12 @@ function cellToString(v: unknown): string {
   return String(v);
 }
 
-/** Retry transient Google API failures once. */
+/** Retry transient Google API failures once (never quota errors). */
 async function withRetry<T>(fn: () => Promise<T>): Promise<T> {
   try {
     return await fn();
   } catch (err) {
+    if (err instanceof QuotaError) throw err;
     await new Promise((r) => setTimeout(r, 700));
     return fn();
   }

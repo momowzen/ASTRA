@@ -121,15 +121,39 @@ async function loadValidations(titles: string[]): Promise<sheets.ValidationOptio
     key !== validationCacheKey ||
     Date.now() - validationCacheAt > VALIDATION_TTL_MS;
   if (stale) {
-    validationCache = await sheets.fetchValidations(titles);
+    const fresh = await sheets.fetchValidations(titles);
+    if (fresh) validationCache = fresh;
     validationCacheKey = key;
     validationCacheAt = Date.now();
   }
   return validationCache ?? {};
 }
 
+const META_TTL_MS = 60_000;
+let metaCache: { sheets: sheets.SheetProperties[] } | null = null;
+let metaCacheAt = 0;
+
+async function getMeta(): Promise<{ sheets: sheets.SheetProperties[] }> {
+  if (!metaCache || Date.now() - metaCacheAt > META_TTL_MS) {
+    metaCache = await sheets.getSpreadsheetMeta();
+    metaCacheAt = Date.now();
+  }
+  return metaCache;
+}
+
+function computeRev(tabs: TabData[]): string {
+  return createHash('sha1')
+    .update(
+      JSON.stringify(
+        tabs.map((t) => [t.meta.title, t.meta.options ?? null, t.rows.map((r) => [r.row, r.cells])]),
+      ),
+    )
+    .digest('hex')
+    .slice(0, 16);
+}
+
 async function load(): Promise<Snapshot> {
-  const meta = await sheets.getSpreadsheetMeta();
+  const meta = await getMeta();
   const visible = meta.sheets
     .filter((s) => !s.hidden && s.title !== config.credentialsTab)
     .sort((a, b) => a.index - b.index);
@@ -150,59 +174,108 @@ async function load(): Promise<Snapshot> {
       validations[s.title],
     ),
   );
-  const rev = createHash('sha1')
-    .update(
-      JSON.stringify(
-        tabs.map((t) => [t.meta.title, t.meta.options ?? null, t.rows.map((r) => [r.row, r.cells])]),
-      ),
-    )
-    .digest('hex')
-    .slice(0, 16);
+  const rev = computeRev(tabs);
   return { rev, ts: Date.now(), tabs };
 }
 
+/**
+ * Apply a successful write straight into the snapshot so other clients see it
+ * on their next poll without spending a Google read. The recent-writes overlay
+ * keeps the following load() consistent until Google has caught up.
+ */
+export function applyLocalWrite(title: string, row: number, col: number, value: string): void {
+  if (!snapshot) return;
+  const tab = snapshot.tabs.find((t) => t.meta.title === title);
+  if (!tab) return;
+  const target = tab.rows.find((r) => r.row === row);
+  if (!target) return;
+  while (target.cells.length <= col) target.cells.push('');
+  target.cells[col] = value;
+  snapshot = { rev: computeRev(snapshot.tabs), ts: Date.now(), tabs: snapshot.tabs };
+}
+
+const REFRESH_MIN_GAP_MS = 1500;
+let lastLoadAt = 0;
+let trailingTimer: NodeJS.Timeout | null = null;
+let quotaLogged = false;
+
 async function doRefresh(): Promise<void> {
+  if (sheets.isQuotaBlocked()) {
+    if (!quotaLogged) {
+      quotaLogged = true;
+      console.error(
+        `[quota] read limit hit, backing off ${Math.max(Math.round(sheets.quotaRetryAfterMs() / 1000), 1)}s`,
+      );
+    }
+    return;
+  }
   try {
     const next = await load();
     const changed = !snapshot || snapshot.rev !== next.rev;
     snapshot = next;
     lastError = null;
+    if (quotaLogged) {
+      quotaLogged = false;
+      console.log('[quota] read quota recovered');
+    }
     if (changed) {
       console.log(`[sync] sheet snapshot rev=${next.rev} tabs=${next.tabs.length}`);
     }
   } catch (err) {
     lastError = err instanceof Error ? err.message : String(err);
-    console.error('[sync] refresh failed:', lastError);
+    if (err instanceof sheets.QuotaError) {
+      if (!quotaLogged) {
+        quotaLogged = true;
+        console.error(
+          `[quota] read limit hit, backing off ${Math.max(Math.round(err.retryAfterMs / 1000), 1)}s`,
+        );
+      }
+    } else {
+      console.error('[sync] refresh failed:', lastError);
+    }
   }
 }
 
 function refresh(): Promise<void> {
   if (inFlight) return inFlight;
+  const wait = lastLoadAt + REFRESH_MIN_GAP_MS - Date.now();
+  if (wait > 0) {
+    if (!trailingTimer) {
+      trailingTimer = setTimeout(() => {
+        trailingTimer = null;
+        void refresh();
+      }, wait);
+      trailingTimer.unref?.();
+    }
+    return Promise.resolve();
+  }
+  lastLoadAt = Date.now();
   inFlight = doRefresh().finally(() => {
     inFlight = null;
   });
   return inFlight;
 }
 
-/** Debounced immediate refresh used after writes (Google can serve stale reads for ~1-2s). */
-let refreshScheduled = false;
+/** Single coalesced refresh after a structural write (append/delete/etc). */
+let refreshTimer: NodeJS.Timeout | null = null;
 export function scheduleRefresh(): void {
-  if (refreshScheduled) return;
-  refreshScheduled = true;
-  const delays = [400, 1500, 3500];
-  delays.forEach((delay, i) => {
-    const t = setTimeout(() => {
-      void refresh();
-      if (i === delays.length - 1) refreshScheduled = false;
-    }, delay);
-      t.unref?.();
-  });
+  if (refreshTimer) return;
+  refreshTimer = setTimeout(() => {
+    refreshTimer = null;
+    void refresh();
+  }, 1500);
+  refreshTimer.unref?.();
 }
 
 export async function initStore(): Promise<void> {
   await refresh();
   timer = setInterval(() => void refresh(), config.pollIntervalMs);
   timer.unref?.();
+  const readsTimer = setInterval(() => {
+    const reads = sheets.consumeReadAttempts();
+    if (reads > 0) console.log(`[sync] reads last 60s: ${reads}`);
+  }, 60_000);
+  readsTimer.unref?.();
 }
 
 export function getSnapshot(): Snapshot {
