@@ -26,7 +26,7 @@ function prettyTitle(title: string): string {
     .replace(/\bof\b/gi, 'of');
 }
 
-const MEMBER_READONLY = new Set(['CP', 'GUILD', 'ROLE', 'STATUS']);
+const MEMBER_READONLY = new Set(['CP', 'ROLE', 'STATUS']);
 
 function Field({
   label,
