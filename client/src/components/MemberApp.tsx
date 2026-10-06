@@ -285,13 +285,12 @@ export default function MemberApp({
     if (!rosterTab || !rosterRow) return [] as { label: string; cls: string }[];
     const cols = buildColumns(rosterTab.meta);
     const out: { label: string; cls: string }[] = [];
-    for (const c of cols.slice(1)) {
+    for (const label of ['ROLE', 'CP', 'GUILD']) {
+      const c = cols.find((col) => col.label.trim().toUpperCase() === label);
+      if (!c) continue;
       const v = (rosterRow.cells[c.index] || '').trim();
       if (!v) continue;
-      const upper = c.label.toUpperCase();
-      const cls = upper === 'CP' ? 'gold' : upper === 'STATUS' ? 'green' : 'violet';
-      const shown = upper === 'CP' ? formatCp(v) : v;
-      out.push({ label: shown, cls });
+      out.push({ label: label === 'CP' ? formatCp(v) : v, cls: label === 'CP' ? 'gold' : 'violet' });
     }
     return out;
   }, [rosterTab, rosterRow]);
@@ -416,7 +415,6 @@ export default function MemberApp({
             <div className="id">
               <h1>{session.ign}</h1>
               <div className="badges">
-                <span className="badge gold">{t('member.badgeMember')}</span>
                 {profileBadges.map((b, i) => (
                   <span key={i} className={`badge ${b.cls}`}>
                     {b.label}

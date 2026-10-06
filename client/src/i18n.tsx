@@ -155,7 +155,6 @@ const DICT: Record<string, { en: string; ko: string; ja: string }> = {
   'member.myProfile': { en: 'My profile', ko: '내 프로필', ja: "自分のプロフィール" },
   'member.profile': { en: 'Profile', ko: '프로필', ja: "プロフィール" },
   'member.loading': { en: 'Loading…', ko: '로딩 중…', ja: "読み込み中…" },
-  'member.badgeMember': { en: 'Member', ko: '멤버', ja: "メンバー" },
   'member.notOnRoster': {
     en: 'Not on the roster yet — ask an admin to add you',
     ko: '아직 로스터에 없습니다 — 관리자에게 추가를 요청하세요', ja: "まだロスターにいません — 管理者に追加を依頼してください",
