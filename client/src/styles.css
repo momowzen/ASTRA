@@ -519,13 +519,34 @@ select option {
   padding-left: 31px;
   width: 220px;
 }
-.search svg {
+.search > svg {
   position: absolute;
   left: 10px;
   top: 50%;
   transform: translateY(-50%);
   color: var(--faint);
   pointer-events: none;
+}
+.search-clear {
+  display: none;
+  position: absolute;
+  right: 6px;
+  top: 50%;
+  transform: translateY(-50%);
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+}
+.search-clear:hover {
+  color: var(--text);
+  background: var(--panel-2);
 }
 .col-filter {
   display: flex;
@@ -1370,8 +1391,8 @@ table.coll td.ign-col {
     display: grid;
     grid-template-columns: minmax(0, 1fr) auto;
     grid-template-areas:
-      'search clear'
-      'col add';
+      'search add'
+      'col col';
     align-items: center;
     gap: 8px;
     width: 100%;
@@ -1383,22 +1404,25 @@ table.coll td.ign-col {
     grid-area: col;
     min-width: 0;
   }
-  .toolbar .toolbar-clear {
-    grid-area: clear;
-  }
   .toolbar .toolbar-add {
     grid-area: add;
     white-space: nowrap;
   }
-  /* Keep the fixed slot but hide the content when inactive, so the 2-line
-     layout never shifts as filters are set/cleared or sheet tabs change. */
-  .val-filter.is-empty,
-  .toolbar-clear.is-empty {
+  /* Clear moves inside the search box on mobile; keep the filter slots
+     reserved so the 2-line layout never shifts. */
+  .toolbar .toolbar-clear {
+    display: none;
+  }
+  .val-filter.is-empty {
     display: inline-flex;
     visibility: hidden;
   }
   .search .input {
     width: 100%;
+    padding-right: 34px;
+  }
+  .search-clear {
+    display: inline-flex;
   }
   .col-filter .select {
     width: auto;

@@ -470,6 +470,20 @@ export default function AdminApp({
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                 />
+                {(search || showCol >= 0 || filterVal) && (
+                  <button
+                    type="button"
+                    className="search-clear"
+                    aria-label={t('admin.clear')}
+                    onClick={() => {
+                      setSearch('');
+                      setShowCol(-1);
+                      setFilterVal('');
+                    }}
+                  >
+                    <IconClose />
+                  </button>
+                )}
               </div>
               <div className="col-filter">
                 <select
