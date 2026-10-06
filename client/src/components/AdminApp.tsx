@@ -184,6 +184,32 @@ export default function AdminApp({
 
   const tab = data.tabs.find((t) => t.meta.title === activeTitle) || data.tabs[0];
   const isBasic = (tab?.meta.title ?? '').toUpperCase() === 'BASIC INFORMATION';
+
+  // Nickname search: map matching nicknames to IGNs from the roster so the same
+  // search box works on every sheet tab, not just Basic Information.
+  const rosterTab = useMemo(
+    () =>
+      data.tabs.find((tb) => tb.meta.title.toUpperCase() === 'BASIC INFORMATION') ||
+      data.tabs.find((tb) => (tb.meta.headers[0]?.[0] || '').trim().toUpperCase() === 'IGN'),
+    [data.tabs],
+  );
+  const nickCol = useMemo(() => {
+    const h = rosterTab?.meta.headers[0] || [];
+    return h.findIndex((x) => String(x).trim().toLowerCase() === 'nickname');
+  }, [rosterTab]);
+  const nickIgns = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    const set = new Set<string>();
+    if (!q || nickCol < 0 || !rosterTab) return set;
+    for (const r of rosterTab.rows) {
+      if ((r.cells[nickCol] || '').toLowerCase().includes(q)) {
+        const ign = (r.cells[0] || '').trim().toLowerCase();
+        if (ign) set.add(ign);
+      }
+    }
+    return set;
+  }, [search, nickCol, rosterTab]);
+
   const allCols = useMemo(() => (tab ? buildColumns(tab.meta) : []), [tab]);
   const projecting = showCol >= 0;
   const cols = useMemo(
@@ -211,11 +237,14 @@ export default function AdminApp({
     if (!tab) return [];
     const q = search.trim().toLowerCase();
     return tab.rows.filter((r) => {
-      if (q && !(r.cells[0] || '').toLowerCase().includes(q)) return false;
+      if (q) {
+        const ign = (r.cells[0] || '').trim().toLowerCase();
+        if (!ign.includes(q) && !nickIgns.has(ign)) return false;
+      }
       if (showCol >= 0 && filterVal && (r.cells[showCol] ?? '').trim() !== filterVal) return false;
       return true;
     });
-  }, [tab, search, showCol, filterVal]);
+  }, [tab, search, showCol, filterVal, nickIgns]);
 
   async function commitCell(row: number, col: number, value: string): Promise<boolean> {
     if (!tab) return false;

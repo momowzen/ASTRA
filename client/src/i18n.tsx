@@ -58,7 +58,7 @@ const DICT: Record<string, { en: string; ko: string; ja: string }> = {
   'admin.sheetTabs': { en: 'Sheet tabs', ko: '시트 탭', ja: "シートタブ" },
   'admin.signedInAs': { en: 'Signed in as {user}', ko: '로그인: {user}', ja: "ログイン中: {user}" },
   'admin.bossTitle': { en: 'Boss Attendance', ko: '보스 출석', ja: "ボス出席" },
-  'admin.searchPh': { en: 'Search IGN…', ko: 'IGN 검색…', ja: "IGNを検索…" },
+  'admin.searchPh': { en: 'Search IGN or nickname…', ko: 'IGN 또는 닉네임 검색…', ja: "IGNまたはニックネームを検索…" },
   'admin.allColumns': { en: 'All columns', ko: '전체 열', ja: "すべての列" },
   'admin.allValues': { en: 'All values', ko: '전체 값', ja: "すべての値" },
   'admin.filterBy': { en: 'Filter by {col}', ko: '{col}로 필터', ja: "{col} で絞り込み" },
