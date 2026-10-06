@@ -895,6 +895,23 @@ tr:hover .icon-btn {
   min-height: 0;
 }
 
+/* Member profile: one panel that scrolls through Basic Information + Equipment. */
+.profile-panel {
+  overflow: hidden;
+}
+.panel-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 26px;
+}
+.profile-section {
+  display: flex;
+  flex-direction: column;
+}
+
 .field-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
@@ -1452,6 +1469,9 @@ table.coll td.ign-col {
 
   .content {
     padding: 14px;
+  }
+  .panel-card {
+    padding: 16px;
   }
   .table-scroll {
     max-height: none;

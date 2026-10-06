@@ -436,59 +436,65 @@ export default function MemberApp({
             </div>
           </div>
 
-          {isDashboard && rosterTab && (
-            <div className="panel-card">
-              <h3>{tabText('BASIC INFORMATION')}</h3>
-              {!rosterRow ? (
-                <div className="empty">
-                  <div className="big">
-                    <IconGrid />
-                  </div>
-                  {t('member.noRowProfile')}
-                </div>
-              ) : (
-                <div className="field-grid">
-                  {rosterCols.slice(1).map((c) => (
-                    <Field
-                      key={c.index}
-                      label={colLabel(c.label, t, lang)}
-                      value={rosterRow.cells[c.index] ?? ''}
-                      options={rosterTab.meta.options?.[c.index]}
-                      readOnly={MEMBER_READONLY.has(c.label.trim().toUpperCase())}
-                      format={isCpLabel(c.label)}
-                      onCommit={(v) => commit(rosterTab, rosterRow.row, c.index, v)}
-                    />
-                  ))}
-                </div>
-              )}
-            </div>
-          )}
+          {isDashboard && (rosterTab || equipTab) && (
+            <div className="panel-card profile-panel">
+              <div className="panel-scroll">
+                {rosterTab && (
+                  <section className="profile-section">
+                    <h3>{tabText('BASIC INFORMATION')}</h3>
+                    {!rosterRow ? (
+                      <div className="empty">
+                        <div className="big">
+                          <IconGrid />
+                        </div>
+                        {t('member.noRowProfile')}
+                      </div>
+                    ) : (
+                      <div className="field-grid">
+                        {rosterCols.slice(1).map((c) => (
+                          <Field
+                            key={c.index}
+                            label={colLabel(c.label, t, lang)}
+                            value={rosterRow.cells[c.index] ?? ''}
+                            options={rosterTab.meta.options?.[c.index]}
+                            readOnly={MEMBER_READONLY.has(c.label.trim().toUpperCase())}
+                            format={isCpLabel(c.label)}
+                            onCommit={(v) => commit(rosterTab, rosterRow.row, c.index, v)}
+                          />
+                        ))}
+                      </div>
+                    )}
+                  </section>
+                )}
 
-          {isDashboard && equipTab && (
-            <div className="panel-card">
-              <h3>{tabText('EQUIPMENT')}</h3>
-              {!equipRow ? (
-                <div className="empty">
-                  <div className="big">
-                    <IconGrid />
-                  </div>
-                  {t('member.noRowProfile')}
-                </div>
-              ) : (
-                <div className="field-grid">
-                  {equipCols.slice(1).map((c) => (
-                    <Field
-                      key={c.index}
-                      label={colLabel(c.label, t, lang)}
-                      value={equipRow.cells[c.index] ?? ''}
-                      options={equipTab.meta.options?.[c.index]}
-                      readOnly={MEMBER_READONLY.has(c.label.trim().toUpperCase())}
-                      format={isCpLabel(c.label)}
-                      onCommit={(v) => commit(equipTab, equipRow.row, c.index, v)}
-                    />
-                  ))}
-                </div>
-              )}
+                {equipTab && (
+                  <section className="profile-section">
+                    <h3>{tabText('EQUIPMENT')}</h3>
+                    {!equipRow ? (
+                      <div className="empty">
+                        <div className="big">
+                          <IconGrid />
+                        </div>
+                        {t('member.noRowProfile')}
+                      </div>
+                    ) : (
+                      <div className="field-grid">
+                        {equipCols.slice(1).map((c) => (
+                          <Field
+                            key={c.index}
+                            label={colLabel(c.label, t, lang)}
+                            value={equipRow.cells[c.index] ?? ''}
+                            options={equipTab.meta.options?.[c.index]}
+                            readOnly={MEMBER_READONLY.has(c.label.trim().toUpperCase())}
+                            format={isCpLabel(c.label)}
+                            onCommit={(v) => commit(equipTab, equipRow.row, c.index, v)}
+                          />
+                        ))}
+                      </div>
+                    )}
+                  </section>
+                )}
+              </div>
             </div>
           )}
 
