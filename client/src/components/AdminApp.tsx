@@ -485,40 +485,38 @@ export default function AdminApp({
                     </option>
                   ))}
                 </select>
-                {showCol >= 0 && (
-                  <select
-                    className="select val-filter"
-                    title={t('admin.filterBy', {
-                      col: colLabel(cols.find((c) => c.index === showCol)?.label ?? '', t, lang),
-                    })}
-                    value={filterVal}
-                    onChange={(e) => {
-                      setFilterVal(e.target.value);
-                      setEditing(null);
-                    }}
-                  >
-                    <option value="">{t('admin.allValues')}</option>
-                    {filterChoices.map((v) => (
-                      <option key={v} value={v} style={{ color: optionColor(v) || 'var(--text)' }}>
-                        {v}
-                      </option>
-                    ))}
-                  </select>
-                )}
-              </div>
-              {(search || showCol >= 0 || filterVal) && (
-                <button
-                  className="btn btn-ghost btn-sm"
-                  onClick={() => {
-                    setSearch('');
-                    setShowCol(-1);
-                    setFilterVal('');
+                <select
+                  className={`select val-filter ${showCol < 0 ? 'is-empty' : ''}`}
+                  disabled={showCol < 0}
+                  title={t('admin.filterBy', {
+                    col: colLabel(cols.find((c) => c.index === showCol)?.label ?? '', t, lang),
+                  })}
+                  value={filterVal}
+                  onChange={(e) => {
+                    setFilterVal(e.target.value);
+                    setEditing(null);
                   }}
                 >
-                  {t('admin.clear')}
-                </button>
-              )}
-              <button className="btn btn-primary" onClick={() => setAddOpen(true)}>
+                  <option value="">{t('admin.allValues')}</option>
+                  {filterChoices.map((v) => (
+                    <option key={v} value={v} style={{ color: optionColor(v) || 'var(--text)' }}>
+                      {v}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <button
+                className={`btn btn-ghost btn-sm toolbar-clear ${search || showCol >= 0 || filterVal ? '' : 'is-empty'}`}
+                disabled={!search && showCol < 0 && !filterVal}
+                onClick={() => {
+                  setSearch('');
+                  setShowCol(-1);
+                  setFilterVal('');
+                }}
+              >
+                {t('admin.clear')}
+              </button>
+              <button className="btn btn-primary toolbar-add" onClick={() => setAddOpen(true)}>
                 <IconPlus /> {t('admin.addRow')}
               </button>
             </div>

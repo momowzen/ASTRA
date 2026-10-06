@@ -503,6 +503,11 @@ select option {
   padding: 7px 10px;
   font-size: 13px;
 }
+/* Filter 2 / Clear keep a fixed slot on mobile; hidden here when inactive. */
+.val-filter.is-empty,
+.toolbar-clear.is-empty {
+  display: none;
+}
 .search {
   position: relative;
 }
@@ -1351,17 +1356,38 @@ table.coll td.ign-col {
     white-space: nowrap;
   }
   .toolbar {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas:
+      'search clear'
+      'col add';
+    align-items: center;
+    gap: 8px;
     width: 100%;
   }
-  .search {
-    flex: 1 1 100%;
+  .toolbar .search {
+    grid-area: search;
+  }
+  .toolbar .col-filter {
+    grid-area: col;
+    min-width: 0;
+  }
+  .toolbar .toolbar-clear {
+    grid-area: clear;
+  }
+  .toolbar .toolbar-add {
+    grid-area: add;
+    white-space: nowrap;
+  }
+  /* Keep the fixed slot but hide the content when inactive, so the 2-line
+     layout never shifts as filters are set/cleared or sheet tabs change. */
+  .val-filter.is-empty,
+  .toolbar-clear.is-empty {
+    display: inline-flex;
+    visibility: hidden;
   }
   .search .input {
     width: 100%;
-  }
-  .col-filter {
-    flex: 1 1 auto;
-    min-width: 0;
   }
   .col-filter .select {
     width: auto;
@@ -1416,14 +1442,19 @@ table.coll td.ign-col {
   }
   .badges {
     flex-wrap: nowrap;
+    align-items: center;
     overflow-x: auto;
-    padding-bottom: 2px;
+    overflow-y: hidden;
     scrollbar-width: none;
+    -ms-overflow-style: none;
   }
   .badges::-webkit-scrollbar {
     display: none;
+    height: 0;
   }
   .badge {
+    flex: 0 0 auto;
+    white-space: nowrap;
     font-size: 11px;
     padding: 4px 9px;
   }
