@@ -24,6 +24,7 @@ export const TAB_KEYS: Record<string, string> = {
 
 export const COL_KEYS: Record<string, string> = {
   NATION: 'col.nation',
+  COUNTRY: 'col.nation',
   GUILD: 'col.guild',
   ROLE: 'col.role',
   STATUS: 'col.status',
