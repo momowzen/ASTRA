@@ -4,7 +4,7 @@ import { INTERNAL_TABS } from '../types';
 import type { Column, DataResponse, Session } from '../types';
 import { buildColumns, formatCp, isCpLabel, optionColor } from '../utils';
 import { addRow as apiAddRow, deleteRow as apiDeleteRow, saveCells, ApiError } from '../api';
-import { IconBulb, IconGear, IconGrid, IconLogout, IconPlus, IconSearch, IconTrash } from './icons';
+import { IconBulb, IconClose, IconGear, IconGrid, IconLogout, IconMenu, IconPlus, IconSearch, IconTrash } from './icons';
 import PasswordModal from './PasswordModal';
 import BossTracker from './BossTracker';
 import GuildRoster from './GuildRoster';
@@ -140,8 +140,28 @@ export default function AdminApp({
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [tipOpen, setTipOpen] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const stripRef = useRef<HTMLElement>(null);
 
   const { t, lang } = useLang();
+
+  const sheetTabs = data.tabs.filter((tb) => !INTERNAL_TABS.includes(tb.meta.title.toUpperCase()));
+
+  function selectTab(title: string) {
+    setActiveTitle(title);
+    setBossView(null);
+    setToolView(null);
+    setRosterView(false);
+    setEditing(null);
+    setShowCol(-1);
+    setFilterVal('');
+    setMenuOpen(false);
+  }
+
+  useEffect(() => {
+    const el = stripRef.current?.querySelector<HTMLElement>('.main-tab.active');
+    el?.scrollIntoView({ inline: 'center', block: 'nearest' });
+  }, [activeTitle, rosterView, bossView, toolView]);
 
   // Views that should fill the viewport exactly: the page never scrolls and the
   // panels keep a uniform 22px gap on every side (list bodies scroll instead).
@@ -253,13 +273,25 @@ export default function AdminApp({
 
   return (
     <div className="shell">
-      <aside className="sidebar">
+      <aside
+        className={menuOpen ? 'sidebar open' : 'sidebar'}
+        onClick={(e) => {
+          if ((e.target as HTMLElement).closest('.nav-item')) setMenuOpen(false);
+        }}
+      >
         <div className="brand">
           <img className="mark" src="./assets/logo.png" alt="" />
           <div>
             <div className="name">ASTRA</div>
             <div className="tag">Admin</div>
           </div>
+          <button
+            className="drawer-close"
+            aria-label={t('common.close')}
+            onClick={() => setMenuOpen(false)}
+          >
+            <IconClose />
+          </button>
         </div>
 
         <div className="section-label">{t('admin.rosterSection')}</div>
@@ -400,8 +432,13 @@ export default function AdminApp({
         </div>
       </aside>
 
+      {menuOpen && <div className="nav-backdrop" onClick={() => setMenuOpen(false)} />}
+
       <main className="main">
         <header className="topbar">
+          <button className="menu-btn" aria-label={t('common.menu')} onClick={() => setMenuOpen(true)}>
+            <IconMenu />
+          </button>
           <h2>
             {rosterView
               ? `${t('admin.rosterSection')} · ${t('admin.rosterOverview')}`
@@ -488,9 +525,20 @@ export default function AdminApp({
           )}
           <span className={`live ${live === 'live' ? '' : live}`}>
             <span className="dot" />
-            {liveNote}
+            <span className="live-text">{liveNote}</span>
           </span>
           <LangToggle />
+          <nav className="main-tabs" ref={stripRef}>
+            {sheetTabs.map((tb) => (
+              <button
+                key={tb.meta.title}
+                className={`main-tab ${!bossView && !toolView && !rosterView && tb.meta.title === tab?.meta.title ? 'active' : ''}`}
+                onClick={() => selectTab(tb.meta.title)}
+              >
+                {tabLabel(tb.meta.title, t, lang)}
+              </button>
+            ))}
+          </nav>
         </header>
 
         <div className={fit ? 'content content-fit' : 'content'}>

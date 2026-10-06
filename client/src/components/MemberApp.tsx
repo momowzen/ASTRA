@@ -3,7 +3,7 @@ import { MEMBER_HIDDEN_TABS } from '../types';
 import type { Column, DataResponse, Session, TabData } from '../types';
 import { buildColumns, formatCp, initials, isCpLabel, isMark, optionColor } from '../utils';
 import { ApiError, saveCells } from '../api';
-import { IconGear, IconGrid, IconLogout } from './icons';
+import { IconClose, IconGear, IconGrid, IconLogout, IconMenu } from './icons';
 import PasswordModal from './PasswordModal';
 import { LangToggle, useLang } from '../i18n';
 import { colLabel, tabLabel } from '../display';
@@ -238,6 +238,8 @@ export default function MemberApp({
 }: Props) {
   const [activeTitle, setActiveTitle] = useState('');
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const stripRef = useRef<HTMLElement>(null);
 
   const { t, lang } = useLang();
   const tabText = (raw: string) => tabLabel(raw, t, lang, prettyTitle);
@@ -255,6 +257,16 @@ export default function MemberApp({
       !MEMBER_HIDDEN_TABS.includes(t.meta.title.toUpperCase()) &&
       (t.meta.headers[0] || []).some((h) => h.trim() !== ''),
   );
+
+  function selectTab(title: string) {
+    setActiveTitle(title);
+    setMenuOpen(false);
+  }
+
+  useEffect(() => {
+    const el = stripRef.current?.querySelector<HTMLElement>('.main-tab.active');
+    el?.scrollIntoView({ inline: 'center', block: 'nearest' });
+  }, [activeTitle]);
 
   const activeTab = memberTabs.find((t) => t.meta.title === activeTitle);
   const isDashboard = !activeTab;
@@ -307,13 +319,25 @@ export default function MemberApp({
 
   return (
     <div className="shell shell-member">
-      <aside className="sidebar">
+      <aside
+        className={menuOpen ? 'sidebar open' : 'sidebar'}
+        onClick={(e) => {
+          if ((e.target as HTMLElement).closest('.nav-item')) setMenuOpen(false);
+        }}
+      >
         <div className="brand">
           <img className="mark" src="./assets/logo.png" alt="" />
           <div>
             <div className="name">ASTRA</div>
             <div className="tag">{t('member.tag')}</div>
           </div>
+          <button
+            className="drawer-close"
+            aria-label={t('common.close')}
+            onClick={() => setMenuOpen(false)}
+          >
+            <IconClose />
+          </button>
         </div>
 
         <div className="section-label">{t('member.myProfile')}</div>
@@ -356,15 +380,34 @@ export default function MemberApp({
         </div>
       </aside>
 
+      {menuOpen && <div className="nav-backdrop" onClick={() => setMenuOpen(false)} />}
+
       <main className="main">
         <header className="topbar">
+          <button className="menu-btn" aria-label={t('common.menu')} onClick={() => setMenuOpen(true)}>
+            <IconMenu />
+          </button>
           <h2>{isDashboard ? t('member.profile') : activeTab ? tabText(activeTab.meta.title) : t('member.loading')}</h2>
           <div className="grow" />
           <span className={`live ${live === 'live' ? '' : live}`}>
             <span className="dot" />
-            {liveNote}
+            <span className="live-text">{liveNote}</span>
           </span>
           <LangToggle />
+          <nav className="main-tabs" ref={stripRef}>
+            <button className={`main-tab ${isDashboard ? 'active' : ''}`} onClick={() => selectTab('')}>
+              {t('member.profile')}
+            </button>
+            {memberTabs.map((mt) => (
+              <button
+                key={mt.meta.title}
+                className={`main-tab ${mt.meta.title === activeTitle ? 'active' : ''}`}
+                onClick={() => selectTab(mt.meta.title)}
+              >
+                {tabText(mt.meta.title)}
+              </button>
+            ))}
+          </nav>
         </header>
 
         <div className="content">

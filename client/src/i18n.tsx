@@ -27,6 +27,8 @@ const DICT: Record<string, { en: string; ko: string; ja: string }> = {
   'common.saving': { en: 'Saving…', ko: '저장 중…', ja: "保存中…" },
   'common.saved': { en: 'Saved', ko: '저장됨', ja: "保存済み" },
   'common.failed': { en: 'Failed', ko: '실패', ja: "失敗" },
+  'common.menu': { en: 'Menu', ko: '메뉴', ja: "メニュー" },
+  'common.close': { en: 'Close', ko: '닫기', ja: "閉じる" },
 
   // ---- login ----
   'login.tag': { en: 'Guild Manager', ko: '길드 관리자', ja: "ギルドマネージャー" },

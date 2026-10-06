@@ -1183,6 +1183,35 @@ table.coll td.ign-col {
   }
 }
 
+/* ---------- mobile controls (hidden on desktop) ---------- */
+
+.menu-btn,
+.drawer-close {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  flex: none;
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--panel-2);
+  color: var(--text);
+  cursor: pointer;
+  transition: 0.13s ease;
+}
+.menu-btn:hover,
+.drawer-close:hover {
+  background: var(--panel-3);
+}
+.main-tabs {
+  display: none;
+}
+.nav-backdrop {
+  display: none;
+}
+
 /* ---------- responsive ---------- */
 
 @media (max-width: 900px) {
@@ -1193,53 +1222,247 @@ table.coll td.ign-col {
     height: 100vh;
     height: 100dvh;
     overflow: hidden;
-    grid-template-rows: auto 1fr;
+    grid-template-rows: 1fr;
   }
-  .shell-member .main {
-    height: auto;
+  .shell-member .main,
+  .shell-member .content {
+    min-height: 0;
   }
-  .sidebar {
-    position: static;
-    height: auto;
-    flex-direction: row;
-    align-items: center;
-    overflow-x: auto;
-    padding: 10px 12px;
-    gap: 8px;
-    border-right: none;
-    border-bottom: 1px solid var(--line-soft);
+
+  .topbar .menu-btn {
+    order: 1;
   }
-  .sidebar .brand {
-    padding: 0 8px 0 0;
+  .menu-btn {
+    display: inline-flex;
   }
-  .sidebar .section-label,
-  .sidebar .spacer {
-    display: none;
+  .topbar h2 {
+    order: 2;
   }
-  .sidebar .tab-scroll {
-    display: contents;
+  .topbar .grow {
+    order: 3;
   }
-  .sidebar .userbox {
-    flex-direction: row;
-    border-top: none;
-    padding-top: 0;
+  .topbar .live {
+    order: 4;
+  }
+  .topbar .lang-toggle {
+    order: 5;
+  }
+  .topbar .toolbar {
+    order: 6;
+  }
+  .topbar .main-tabs {
+    order: 7;
+  }
+  .drawer-close {
+    display: inline-flex;
     margin-left: auto;
   }
+
+  /* Off-canvas navigation drawer */
+  .sidebar {
+    position: fixed;
+    inset: 0 auto 0 0;
+    z-index: 80;
+    width: min(84vw, 320px);
+    height: 100vh;
+    height: 100dvh;
+    flex-direction: column;
+    align-items: stretch;
+    padding: 16px 14px;
+    gap: 6px;
+    overflow-y: auto;
+    overflow-x: hidden;
+    border-right: 1px solid var(--line-soft);
+    background: linear-gradient(180deg, var(--bg-2), var(--panel));
+    transform: translateX(-100%);
+    transition: transform 0.22s ease;
+  }
+  .sidebar.open {
+    transform: none;
+    box-shadow: var(--shadow);
+  }
+  .sidebar .section-label {
+    display: block;
+  }
+  .sidebar .tab-scroll {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    overflow: visible;
+  }
+  .sidebar .userbox {
+    flex-direction: column;
+    border-top: 1px solid var(--line-soft);
+    padding-top: 12px;
+    margin-left: 0;
+  }
   .nav-item {
-    width: auto;
+    width: 100%;
+    padding: 11px 12px;
+  }
+
+  .nav-backdrop {
+    display: block;
+    position: fixed;
+    inset: 0;
+    z-index: 70;
+    background: rgba(4, 6, 12, 0.55);
+    backdrop-filter: blur(2px);
+    animation: fade 0.15s ease;
+  }
+
+  /* Prominent, scrollable sheet-tab strip inside the sticky header */
+  .main-tabs {
+    display: flex;
+    flex-basis: 100%;
+    gap: 8px;
+    margin: 2px -12px -2px;
+    padding: 2px 12px 4px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+  .main-tabs::-webkit-scrollbar {
+    display: none;
+  }
+  .main-tab {
+    flex: none;
+    white-space: nowrap;
+    padding: 7px 14px;
+    border-radius: 999px;
+    border: 1px solid var(--line);
+    background: var(--panel-2);
+    color: var(--muted);
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: 0.13s ease;
+  }
+  .main-tab.active {
+    color: #fff;
+    border-color: rgba(139, 124, 255, 0.5);
+    background: linear-gradient(135deg, rgba(139, 124, 255, 0.28), rgba(139, 124, 255, 0.08));
+  }
+
+  .topbar {
+    padding: 10px 12px;
+    gap: 10px;
+  }
+  .topbar h2 {
+    font-size: 15px;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
     white-space: nowrap;
   }
-  .topbar {
-    padding: 12px 14px;
+  .toolbar {
+    width: 100%;
+  }
+  .search {
+    flex: 1 1 100%;
   }
   .search .input {
-    width: 150px;
+    width: 100%;
   }
+  .col-filter {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+  .col-filter .select {
+    width: auto;
+    flex: 1;
+    min-width: 0;
+  }
+  .live-text {
+    display: none;
+  }
+
   .content {
     padding: 14px;
   }
   .table-scroll {
     max-height: none;
+  }
+
+  /* Comfortable touch targets + avoid iOS input zoom */
+  .input,
+  .select,
+  .coll-select,
+  .cell-input,
+  .toolbar .input,
+  .toolbar .select {
+    font-size: 16px;
+  }
+  .btn {
+    min-height: 40px;
+  }
+
+  /* Compact member hero */
+  .profile-hero {
+    padding: 12px 14px;
+    gap: 12px;
+    margin-bottom: 12px;
+    flex-wrap: nowrap;
+    align-items: center;
+  }
+  .avatar {
+    width: 48px;
+    height: 48px;
+    border-radius: 14px;
+    font-size: 18px;
+  }
+  .profile-hero .id {
+    min-width: 0;
+    flex: 1;
+  }
+  .profile-hero .id h1 {
+    font-size: 18px;
+    margin-bottom: 6px;
+  }
+  .badges {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    padding-bottom: 2px;
+    scrollbar-width: none;
+  }
+  .badges::-webkit-scrollbar {
+    display: none;
+  }
+  .badge {
+    font-size: 11px;
+    padding: 4px 9px;
+  }
+
+  /* Roster stats: 2-up and flush with the 14px content padding */
+  .roster-view .stat-row {
+    margin: -14px -14px 0;
+  }
+  .stat-card {
+    min-width: 0;
+    flex: 1 1 calc(50% - 7px);
+    padding: 14px 16px;
+  }
+  .stat-value {
+    font-size: 22px;
+  }
+}
+
+/* Row-action buttons must be reachable without hover on touch devices. */
+@media (hover: none) {
+  .icon-btn {
+    opacity: 1;
+  }
+}
+
+@media (max-width: 640px) {
+  .toasts {
+    left: 12px;
+    right: 12px;
+    bottom: 12px;
+  }
+  .toast {
+    max-width: none;
   }
 }
 
