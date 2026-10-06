@@ -440,21 +440,24 @@ export default function AdminApp({
             <IconMenu />
           </button>
           <h2>
-            {rosterView
-              ? `${t('admin.rosterSection')} · ${t('admin.rosterOverview')}`
-              : bossView
-                ? `${t('admin.bossTitle')} · ${
-                    bossView === 'dashboard'
-                      ? t('admin.dashboard')
-                      : bossView === 'attendance'
-                        ? t('admin.attendance')
-                        : t('admin.bossConfig')
-                  }`
-                : toolView
-                  ? `${t('tools.section')} · ${toolView === 'cp-update' ? t('tools.cpUpdate') : t('tools.distribution')}`
-                  : tab
-                  ? tabLabel(tab.meta.title, t, lang)
-                  : t('member.loading')}
+            <span className="topbar-tab-title">
+              {rosterView
+                ? `${t('admin.rosterSection')} · ${t('admin.rosterOverview')}`
+                : bossView
+                  ? `${t('admin.bossTitle')} · ${
+                      bossView === 'dashboard'
+                        ? t('admin.dashboard')
+                        : bossView === 'attendance'
+                          ? t('admin.attendance')
+                          : t('admin.bossConfig')
+                    }`
+                  : toolView
+                    ? `${t('tools.section')} · ${toolView === 'cp-update' ? t('tools.cpUpdate') : t('tools.distribution')}`
+                    : tab
+                    ? tabLabel(tab.meta.title, t, lang)
+                    : t('member.loading')}
+            </span>
+            <span className="topbar-brand">ASTRA</span>
           </h2>
           <div className="grow" />
           {!bossView && !toolView && !rosterView && (

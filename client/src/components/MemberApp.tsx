@@ -386,7 +386,12 @@ export default function MemberApp({
           <button className="menu-btn" aria-label={t('common.menu')} onClick={() => setMenuOpen(true)}>
             <IconMenu />
           </button>
-          <h2>{isDashboard ? t('member.profile') : activeTab ? tabText(activeTab.meta.title) : t('member.loading')}</h2>
+          <h2>
+            <span className="topbar-tab-title">
+              {isDashboard ? t('member.profile') : activeTab ? tabText(activeTab.meta.title) : t('member.loading')}
+            </span>
+            <span className="topbar-brand">ASTRA</span>
+          </h2>
           <div className="grow" />
           <span className={`live ${live === 'live' ? '' : live}`}>
             <span className="dot" />

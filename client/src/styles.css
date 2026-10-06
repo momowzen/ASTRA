@@ -489,6 +489,10 @@ select option {
   margin: 0;
   font-weight: 700;
 }
+/* Mobile shows a fixed brand label so the header never resizes per tab. */
+.topbar-brand {
+  display: none;
+}
 .topbar .grow {
   flex: 1;
 }
@@ -1354,6 +1358,13 @@ table.coll td.ign-col {
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+  }
+  .topbar-tab-title {
+    display: none;
+  }
+  .topbar-brand {
+    display: inline;
+    letter-spacing: 0.16em;
   }
   .toolbar {
     display: grid;
