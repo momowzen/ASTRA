@@ -1284,12 +1284,6 @@ table.coll td.ign-col {
   .sidebar .section-label {
     display: block;
   }
-  .sidebar .tab-scroll {
-    display: flex;
-    flex-direction: column;
-    min-height: 0;
-    overflow: visible;
-  }
   .sidebar .userbox {
     flex-direction: column;
     border-top: 1px solid var(--line-soft);
