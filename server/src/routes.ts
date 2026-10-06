@@ -1,7 +1,7 @@
 import { Router, Response } from 'express';
 import { config } from './config';
 import * as sheets from './sheets';
-import { findCredential, deleteCredential, setPassword, verifyCredential } from './credentials';
+import { findCredential, findCredentialByIgn, renameUsername, deleteCredentialByIgn, setPassword, verifyCredential } from './credentials';
 import { rateLimit, requireAdmin, requireAuth, signToken } from './auth';
 import { applyLocalWrite, findIgn, getSnapshot, getTab, rowBelongsTo, scheduleRefresh, noteWrite, lastError } from './store';
 import { BOSS_NAMES } from './bosses';
@@ -65,9 +65,10 @@ api.post('/auth/login', async (req, res) => {
   }
 
   try {
-    const cred = await findCredential(username);
+    const cred = (await findCredential(username)) || (await findCredentialByIgn(username));
     let role: 'ADMIN' | 'MEMBER';
     let canonical: string;
+    let ign: string;
 
     if (cred) {
       if (!(await verifyCredential(cred, password))) {
@@ -75,24 +76,22 @@ api.post('/auth/login', async (req, res) => {
       }
       role = cred.role;
       canonical = cred.username;
+      ign = role === 'ADMIN' ? '' : cred.ign || canonical;
     } else {
       // First login: members sign in with IGN / IGN until they set a password.
-      const ign = findIgn(username);
-      if (!ign || password !== ign) {
+      const found = findIgn(username);
+      if (!found || password !== found) {
         return bad(res, 401, 'Invalid username or password');
       }
-      await setPassword(ign, password, 'MEMBER');
+      await setPassword(found, password, 'MEMBER', found);
       role = 'MEMBER';
-      canonical = ign;
+      canonical = found;
+      ign = found;
     }
 
-    const session = {
-      username: canonical,
-      role,
-      ign: role === 'ADMIN' ? '' : canonical,
-    };
+    const session = { username: canonical, role, ign };
     const token = signToken(session);
-    res.json({ token, role, username: canonical, ign: session.ign });
+    res.json({ token, role, username: canonical, ign });
   } catch (err) {
     console.error('[auth] login failed:', err);
     bad(res, 500, 'Login failed. Please try again.');
@@ -113,7 +112,9 @@ api.post('/auth/password', requireAuth, async (req, res) => {
   if (next.length > 128) return bad(res, 400, 'New password must be 128 characters or fewer');
 
   try {
-    const cred = await findCredential(s.username);
+    const cred =
+      (s.role === 'MEMBER' && s.ign ? await findCredentialByIgn(s.ign) : null) ||
+      (await findCredential(s.username));
     let ok: boolean;
     if (cred) {
       ok = await verifyCredential(cred, current);
@@ -125,11 +126,55 @@ api.post('/auth/password', requireAuth, async (req, res) => {
       }
     }
     if (!ok) return bad(res, 403, 'Current password is incorrect');
-    await setPassword(s.username, next, s.role);
+    await setPassword(cred ? cred.username : s.username, next, s.role);
     res.json({ ok: true });
   } catch (err) {
     console.error('[auth] password change failed:', err);
     bad(res, 500, 'Could not change password');
+  }
+});
+
+api.post('/auth/username', requireAuth, async (req, res) => {
+  const s = req.session!;
+  if (s.role !== 'MEMBER') return bad(res, 403, 'Only members can change their username');
+  const current = String(req.body?.currentPassword ?? '');
+  const next = String(req.body?.username ?? '').trim();
+  if (!next) return bad(res, 400, 'A username is required');
+  if (!current) return bad(res, 400, 'Your current password is required');
+
+  try {
+    const cred =
+      (s.ign ? await findCredentialByIgn(s.ign) : null) || (await findCredential(s.username));
+    let ok: boolean;
+    if (cred) {
+      ok = await verifyCredential(cred, current);
+    } else {
+      ok = current === s.ign || current === s.username;
+    }
+    if (!ok) return bad(res, 403, 'Current password is incorrect');
+
+    const currentUsername = cred?.username ?? s.username;
+    if (next.toLowerCase() !== currentUsername.toLowerCase()) {
+      if (await findCredential(next)) return bad(res, 409, 'That username is already taken');
+      const clash = findIgn(next);
+      if (clash && clash.trim().toLowerCase() !== s.ign.trim().toLowerCase()) {
+        return bad(res, 409, "That username matches another member's IGN");
+      }
+    }
+
+    const ign = s.ign.trim() || cred?.ign || findIgn(currentUsername) || currentUsername;
+    if (cred) {
+      await renameUsername(cred.username, next, ign);
+    } else {
+      await setPassword(next, current, 'MEMBER', ign);
+    }
+
+    const session = { username: next, role: 'MEMBER' as const, ign };
+    const token = signToken(session);
+    res.json({ token, role: 'MEMBER', username: next, ign });
+  } catch (err) {
+    console.error('[auth] username change failed:', err);
+    bad(res, 500, 'Could not change username');
   }
 });
 
@@ -287,7 +332,7 @@ api.post('/admin/reset-member', requireAuth, requireAdmin, async (req, res) => {
   const ign = String(req.query.ign ?? '').trim();
   if (!ign) return bad(res, 400, 'IGN is required');
   try {
-    const removed = await deleteCredential(ign);
+    const removed = await deleteCredentialByIgn(ign);
     res.json({ ok: true, removed });
   } catch (err) {
     console.error('[admin] reset member failed:', err);

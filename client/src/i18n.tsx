@@ -178,6 +178,15 @@ const DICT: Record<string, { en: string; ko: string; ja: string }> = {
   },
   'member.currentPassword': { en: 'Current password', ko: '현재 비밀번호', ja: "現在のパスワード" },
   'member.passwordUpdated': { en: 'Password updated', ko: '비밀번호가 변경되었습니다', ja: "パスワードを更新しました" },
+  'member.usernameSection': { en: 'Change username', ko: '아이디 변경', ja: "ユーザー名の変更" },
+  'member.passwordSection': { en: 'Change password', ko: '비밀번호 변경', ja: "パスワードの変更" },
+  'member.newUsername': { en: 'New username', ko: '새 아이디', ja: "新しいユーザー名" },
+  'member.changeUsername': { en: 'Update username', ko: '아이디 변경', ja: "ユーザー名を更新" },
+  'member.usernameUpdated': { en: 'Username updated', ko: '아이디가 변경되었습니다', ja: "ユーザー名を更新しました" },
+  'member.usernameRequired': { en: 'Enter a username', ko: '아이디를 입력하세요', ja: "ユーザー名を入力してください" },
+  'member.usernameSame': { en: 'That is already your username', ko: '이미 사용 중인 아이디입니다', ja: "すでに同じユーザー名です" },
+  'member.usernamePasswordRequired': { en: 'Enter your current password', ko: '현재 비밀번호를 입력하세요', ja: "現在のパスワードを入力してください" },
+  'member.couldNotChangeUsername': { en: 'Could not change username', ko: '아이디를 변경할 수 없습니다', ja: "ユーザー名を変更できませんでした" },
   'member.couldNotSave': { en: 'Could not save', ko: '저장할 수 없습니다', ja: "保存できませんでした" },
 
   // ---- collection cell ----

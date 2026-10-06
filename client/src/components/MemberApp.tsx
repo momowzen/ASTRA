@@ -4,7 +4,7 @@ import type { Column, DataResponse, Session, TabData } from '../types';
 import { buildColumns, formatCp, initials, isCpLabel, isMark, optionColor } from '../utils';
 import { ApiError, saveCells } from '../api';
 import { IconClose, IconGear, IconGrid, IconLogout, IconMenu } from './icons';
-import PasswordModal from './PasswordModal';
+import MemberSettingsModal from './MemberSettingsModal';
 import { LangToggle, useLang } from '../i18n';
 import { colLabel, tabLabel } from '../display';
 
@@ -16,6 +16,7 @@ interface Props {
   onPatch: (tabTitle: string, updates: { row: number; col: number; value: string }[]) => void;
   toast: (msg: string, kind?: 'ok' | 'err') => void;
   onLogout: () => void;
+  onSessionChange: (s: Session) => void;
 }
 
 function prettyTitle(title: string): string {
@@ -235,6 +236,7 @@ export default function MemberApp({
   onPatch,
   toast,
   onLogout,
+  onSessionChange,
 }: Props) {
   const [activeTitle, setActiveTitle] = useState('');
   const [settingsOpen, setSettingsOpen] = useState(false);
@@ -553,12 +555,11 @@ export default function MemberApp({
       </main>
 
       {settingsOpen && (
-        <PasswordModal
-          title={t('member.settingsTitle')}
-          description={t('member.settingsDesc')}
-          currentLabel={t('member.currentPassword')}
+        <MemberSettingsModal
+          session={session}
           onClose={() => setSettingsOpen(false)}
-          onDone={() => toast(t('member.passwordUpdated'), 'ok')}
+          onSessionChange={onSessionChange}
+          toast={toast}
         />
       )}
     </div>

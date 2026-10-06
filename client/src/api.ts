@@ -260,3 +260,13 @@ export async function changePassword(currentPassword: string, newPassword: strin
     body: JSON.stringify({ currentPassword, newPassword }),
   });
 }
+
+export async function changeUsername(currentPassword: string, newUsername: string): Promise<Session> {
+  const res = await request<{ token: string; role: Session['role']; username: string; ign: string }>(
+    '/auth/username',
+    { method: 'POST', body: JSON.stringify({ currentPassword, username: newUsername }) },
+  );
+  const session: Session = { token: res.token, role: res.role, username: res.username, ign: res.ign };
+  setSession(session);
+  return session;
+}

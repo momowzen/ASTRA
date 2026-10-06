@@ -1142,6 +1142,23 @@ table.coll td.ign-col {
   justify-content: flex-end;
   margin-top: 6px;
 }
+.modal form.settings-section {
+  border-top: 1px solid var(--line-soft);
+  padding-top: 16px;
+  margin-top: 4px;
+}
+.modal form.settings-section:first-of-type {
+  border-top: 0;
+  padding-top: 0;
+  margin-top: 0;
+}
+.settings-section-title {
+  font-family: var(--display);
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--accent);
+}
 .tip-section + .tip-section {
   margin-top: 18px;
 }

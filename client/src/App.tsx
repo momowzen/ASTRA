@@ -219,7 +219,12 @@ export default function App() {
     );
   } else {
     const shared = { data, session, live, liveNote, onPatch, toast: pushToast, onLogout: logout };
-    body = session.role === 'ADMIN' ? <AdminApp {...shared} /> : <MemberApp {...shared} />;
+    body =
+      session.role === 'ADMIN' ? (
+        <AdminApp {...shared} />
+      ) : (
+        <MemberApp {...shared} onSessionChange={(s) => setSession(s)} />
+      );
   }
 
   return (
