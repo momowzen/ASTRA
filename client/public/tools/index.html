@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover">
+  <title>ASTRA</title>
+  <link rel="icon" type="image/png" href="assets/logo.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css?v=20260806b31">
+</head>
+<body>
+
+  <svg class="svg-defs" aria-hidden="true">
+    <defs>
+      <linearGradient id="heroGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stop-color="#8b5cf6" />
+        <stop offset="50%" stop-color="#f59e0b" />
+        <stop offset="100%" stop-color="#22d3ee" />
+      </linearGradient>
+    </defs>
+  </svg>
+
+  <div class="bg-canvas" aria-hidden="true">
+    <div class="nebula nebula-1"></div>
+    <div class="nebula nebula-2"></div>
+    <div class="nebula nebula-3"></div>
+    <div class="stars"></div>
+    <div class="aurora"></div>
+    <div class="vignette"></div>
+  </div>
+
+  <div class="astra-app">
+    <header class="astra-header">
+      <div class="brand" id="brand">
+        <img src="assets/logo.png" alt="" class="brand-logo">
+        <span class="brand-text">ASTRA</span>
+      </div>
+      <div class="header-actions">
+        <span class="live-pill off" id="livePill" aria-live="polite">
+          <span class="dot" aria-hidden="true"></span>
+          <span id="liveText">--</span>
+        </span>
+        <button class="icon-btn" id="alarmBtn" aria-label="Toggle voice alarm" title="Toggle voice alarm">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><line x1="23" y1="9" x2="17" y2="15"></line><line x1="17" y1="9" x2="23" y2="15"></line></svg>
+        </button>
+        <button class="icon-btn lang-btn" id="langBtn" aria-label="Switch language" title="Switch language">
+          <span id="langText" class="lang-flag">🇺🇸</span>
+        </button>
+      </div>
+      <nav class="nav-pill" aria-label="Main navigation">
+        <div class="nav-indicator" aria-hidden="true"></div>
+        <button class="nav-btn active" data-page="tracker" id="navTracker"><span>Tracker</span></button>
+        <button class="nav-btn" data-page="hidden" id="navHidden"><span>Hidden Class</span></button>
+        <button class="nav-btn" data-page="relic" id="navRelic"><span id="relicNavLbl">Relic</span></button>
+      </nav>
+    </header>
+
+    <div class="page active" id="pageTracker">
+      <section class="hero-next" id="heroNext" aria-label="Next spawn">
+        <div class="hero-status-ring" aria-hidden="true">
+          <div class="center-glow"></div>
+          <img class="hero-boss-img" id="heroBossImg" alt="">
+          <svg viewBox="0 0 100 100">
+            <circle class="track" cx="50" cy="50" r="44"></circle>
+            <circle class="progress" id="heroProgress" cx="50" cy="50" r="44" stroke-dasharray="276.46" stroke-dashoffset="276.46"></circle>
+          </svg>
+        </div>
+        <div class="hero-info">
+          <div class="hero-label" id="nextLbl">Next Spawn</div>
+          <h1 class="hero-name" id="nextName">--</h1>
+          <div class="hero-meta">
+            <span class="hero-lv" id="nextLv"></span>
+            <span class="hero-loc" id="nextLoc"></span>
+            <span class="hero-tag" id="nextTag"></span>
+            <span class="hero-guild-badge" id="nextGuild" hidden></span>
+          </div>
+          <div class="hero-at" id="nextAt"></div>
+        </div>
+        <div class="hero-countdown">
+          <div class="hero-countdown-value" id="nextCd">--:--:--</div>
+          <div class="hero-countdown-label" id="nextCdLabel">Time Remaining</div>
+        </div>
+      </section>
+
+      <div class="dashboard-grid">
+        <div class="panel up-hdr">
+          <div class="panel-header">
+            <div class="panel-title">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+              <span id="upcomingLbl">Today</span>
+            </div>
+            <div class="segmented" role="tablist" aria-label="Upcoming view">
+              <button type="button" class="seg-btn active" id="upTodayBtn" data-upview="today" role="tab" aria-selected="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2"></path><path d="M12 20v2"></path><path d="m4.93 4.93 1.41 1.41"></path><path d="m17.66 17.66 1.41 1.41"></path><path d="M2 12h2"></path><path d="M20 12h2"></path><path d="m6.34 17.66-1.41 1.41"></path><path d="m19.07 4.93-1.41 1.41"></path></svg>
+                <span id="upTodayLbl">Today</span>
+              </button>
+              <button type="button" class="seg-btn" id="upTmrwBtn" data-upview="tomorrow" role="tab" aria-selected="false">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"></path></svg>
+                <span id="upTmrwLbl">Tomorrow</span>
+              </button>
+            </div>
+          </div>
+          <div class="panel-body" id="upcomingList"></div>
+          <div class="panel-body" id="upcomingTmrw" hidden></div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-header">
+            <div class="panel-title">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+              <span id="viewTitle">Interval</span>
+            </div>
+            <div class="segmented" role="tablist" aria-label="View mode">
+              <button type="button" class="seg-btn active" id="ivBtn" data-view="interval" role="tab" aria-selected="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-6.219-8.56"></path></svg>
+                <span id="ivBtnLbl">Interval</span>
+              </button>
+              <button type="button" class="seg-btn" id="schedBtn" data-view="schedule" role="tab" aria-selected="false">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+                <span id="schedBtnLbl">Schedule</span>
+              </button>
+            </div>
+          </div>
+          <div class="panel-body" id="ivGrid"></div>
+          <div class="panel-body" id="schedGrid" hidden></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="page hidden-page" id="pageHidden">
+      <div class="ptr-indicator" id="ptrIndicator" aria-hidden="true"></div>
+      <div class="hidden-scroll" id="hiddenScroll">
+        <div class="hidden-grid" id="hiddenList"></div>
+      </div>
+    </div>
+
+    <div class="page relic-page" id="pageRelic">
+      <div class="relic-scroll" id="relicScroll">
+        <div class="relic-grid">
+          <div class="panel">
+            <div class="panel-header">
+              <div class="panel-title">
+                <span id="relicLbl">Relic Levels</span>
+              </div>
+              <span class="panel-count" id="relicCount">4</span>
+            </div>
+            <div class="panel-body relic-body" id="relicSettings">
+
+              <div class="relic-card" id="relicRow0">
+                <div class="relic-card-top">
+                  <span class="relic-dot re-0" aria-hidden="true"></span>
+                  <span class="relic-name" id="relicName0"></span>
+                  <span class="relic-cp" id="relicCp0"></span>
+                </div>
+                <div class="relic-inputs">
+                  <div class="relic-field">
+                    <span class="relic-field-label">Current</span>
+                    <div class="relic-numwrap">
+                      <button type="button" class="relic-stepper" data-idx="0" data-field="from" data-dir="-1" aria-label="Decrease current">&#8722;</button>
+                      <input type="text" class="relic-num" id="relicFrom0" min="1" max="100" value="1" inputmode="numeric">
+                      <button type="button" class="relic-stepper" data-idx="0" data-field="from" data-dir="1" aria-label="Increase current">+</button>
+                    </div>
+                  </div>
+                  <span class="relic-arrow"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 4l14 8-14 8z"></path></svg></span>
+                  <div class="relic-field">
+                    <span class="relic-field-label">Goal</span>
+                    <div class="relic-numwrap">
+                      <button type="button" class="relic-stepper" data-idx="0" data-field="to" data-dir="-1" aria-label="Decrease goal">&#8722;</button>
+                      <input type="text" class="relic-num" id="relicTo0" min="1" max="100" value="1" inputmode="numeric">
+                      <button type="button" class="relic-stepper" data-idx="0" data-field="to" data-dir="1" aria-label="Increase goal">+</button>
+                    </div>
+                  </div>
+                </div>
+                <div class="relic-result" id="relicResult0"></div>
+              </div>
+
+              <div class="relic-card" id="relicRow1">
+                <div class="relic-card-top">
+                  <span class="relic-dot re-1" aria-hidden="true"></span>
+                  <span class="relic-name" id="relicName1"></span>
+                  <span class="relic-cp" id="relicCp1"></span>
+                </div>
+                <div class="relic-inputs">
+                  <div class="relic-field">
+                    <span class="relic-field-label">Current</span>
+                    <div class="relic-numwrap">
+                      <button type="button" class="relic-stepper" data-idx="1" data-field="from" data-dir="-1">&#8722;</button>
+                      <input type="text" class="relic-num" id="relicFrom1" min="1" max="100" value="1" inputmode="numeric">
+                      <button type="button" class="relic-stepper" data-idx="1" data-field="from" data-dir="1">+</button>
+                    </div>
+                  </div>
+                  <span class="relic-arrow"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 4l14 8-14 8z"></path></svg></span>
+                  <div class="relic-field">
+                    <span class="relic-field-label">Goal</span>
+                    <div class="relic-numwrap">
+                      <button type="button" class="relic-stepper" data-idx="1" data-field="to" data-dir="-1">&#8722;</button>
+                      <input type="text" class="relic-num" id="relicTo1" min="1" max="100" value="1" inputmode="numeric">
+                      <button type="button" class="relic-stepper" data-idx="1" data-field="to" data-dir="1">+</button>
+                    </div>
+                  </div>
+                </div>
+                <div class="relic-result" id="relicResult1"></div>
+              </div>
+
+              <div class="relic-card" id="relicRow2">
+                <div class="relic-card-top">
+                  <span class="relic-dot re-2" aria-hidden="true"></span>
+                  <span class="relic-name" id="relicName2"></span>
+                  <span class="relic-cp" id="relicCp2"></span>
+                </div>
+                <div class="relic-inputs">
+                  <div class="relic-field">
+                    <span class="relic-field-label">Current</span>
+                    <div class="relic-numwrap">
+                      <button type="button" class="relic-stepper" data-idx="2" data-field="from" data-dir="-1">&#8722;</button>
+                      <input type="text" class="relic-num" id="relicFrom2" min="1" max="100" value="1" inputmode="numeric">
+                      <button type="button" class="relic-stepper" data-idx="2" data-field="from" data-dir="1">+</button>
+                    </div>
+                  </div>
+                  <span class="relic-arrow"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 4l14 8-14 8z"></path></svg></span>
+                  <div class="relic-field">
+                    <span class="relic-field-label">Goal</span>
+                    <div class="relic-numwrap">
+                      <button type="button" class="relic-stepper" data-idx="2" data-field="to" data-dir="-1">&#8722;</button>
+                      <input type="text" class="relic-num" id="relicTo2" min="1" max="100" value="1" inputmode="numeric">
+                      <button type="button" class="relic-stepper" data-idx="2" data-field="to" data-dir="1">+</button>
+                    </div>
+                  </div>
+                </div>
+                <div class="relic-result" id="relicResult2"></div>
+              </div>
+
+              <div class="relic-card" id="relicRow3">
+                <div class="relic-card-top">
+                  <span class="relic-dot re-3" aria-hidden="true"></span>
+                  <span class="relic-name" id="relicName3"></span>
+                  <span class="relic-cp" id="relicCp3"></span>
+                </div>
+                <div class="relic-inputs">
+                  <div class="relic-field">
+                    <span class="relic-field-label">Current</span>
+                    <div class="relic-numwrap">
+                      <button type="button" class="relic-stepper" data-idx="3" data-field="from" data-dir="-1">&#8722;</button>
+                      <input type="text" class="relic-num" id="relicFrom3" min="1" max="100" value="1" inputmode="numeric">
+                      <button type="button" class="relic-stepper" data-idx="3" data-field="from" data-dir="1">+</button>
+                    </div>
+                  </div>
+                  <span class="relic-arrow"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 4l14 8-14 8z"></path></svg></span>
+                  <div class="relic-field">
+                    <span class="relic-field-label">Goal</span>
+                    <div class="relic-numwrap">
+                      <button type="button" class="relic-stepper" data-idx="3" data-field="to" data-dir="-1">&#8722;</button>
+                      <input type="text" class="relic-num" id="relicTo3" min="1" max="100" value="1" inputmode="numeric">
+                      <button type="button" class="relic-stepper" data-idx="3" data-field="to" data-dir="1">+</button>
+                    </div>
+                  </div>
+                </div>
+                <div class="relic-result" id="relicResult3"></div>
+              </div>
+
+              <div class="relic-grand">
+                <div class="relic-grand-cell">
+                  <span class="relic-grand-label" id="relicGrandLblP">Pieces</span>
+                  <span class="relic-grand-value" id="relicGrandPieces">0</span>
+                </div>
+                <div class="relic-grand-cell">
+                  <span class="relic-grand-label" id="relicGrandLblU">Upgrades</span>
+                  <span class="relic-grand-value" id="relicGrandUp">0</span>
+                </div>
+                <div class="relic-grand-cell">
+                  <span class="relic-grand-label" id="relicGrandLblC">Combat Power</span>
+                  <span class="relic-grand-value gold" id="relicGrandCp">+0</span>
+                </div>
+              </div>
+
+              </div>
+          </div>
+
+          <div class="panel">
+            <div class="panel-header">
+              <div class="panel-title">
+                <span id="mktLbl">Temporal Piece Market</span>
+              </div>
+              <div class="mkt-actions">
+                <span class="mkt-realm" id="mktRealm">Origin</span>
+                <button class="icon-btn mkt-refresh" id="mktRefresh" title="Refresh" aria-label="Refresh market prices">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.64-6.36"></path><polyline points="21 3 21 9 15 9"></polyline></svg>
+                </button>
+              </div>
+            </div>
+            <div class="panel-body mkt-body" id="mktBody">
+              <div class="mkt-status">
+                <span class="mkt-updated" id="mktUpdated">--</span>
+                <div class="segmented mkt-currency" role="tablist" aria-label="Currency">
+                  <button type="button" class="seg-btn active" data-cur="usd" role="tab" aria-selected="true">USDt</button>
+                  <button type="button" class="seg-btn" data-cur="php" role="tab" aria-selected="false">PHP</button>
+                  <button type="button" class="seg-btn" data-cur="jpy" role="tab" aria-selected="false">JPY</button>
+                  <button type="button" class="seg-btn" data-cur="krw" role="tab" aria-selected="false">KRW</button>
+                </div>
+              </div>
+              <div class="mkt-state" id="mktState"></div>
+              <div class="tier-list" id="tierList"></div>
+              <div class="mkt-insight" id="mktInsight"></div>
+              <button class="mkt-details-toggle" id="mktDetailsToggle" type="button" hidden><span id="mktDetailsToggleLbl"></span><span class="mkt-toggle-arrow">&#9660;</span></button>
+              <div class="mkt-save" id="mktSave" hidden></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="status-bar" id="exportInfo">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+      <span>Initializing ASTRA...</span>
+    </div>
+  </div>
+
+  <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore-compat.js"></script>
+    <script src="app.js?v=20260810c01"></script>
+</body>
+</html>

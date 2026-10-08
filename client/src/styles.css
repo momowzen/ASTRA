@@ -1447,6 +1447,9 @@ table.coll td.ign-col {
   .topbar .live {
     order: 4;
   }
+  .topbar .topbar-alarm {
+    order: 4;
+  }
   .topbar .lang-toggle {
     order: 5;
   }
@@ -2310,4 +2313,43 @@ table.grid.roster-grid td.ign-col {
   min-width: 0;
   width: 1px;
   white-space: nowrap;
+}
+
+/* ---------- member tools (embedded ASTRA Web Viewer) ---------- */
+.tools-frame {
+  flex: 1;
+  width: 100%;
+  min-height: 0;
+  border: 0;
+  border-radius: var(--radius);
+  background: var(--bg);
+}
+
+/* Alarm toggle (moved into the topbar, shown only on the Boss Tracker tool). */
+.topbar-alarm {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  flex: none;
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: rgba(16, 22, 42, 0.7);
+  color: var(--muted);
+  cursor: pointer;
+  transition: 0.13s ease;
+}
+.topbar-alarm svg {
+  width: 16px;
+  height: 16px;
+}
+.topbar-alarm:hover {
+  background: var(--panel-3);
+  color: var(--text);
+}
+.topbar-alarm.on {
+  color: var(--green);
+  border-color: rgba(61, 220, 151, 0.5);
 }

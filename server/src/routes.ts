@@ -723,6 +723,36 @@ api.post('/ocr/cp', requireAuth, requireAdmin, async (req, res) => {
   res.json({ texts: result.texts });
 });
 
+// Proxy text-to-speech to an openai-edge-tts instance
+// (https://github.com/travisvn/openai-edge-tts) so the browser gets same-origin
+// audio without exposing the TTS host or its API key. Falls back to nothing on
+// failure — the client then uses the built-in Web Speech API.
+api.post('/tts', requireAuth, async (req, res) => {
+  const input = typeof req.body?.input === 'string' ? req.body.input.trim() : '';
+  if (!input) return bad(res, 400, 'input is required');
+  const voice = (typeof req.body?.voice === 'string' && req.body.voice.trim()) || config.ttsVoice || 'en-US-AvaNeural';
+  try {
+    const upstream = await fetch(`${config.ttsUrl}/v1/audio/speech`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${config.ttsApiKey}`,
+      },
+      body: JSON.stringify({ model: 'tts-1', input: input.slice(0, 2000), voice, response_format: 'mp3' }),
+    });
+    if (!upstream.ok) {
+      const detail = await upstream.text().catch(() => '');
+      return bad(res, 502, `tts upstream ${upstream.status}${detail ? `: ${detail.slice(0, 200)}` : ''}`);
+    }
+    const audio = Buffer.from(await upstream.arrayBuffer());
+    res.setHeader('Content-Type', upstream.headers.get('content-type') || 'audio/mpeg');
+    res.setHeader('Cache-Control', 'no-store');
+    res.send(audio);
+  } catch (err) {
+    return bad(res, 502, `tts unreachable: ${String((err as Error)?.message || err).slice(0, 200)}`);
+  }
+});
+
 api.post('/cp/update', requireAuth, requireAdmin, async (req, res) => {
   const items = req.body?.items;
   if (!Array.isArray(items) || items.length === 0) return bad(res, 400, 'No CP items supplied');

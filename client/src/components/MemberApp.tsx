@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { MEMBER_HIDDEN_TABS } from '../types';
 import type { Column, DataResponse, Session, TabData } from '../types';
 import { buildColumns, formatCp, initials, isCpLabel, isMark, MEMBER_READONLY, optionColor } from '../utils';
-import { ApiError, saveCells } from '../api';
+import { ApiError, apiBase, saveCells } from '../api';
 import { IconClose, IconGear, IconGrid, IconLogout, IconMenu } from './icons';
 import MemberSettingsModal from './MemberSettingsModal';
 import ProfileProgress from './ProfileProgress';
@@ -37,6 +37,18 @@ const ROSTER_COLS = [
 
 // IGN is shown but not filterable.
 const ROSTER_FILTER_COLS = ROSTER_COLS.filter((c) => c.key !== 'ign');
+
+type ToolView = 'tracker' | 'hidden' | 'relic';
+
+interface AstraToolsApi {
+  onStatusChange: ((on: boolean) => void) | null;
+  onAlarmChange: ((on: boolean) => void) | null;
+  apiBase: string;
+  setPage: (page: string) => void;
+  setLang: (lang: string) => void;
+  toggleAlarm: () => void;
+  alarmOn: () => boolean;
+}
 
 function Field({
   label,
@@ -258,6 +270,10 @@ export default function MemberApp({
   const [rosterView, setRosterView] = useState(false);
   const [rosterCol, setRosterCol] = useState(-1);
   const [rosterVal, setRosterVal] = useState('');
+  const [toolsView, setToolsView] = useState<ToolView | null>(null);
+  const [toolsOnline, setToolsOnline] = useState(true);
+  const [toolsAlarm, setToolsAlarm] = useState(false);
+  const toolsFrameRef = useRef<HTMLIFrameElement>(null);
   const stripRef = useRef<HTMLElement>(null);
 
   const { t, lang } = useLang();
@@ -280,14 +296,23 @@ export default function MemberApp({
   function selectTab(title: string) {
     setActiveTitle(title);
     setRosterView(false);
+    setToolsView(null);
     setMenuOpen(false);
   }
 
   function showRoster() {
     setRosterView(true);
     setActiveTitle('');
+    setToolsView(null);
     setRosterCol(-1);
     setRosterVal('');
+    setMenuOpen(false);
+  }
+
+  function showTool(tool: ToolView) {
+    setToolsView(tool);
+    setActiveTitle('');
+    setRosterView(false);
     setMenuOpen(false);
   }
 
@@ -320,8 +345,33 @@ export default function MemberApp({
     el?.scrollIntoView({ inline: 'center', block: 'nearest' });
   }, [activeTitle]);
 
+  const mapLang = (l: string) => (l === 'ko' || l === 'ja' || l === 'zh' ? l : 'en');
+  const toolsApi = () =>
+    (toolsFrameRef.current?.contentWindow as (Window & { ASTRA_TOOLS?: AstraToolsApi }) | null)
+      ?.ASTRA_TOOLS;
+
+  function onToolsLoad() {
+    const api = toolsApi();
+    if (!api) return;
+    api.onStatusChange = (on) => setToolsOnline(on);
+    api.onAlarmChange = (on) => setToolsAlarm(on);
+    api.apiBase = apiBase();
+    setToolsAlarm(!!api.alarmOn());
+    api.setLang(mapLang(lang));
+    if (toolsView) api.setPage(toolsView);
+  }
+
+  useEffect(() => {
+    if (toolsView) toolsApi()?.setPage(toolsView);
+  }, [toolsView]);
+
+  useEffect(() => {
+    toolsApi()?.setLang(mapLang(lang));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [lang]);
+
   const activeTab = memberTabs.find((t) => t.meta.title === activeTitle);
-  const isDashboard = !activeTab && !rosterView;
+  const isDashboard = !activeTab && !rosterView && !toolsView;
 
   const myRow = useMemo(() => {
     const ign = session.ign.trim().toLowerCase();
@@ -389,6 +439,9 @@ export default function MemberApp({
     return rosterMembers.filter((m) => (m[key] || '').trim() === rosterVal);
   }, [rosterMembers, rosterCol, rosterVal]);
 
+  const liveState = toolsView ? (toolsOnline ? 'live' : 'error') : live;
+  const liveText = toolsView ? (toolsOnline ? t('app.live') : t('app.offline')) : liveNote;
+
   return (
     <div className="shell shell-member">
       <aside
@@ -441,6 +494,35 @@ export default function MemberApp({
           </button>
         ))}
 
+        <div className="section-label">{t('member.tools')}</div>
+        <button
+          className={`nav-item ${toolsView === 'tracker' ? 'active' : ''}`}
+          onClick={() => showTool('tracker')}
+        >
+          <span className="ico">
+            <IconGrid />
+          </span>
+          {t('member.toolBossTracker')}
+        </button>
+        <button
+          className={`nav-item ${toolsView === 'hidden' ? 'active' : ''}`}
+          onClick={() => showTool('hidden')}
+        >
+          <span className="ico">
+            <IconGrid />
+          </span>
+          {t('member.toolHiddenClass')}
+        </button>
+        <button
+          className={`nav-item ${toolsView === 'relic' ? 'active' : ''}`}
+          onClick={() => showTool('relic')}
+        >
+          <span className="ico">
+            <IconGrid />
+          </span>
+          {t('member.toolRelic')}
+        </button>
+
         <div className="spacer" />
         <div className="userbox">
           <button className="nav-item" onClick={() => setSettingsOpen(true)}>
@@ -467,20 +549,48 @@ export default function MemberApp({
           </button>
           <h2>
             <span className="topbar-tab-title">
-              {rosterView
-                ? t('member.roster')
-                : isDashboard
-                  ? t('member.profile')
-                  : activeTab
-                    ? tabText(activeTab.meta.title)
-                    : t('member.loading')}
+              {toolsView
+                ? toolsView === 'tracker'
+                  ? t('member.toolBossTracker')
+                  : toolsView === 'hidden'
+                    ? t('member.toolHiddenClass')
+                    : t('member.toolRelic')
+                : rosterView
+                  ? t('member.roster')
+                  : isDashboard
+                    ? t('member.profile')
+                    : activeTab
+                      ? tabText(activeTab.meta.title)
+                      : t('member.loading')}
             </span>
             <span className="topbar-brand">ASTRA</span>
           </h2>
           <div className="grow" />
-          <span className={`live ${live === 'live' ? '' : live}`}>
+          {toolsView === 'tracker' && (
+            <button
+              className={`topbar-alarm ${toolsAlarm ? 'on' : ''}`}
+              aria-label={t('member.alarm')}
+              title={t('member.alarm')}
+              aria-pressed={toolsAlarm}
+              onClick={() => toolsApi()?.toggleAlarm()}
+            >
+              {toolsAlarm ? (
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
+                  <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07" />
+                </svg>
+              ) : (
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
+                  <line x1="23" y1="9" x2="17" y2="15" />
+                  <line x1="17" y1="9" x2="23" y2="15" />
+                </svg>
+              )}
+            </button>
+          )}
+          <span className={`live ${liveState === 'live' ? '' : liveState}`}>
             <span className="dot" />
-            <span className="live-text">{liveNote}</span>
+            <span className="live-text">{liveText}</span>
           </span>
           <LangToggle />
           <nav className="main-tabs" ref={stripRef}>
@@ -499,10 +609,29 @@ export default function MemberApp({
                 {tabText(mt.meta.title)}
               </button>
             ))}
+            <button
+              className={`main-tab ${toolsView === 'tracker' ? 'active' : ''}`}
+              onClick={() => showTool('tracker')}
+            >
+              {t('member.toolBossTracker')}
+            </button>
+            <button
+              className={`main-tab ${toolsView === 'hidden' ? 'active' : ''}`}
+              onClick={() => showTool('hidden')}
+            >
+              {t('member.toolHiddenClass')}
+            </button>
+            <button
+              className={`main-tab ${toolsView === 'relic' ? 'active' : ''}`}
+              onClick={() => showTool('relic')}
+            >
+              {t('member.toolRelic')}
+            </button>
           </nav>
         </header>
 
         <div className="content">
+          {!toolsView && (
           <div className="profile-hero">
             <div className="avatar">{initials(session.ign)}</div>
             <div className="id">
@@ -522,6 +651,18 @@ export default function MemberApp({
             </div>
             <ProfileProgress tabs={data.tabs} ign={session.ign} tabText={tabText} onJump={jumpToField} />
           </div>
+          )}
+
+          {toolsView && (
+            <iframe
+              ref={toolsFrameRef}
+              className="tools-frame"
+              src="./tools/index.html"
+              title={t('member.tools')}
+              allow="autoplay"
+              onLoad={onToolsLoad}
+            />
+          )}
 
           {rosterView && (
             <div className="panel-card roster-panel">
