@@ -173,6 +173,8 @@ const DICT: Record<string, { en: string; ko: string; ja: string; zh: string }> =
   'member.tag': { en: 'Member', ko: '멤버', ja: "メンバー", zh: '成员' },
   'member.myProfile': { en: 'My profile', ko: '내 프로필', ja: "自分のプロフィール", zh: '我的资料' },
   'member.profile': { en: 'Profile', ko: '프로필', ja: "プロフィール", zh: '个人资料' },
+  'member.roster': { en: 'Roster', ko: '로스터', ja: "ロスター", zh: '名单' },
+  'member.membersCount': { en: '{a} members', ko: '멤버 {a}명', ja: "メンバー {a}名", zh: '{a} 名成员' },
   'member.loading': { en: 'Loading…', ko: '로딩 중…', ja: "読み込み中…", zh: '加载中…' },
   'member.notOnRoster': {
     en: 'Not on the roster yet — ask an admin to add you',

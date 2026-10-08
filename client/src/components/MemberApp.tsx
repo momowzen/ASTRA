@@ -28,6 +28,13 @@ function prettyTitle(title: string): string {
     .replace(/\bof\b/gi, 'of');
 }
 
+const ROSTER_COLS = [
+  { key: 'ign', label: 'IGN' },
+  { key: 'role', label: 'ROLE' },
+  { key: 'guild', label: 'GUILD' },
+  { key: 'cp', label: 'CP' },
+] as const;
+
 function Field({
   label,
   value,
@@ -245,6 +252,9 @@ export default function MemberApp({
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [jump, setJump] = useState<{ tab: string; col: number } | null>(null);
+  const [rosterView, setRosterView] = useState(false);
+  const [rosterCol, setRosterCol] = useState(-1);
+  const [rosterVal, setRosterVal] = useState('');
   const stripRef = useRef<HTMLElement>(null);
 
   const { t, lang } = useLang();
@@ -266,6 +276,15 @@ export default function MemberApp({
 
   function selectTab(title: string) {
     setActiveTitle(title);
+    setRosterView(false);
+    setMenuOpen(false);
+  }
+
+  function showRoster() {
+    setRosterView(true);
+    setActiveTitle('');
+    setRosterCol(-1);
+    setRosterVal('');
     setMenuOpen(false);
   }
 
@@ -299,7 +318,7 @@ export default function MemberApp({
   }, [activeTitle]);
 
   const activeTab = memberTabs.find((t) => t.meta.title === activeTitle);
-  const isDashboard = !activeTab;
+  const isDashboard = !activeTab && !rosterView;
 
   const myRow = useMemo(() => {
     const ign = session.ign.trim().toLowerCase();
@@ -346,6 +365,27 @@ export default function MemberApp({
     }
   }
 
+  const rosterMembers = data.roster ?? [];
+  const rosterChoices = useMemo(() => {
+    if (rosterCol < 0) return [] as string[];
+    const key = ROSTER_COLS[rosterCol].key;
+    const seen = new Set<string>();
+    const out: string[] = [];
+    for (const m of rosterMembers) {
+      const v = (m[key] || '').trim();
+      if (v && !seen.has(v)) {
+        seen.add(v);
+        out.push(v);
+      }
+    }
+    return out;
+  }, [rosterMembers, rosterCol]);
+  const rosterRows = useMemo(() => {
+    if (rosterCol < 0 || !rosterVal) return rosterMembers;
+    const key = ROSTER_COLS[rosterCol].key;
+    return rosterMembers.filter((m) => (m[key] || '').trim() === rosterVal);
+  }, [rosterMembers, rosterCol, rosterVal]);
+
   return (
     <div className="shell shell-member">
       <aside
@@ -372,18 +412,24 @@ export default function MemberApp({
         <div className="section-label">{t('member.myProfile')}</div>
         <button
           className={`nav-item ${isDashboard ? 'active' : ''}`}
-          onClick={() => setActiveTitle('')}
+          onClick={() => selectTab('')}
         >
           <span className="ico">
             <IconGrid />
           </span>
           {t('member.profile')}
         </button>
+        <button className={`nav-item ${rosterView ? 'active' : ''}`} onClick={showRoster}>
+          <span className="ico">
+            <IconGrid />
+          </span>
+          {t('member.roster')}
+        </button>
         {memberTabs.map((t) => (
           <button
             key={t.meta.title}
             className={`nav-item ${t.meta.title === activeTitle ? 'active' : ''}`}
-            onClick={() => setActiveTitle(t.meta.title)}
+            onClick={() => selectTab(t.meta.title)}
           >
             <span className="ico">
               <IconGrid />
@@ -418,7 +464,13 @@ export default function MemberApp({
           </button>
           <h2>
             <span className="topbar-tab-title">
-              {isDashboard ? t('member.profile') : activeTab ? tabText(activeTab.meta.title) : t('member.loading')}
+              {rosterView
+                ? t('member.roster')
+                : isDashboard
+                  ? t('member.profile')
+                  : activeTab
+                    ? tabText(activeTab.meta.title)
+                    : t('member.loading')}
             </span>
             <span className="topbar-brand">ASTRA</span>
           </h2>
@@ -431,6 +483,9 @@ export default function MemberApp({
           <nav className="main-tabs" ref={stripRef}>
             <button className={`main-tab ${isDashboard ? 'active' : ''}`} onClick={() => selectTab('')}>
               {t('member.profile')}
+            </button>
+            <button className={`main-tab ${rosterView ? 'active' : ''}`} onClick={showRoster}>
+              {t('member.roster')}
             </button>
             {memberTabs.map((mt) => (
               <button
@@ -464,6 +519,88 @@ export default function MemberApp({
             </div>
             <ProfileProgress tabs={data.tabs} ign={session.ign} tabText={tabText} onJump={jumpToField} />
           </div>
+
+          {rosterView && (
+            <div className="panel-card roster-panel">
+              <h3>{t('member.roster')}</h3>
+              <div className="table-meta roster-filter">
+                <span>{t('member.membersCount', { a: rosterRows.length })}</span>
+                <div className="table-meta-right">
+                  <select
+                    className="select"
+                    value={rosterCol}
+                    onChange={(e) => {
+                      setRosterCol(Number(e.target.value));
+                      setRosterVal('');
+                    }}
+                  >
+                    <option value={-1}>{t('admin.allColumns')}</option>
+                    {ROSTER_COLS.map((c, i) => (
+                      <option key={c.key} value={i}>
+                        {colLabel(c.label, t, lang)}
+                      </option>
+                    ))}
+                  </select>
+                  {rosterCol >= 0 && (
+                    <select
+                      className="select"
+                      value={rosterVal}
+                      onChange={(e) => setRosterVal(e.target.value)}
+                    >
+                      <option value="">{t('admin.allValues')}</option>
+                      {rosterChoices.map((v) => (
+                        <option key={v} value={v}>
+                          {v}
+                        </option>
+                      ))}
+                    </select>
+                  )}
+                </div>
+              </div>
+              <div className="table-scroll">
+                <table className="grid">
+                  <thead>
+                    <tr className="labels single">
+                      {ROSTER_COLS.map((c, i) => (
+                        <th key={c.key} className={i === 0 ? 'ign-col' : ''}>
+                          {colLabel(c.label, t, lang)}
+                        </th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {rosterRows.map((m) => (
+                      <tr key={m.ign}>
+                        <td className="ign-col">
+                          <div className="cell">{m.ign}</div>
+                        </td>
+                        <td>
+                          <div className="cell" style={{ color: optionColor(m.role) }}>
+                            {m.role || '—'}
+                          </div>
+                        </td>
+                        <td>
+                          <div className="cell" style={{ color: optionColor(m.guild) }}>
+                            {m.guild || '—'}
+                          </div>
+                        </td>
+                        <td>
+                          <div className="cell">{m.cp ? formatCp(m.cp) : '—'}</div>
+                        </td>
+                      </tr>
+                    ))}
+                    {rosterRows.length === 0 && (
+                      <tr>
+                        <td colSpan={ROSTER_COLS.length}>
+                          <div className="empty">{t('admin.noRows')}</div>
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
 
           {isDashboard && (rosterTab || equipTab) && (
             <div className="panel-card profile-panel">

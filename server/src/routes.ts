@@ -198,6 +198,27 @@ api.get('/data', requireAuth, (req, res) => {
       rows: isAdmin ? t.rows : t.rows.filter((r) => (r.cells[0] || '').trim().toLowerCase() === ign),
     }));
 
+  // Read-only roster (IGN/ROLE/GUILD/CP) for the member "Roster" view — the
+  // per-tab rows above are filtered to the caller, so expose these columns.
+  const basic = snap.tabs.find((t) => t.meta.title.toUpperCase() === 'BASIC INFORMATION');
+  const roster: { ign: string; role: string; guild: string; cp: string }[] = [];
+  if (basic) {
+    const h = (basic.meta.headers[0] || []).map((x) => String(x).trim().toUpperCase());
+    const roleI = h.indexOf('ROLE');
+    const guildI = h.indexOf('GUILD');
+    const cpI = h.indexOf('CP');
+    for (const r of basic.rows) {
+      const rowIgn = (r.cells[0] || '').trim();
+      if (!rowIgn) continue;
+      roster.push({
+        ign: rowIgn,
+        role: roleI >= 0 ? (r.cells[roleI] || '').trim() : '',
+        guild: guildI >= 0 ? (r.cells[guildI] || '').trim() : '',
+        cp: cpI >= 0 ? (r.cells[cpI] || '').trim() : '',
+      });
+    }
+  }
+
   res.json({
     rev: snap.rev,
     ts: snap.ts,
@@ -206,6 +227,7 @@ api.get('/data', requireAuth, (req, res) => {
     username: s.username,
     ign: s.ign,
     tabs,
+    roster,
   });
 });
 

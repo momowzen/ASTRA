@@ -27,7 +27,15 @@ export interface DataResponse {
   username: string;
   ign: string;
   tabs: TabData[];
+  roster?: RosterMember[];
   unchanged?: boolean;
+}
+
+export interface RosterMember {
+  ign: string;
+  role: string;
+  guild: string;
+  cp: string;
 }
 
 export interface Session {
