@@ -1545,17 +1545,9 @@ table.coll td.ign-col {
     padding: 4px 9px;
   }
 
-  /* Roster stats: 2-up and flush with the 14px content padding */
+  /* Roster stats: flush with the 14px content padding */
   .roster-view .stat-row {
     margin: -14px -14px 0;
-  }
-  .stat-card {
-    min-width: 0;
-    flex: 1 1 calc(50% - 7px);
-    padding: 14px 16px;
-  }
-  .stat-value {
-    font-size: 22px;
   }
 }
 
@@ -1598,6 +1590,7 @@ table.coll td.ign-col {
   border-radius: var(--radius);
   padding: 18px 20px;
   box-shadow: 0 12px 34px rgba(0, 0, 0, 0.25);
+  container-type: inline-size;
 }
 .stat-label {
   font-size: 12px;
@@ -1607,9 +1600,19 @@ table.coll td.ign-col {
 }
 .stat-value {
   font-family: var(--display);
-  font-size: 30px;
+  font-size: clamp(15px, 17cqi, 30px);
   font-weight: 800;
   margin-top: 6px;
+  overflow-wrap: anywhere;
+}
+
+/* Narrow cards: stay 2-up and give the number more room to fit. */
+@media (max-width: 900px) {
+  .stat-card {
+    min-width: 0;
+    flex: 1 1 calc(50% - 7px);
+    padding: 14px 16px;
+  }
 }
 
 /* ---------- guild roster ---------- */
