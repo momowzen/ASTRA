@@ -4,7 +4,7 @@ A real-time guild management app backed entirely by a **Google Sheet**.
 
 - **Sheet → page:** the backend re-reads the spreadsheet every few seconds; every open browser refreshes automatically.
 - **Page → sheet:** every edit, add, and delete is written straight back to the spreadsheet.
-- **Admin** (`admin` / `astra1221` by default): every tab becomes a panel with search, column filters, inline editing, row add/delete.
+- **Admin** (`admin` / `admin` by default): every tab becomes a panel with search, column filters, inline editing, row add/delete.
 - **Members:** sign in with **IGN / IGN**, see only their own profile (styled as a real account page, not a table), and edit their own rows. Passwords can be changed in settings.
 - Login credentials live in a **hidden `credentials` tab** created automatically in the spreadsheet — never exposed through the API.
 

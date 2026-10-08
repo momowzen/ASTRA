@@ -46,7 +46,7 @@ export const config = {
   pollIntervalMs: num(process.env.SYNC_POLL_INTERVAL_MS, 5000),
   maxRows: num(process.env.SYNC_MAX_ROWS, 2000),
   adminUsername: 'admin',
-  adminInitialPassword: 'astra1221',
+  adminInitialPassword: 'admin',
   // Ordered AI reader providers for attendance scans, e.g. 'groq,gemini'.
   // Each entry falls through to the next when its key is missing or it fails.
   aiProviders: (process.env.AI_PROVIDER || 'gemini')

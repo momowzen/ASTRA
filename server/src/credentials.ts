@@ -45,6 +45,27 @@ export async function ensureCredentialsTab(): Promise<void> {
     await sheets.setSheetHidden(tab.sheetId, true);
     console.log(`[auth] hid credentials tab "${config.credentialsTab}"`);
   }
+  await ensureAdminCredential();
+}
+
+/**
+ * Make sure an ADMIN credential exists. Seeds one from the configured initial
+ * password when the tab exists but the admin row was removed (or the tab is
+ * empty), so the configured credentials always work.
+ */
+async function ensureAdminCredential(): Promise<void> {
+  const values = await sheets.getValues(config.credentialsTab);
+  if (values.length === 0) {
+    await sheets.updateValues(config.credentialsTab, 'A1:G1', [HEADER]);
+  }
+  if (parse(values).some((c) => c.role === 'ADMIN')) return;
+  const admin = await hashPassword(config.adminInitialPassword);
+  await sheets.appendRow(
+    config.credentialsTab,
+    [config.adminUsername, admin.hash, admin.salt, 'ADMIN', now(), now(), ''],
+    7,
+  );
+  console.log(`[auth] seeded admin credential "${config.adminUsername}"`);
 }
 
 function parse(rows: string[][]): Credential[] {
