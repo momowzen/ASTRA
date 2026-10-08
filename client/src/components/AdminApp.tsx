@@ -500,7 +500,13 @@ export default function AdminApp({
                           : t('admin.bossConfig')
                     }`
                   : toolView
-                    ? `${t('tools.section')} · ${toolView === 'cp-update' ? t('tools.cpUpdate') : t('tools.distribution')}`
+                    ? `${t('tools.section')} · ${
+                        toolView === 'cp-update'
+                          ? t('tools.cpUpdate')
+                          : toolView === 'profile-completion'
+                            ? t('tools.profileCompletion')
+                            : t('tools.distribution')
+                      }`
                     : tab
                     ? tabLabel(tab.meta.title, t, lang)
                     : t('member.loading')}
