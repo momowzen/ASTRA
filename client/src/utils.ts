@@ -69,6 +69,9 @@ export function isCpLabel(label: string): boolean {
 /** Member-view columns that are managed by an admin (not editable by the member). */
 export const MEMBER_READONLY = new Set(['CP', 'ROLE', 'STATUS']);
 
+/** Fields left out of the profile-completion % (admin-managed plus nickname/notes). */
+export const COMPLETION_EXCLUDED = new Set(['CP', 'ROLE', 'STATUS', 'NICKNAME', 'NOTES']);
+
 export interface ProfileColumn {
   index: number;
   group: string;
@@ -91,8 +94,8 @@ export function profileColumns(meta: TabMeta): ProfileColumn[] {
     if (meta.headerRows === 2) {
       const g = String(groups[i] ?? '').trim();
       const s = String(h1[i] ?? '').trim();
-      if ((g || s) && !MEMBER_READONLY.has((s || g).toUpperCase())) out.push({ index: i, group: g, sub: s });
-    } else if (first && !MEMBER_READONLY.has(first.toUpperCase())) {
+      if ((g || s) && !COMPLETION_EXCLUDED.has((s || g).toUpperCase())) out.push({ index: i, group: g, sub: s });
+    } else if (first && !COMPLETION_EXCLUDED.has(first.toUpperCase())) {
       out.push({ index: i, group: '', sub: first });
     }
   }
