@@ -35,6 +35,9 @@ const ROSTER_COLS = [
   { key: 'cp', label: 'CP' },
 ] as const;
 
+// IGN is shown but not filterable.
+const ROSTER_FILTER_COLS = ROSTER_COLS.filter((c) => c.key !== 'ign');
+
 function Field({
   label,
   value,
@@ -368,7 +371,7 @@ export default function MemberApp({
   const rosterMembers = data.roster ?? [];
   const rosterChoices = useMemo(() => {
     if (rosterCol < 0) return [] as string[];
-    const key = ROSTER_COLS[rosterCol].key;
+    const key = ROSTER_FILTER_COLS[rosterCol].key;
     const seen = new Set<string>();
     const out: string[] = [];
     for (const m of rosterMembers) {
@@ -382,7 +385,7 @@ export default function MemberApp({
   }, [rosterMembers, rosterCol]);
   const rosterRows = useMemo(() => {
     if (rosterCol < 0 || !rosterVal) return rosterMembers;
-    const key = ROSTER_COLS[rosterCol].key;
+    const key = ROSTER_FILTER_COLS[rosterCol].key;
     return rosterMembers.filter((m) => (m[key] || '').trim() === rosterVal);
   }, [rosterMembers, rosterCol, rosterVal]);
 
@@ -535,7 +538,7 @@ export default function MemberApp({
                     }}
                   >
                     <option value={-1}>{t('admin.allColumns')}</option>
-                    {ROSTER_COLS.map((c, i) => (
+                    {ROSTER_FILTER_COLS.map((c, i) => (
                       <option key={c.key} value={i}>
                         {colLabel(c.label, t, lang)}
                       </option>
@@ -558,7 +561,7 @@ export default function MemberApp({
                 </div>
               </div>
               <div className="table-scroll">
-                <table className="grid">
+                <table className="grid roster-grid">
                   <thead>
                     <tr className="labels single">
                       {ROSTER_COLS.map((c, i) => (

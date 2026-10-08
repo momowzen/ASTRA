@@ -2296,3 +2296,12 @@ button.completion-ign:hover {
   width: auto;
   min-width: 130px;
 }
+/* Roster table has no row-number column, so pin IGN at the left edge and let it
+   shrink to its content (the other columns share the remaining width). */
+table.grid.roster-grid th.ign-col,
+table.grid.roster-grid td.ign-col {
+  left: 0;
+  min-width: 0;
+  width: 1px;
+  white-space: nowrap;
+}
