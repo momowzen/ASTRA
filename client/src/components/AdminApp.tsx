@@ -343,6 +343,22 @@ export default function AdminApp({
           </span>
           {t('admin.rosterOverview')}
         </button>
+        <button
+          className={`nav-item nav-caps ${toolView === 'profile-completion' ? 'active' : ''}`}
+          onClick={() => {
+            setToolView('profile-completion');
+            setBossView(null);
+            setRosterView(false);
+            setEditing(null);
+            setShowCol(-1);
+            setFilterVal('');
+          }}
+        >
+          <span className="ico">
+            <IconGrid />
+          </span>
+          {t('tools.profileCompletion')}
+        </button>
 
         <div className="section-label">{t('admin.trackerSection')}</div>
         <button
@@ -418,22 +434,6 @@ export default function AdminApp({
           </span>
           {t('tools.cpUpdate')}
         </button>
-        <button
-          className={`nav-item nav-caps ${toolView === 'profile-completion' ? 'active' : ''}`}
-          onClick={() => {
-            setToolView('profile-completion');
-            setBossView(null);
-            setRosterView(false);
-            setEditing(null);
-            setShowCol(-1);
-            setFilterVal('');
-          }}
-        >
-          <span className="ico">
-            <IconGrid />
-          </span>
-          {t('tools.profileCompletion')}
-        </button>
 
         <div className="section-label">{t('admin.sheetTabs')}</div>
         <div className="tab-scroll">
@@ -500,7 +500,7 @@ export default function AdminApp({
                           : t('admin.bossConfig')
                     }`
                   : toolView
-                    ? `${t('tools.section')} · ${
+                    ? `${toolView === 'profile-completion' ? t('admin.rosterSection') : t('tools.section')} · ${
                         toolView === 'cp-update'
                           ? t('tools.cpUpdate')
                           : toolView === 'profile-completion'
