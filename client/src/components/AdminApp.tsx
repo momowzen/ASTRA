@@ -11,6 +11,7 @@ import GuildRoster from './GuildRoster';
 import AdminTools from './AdminTools';
 import CpUpdate from './CpUpdate';
 import CpHistoryView from './CpHistoryView';
+import ProfileCompletion from './ProfileCompletion';
 import { LangToggle, useLang } from '../i18n';
 import { colLabel, tabLabel } from '../display';
 
@@ -133,7 +134,7 @@ export default function AdminApp({
   const [showCol, setShowCol] = useState(-1);
   const [filterVal, setFilterVal] = useState('');
   const [bossView, setBossView] = useState<'dashboard' | 'attendance' | 'config' | null>(null);
-  const [toolView, setToolView] = useState<'distribution' | 'cp-update' | null>(null);
+  const [toolView, setToolView] = useState<'distribution' | 'cp-update' | 'profile-completion' | null>(null);
   const [rosterView, setRosterView] = useState(true);
   const [editing, setEditing] = useState<{ row: number; col: number } | null>(null);
   const [addOpen, setAddOpen] = useState(false);
@@ -166,7 +167,7 @@ export default function AdminApp({
 
   // Views that should fill the viewport exactly: the page never scrolls and the
   // panels keep a uniform 22px gap on every side (list bodies scroll instead).
-  const fit = toolView === 'distribution' || toolView === 'cp-update' || (!rosterView && !bossView && !toolView);
+  const fit = toolView === 'distribution' || toolView === 'cp-update' || toolView === 'profile-completion' || (!rosterView && !bossView && !toolView);
 
   useLayoutEffect(() => {
     const el = document.querySelector<HTMLElement>('.topbar');
@@ -417,6 +418,22 @@ export default function AdminApp({
           </span>
           {t('tools.cpUpdate')}
         </button>
+        <button
+          className={`nav-item nav-caps ${toolView === 'profile-completion' ? 'active' : ''}`}
+          onClick={() => {
+            setToolView('profile-completion');
+            setBossView(null);
+            setRosterView(false);
+            setEditing(null);
+            setShowCol(-1);
+            setFilterVal('');
+          }}
+        >
+          <span className="ico">
+            <IconGrid />
+          </span>
+          {t('tools.profileCompletion')}
+        </button>
 
         <div className="section-label">{t('admin.sheetTabs')}</div>
         <div className="tab-scroll">
@@ -599,6 +616,8 @@ export default function AdminApp({
           ) : toolView ? (
             toolView === 'cp-update' ? (
               <CpUpdate data={data} toast={toast} />
+            ) : toolView === 'profile-completion' ? (
+              <ProfileCompletion data={data} />
             ) : (
               <AdminTools data={data} toast={toast} />
             )

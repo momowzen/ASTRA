@@ -64,12 +64,13 @@ function applyRecentWrites(title: string, values: string[][]): void {
 
 function detectHeaderRows(values: string[][]): 1 | 2 {
   if (values.length < 2) return 1;
-  const first = values[0] || [];
   const second = values[1] || [];
-  const firstCol = (first[0] || '').trim();
   const secondCol = (second[0] || '').trim();
   const secondHasData = second.some((c) => c.trim() !== '');
-  return secondCol === '' && firstCol !== '' && secondHasData ? 2 : 1;
+  // A member data row always carries the IGN in column 0, so a second row with
+  // an empty column 0 but other content is a sub-header row (2-row header).
+  // (The group row above it may leave A1 blank, e.g. SUCCESSOR COLLECTION.)
+  return secondCol === '' && secondHasData ? 2 : 1;
 }
 
 function buildTab(

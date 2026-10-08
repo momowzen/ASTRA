@@ -871,6 +871,130 @@ tr:hover .icon-btn {
   background: rgba(61, 220, 151, 0.08);
 }
 
+/* ---------- member profile completion ---------- */
+.hero-progress {
+  margin-left: auto;
+  flex: 0 1 auto;
+  min-width: 240px;
+  max-width: 360px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.hero-progress-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+}
+.hero-progress-label {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+}
+.hero-progress-pct {
+  font-family: var(--display);
+  font-weight: 800;
+  font-size: 16px;
+}
+.progress-track {
+  height: 8px;
+  border-radius: 99px;
+  background: var(--panel-3);
+  overflow: hidden;
+}
+.progress-fill {
+  display: block;
+  height: 100%;
+  border-radius: 99px;
+  background: linear-gradient(90deg, var(--accent), rgba(139, 124, 255, 0.5));
+  transition: width 0.3s ease;
+}
+.progress-fill.done {
+  background: linear-gradient(90deg, var(--green), rgba(61, 220, 151, 0.5));
+}
+.hero-progress-tip {
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: none;
+  border: none;
+  padding: 2px 0;
+  color: var(--accent);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.hero-progress-tip:hover {
+  text-decoration: underline;
+}
+.hero-progress-tip .caret {
+  font-size: 10px;
+  transition: transform 0.15s ease;
+}
+.hero-progress-tip .caret.up {
+  transform: rotate(180deg);
+}
+.missing-list {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin: 4px 0 12px;
+}
+.missing-group {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+.missing-tab {
+  font-size: 10.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--faint);
+}
+.missing-items {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+.missing-item {
+  font-family: inherit;
+  font-size: 11px;
+  padding: 3px 8px;
+  border-radius: 999px;
+  border: 1px solid rgba(245, 185, 66, 0.35);
+  background: rgba(245, 185, 66, 0.08);
+  color: var(--accent-2);
+  cursor: pointer;
+  transition: 0.12s ease;
+}
+.missing-item:hover {
+  background: rgba(245, 185, 66, 0.2);
+  border-color: rgba(245, 185, 66, 0.7);
+}
+
+/* Brief red-neon highlight on the control a missing-item pill jumps to.
+   Applied to the input/select itself, not the label. */
+.field-flash .input,
+.field-flash .select,
+.field-flash .field-ro,
+.field-flash .coll-select,
+.field-flash .cell-btn,
+.field-flash .cell-text,
+.field-flash .cell-input {
+  animation: field-flash 0.5s ease 3;
+}
+@keyframes field-flash {
+  0% {
+    box-shadow: 0 0 0 2px rgba(255, 45, 85, 0.95), 0 0 14px 3px rgba(255, 45, 85, 0.7);
+  }
+  100% {
+    box-shadow: 0 0 0 2px rgba(255, 45, 85, 0), 0 0 14px 3px rgba(255, 45, 85, 0);
+  }
+}
+
 .panel-card {
   background: var(--panel);
   border: 1px solid var(--line-soft);
@@ -1509,8 +1633,14 @@ table.coll td.ign-col {
     padding: 12px 14px;
     gap: 12px;
     margin-bottom: 12px;
-    flex-wrap: nowrap;
+    flex-wrap: wrap;
     align-items: center;
+  }
+  .hero-progress {
+    flex-basis: 100%;
+    margin-left: 0;
+    min-width: 0;
+    max-width: none;
   }
   .avatar {
     width: 48px;
@@ -2031,4 +2161,117 @@ button.cp-ign:hover {
   .cp-read-list {
     max-height: 480px;
   }
+}
+
+/* ---------- admin tools: profile completion ---------- */
+.completion-view {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.completion-panels {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+  align-items: start;
+}
+/* Grid panels sit side by side — cancel the stacked-card top margin so they
+   stretch to the same height. */
+.completion-panels .panel-card + .panel-card {
+  margin-top: 0;
+}
+.completion-panel {
+  min-height: 0;
+}
+.completion-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 12px;
+}
+.completion-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 90px 44px;
+  gap: 10px;
+  align-items: center;
+  font-size: 13px;
+}
+.completion-ign {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 500;
+}
+button.completion-ign {
+  background: none;
+  border: 0;
+  padding: 0;
+  text-align: left;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+button.completion-ign:hover {
+  color: var(--accent);
+  text-decoration: underline;
+}
+.completion-bar {
+  height: 6px;
+}
+.completion-pct {
+  text-align: right;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+}
+
+/* Fill the viewport (titles fixed, only the member lists scroll). */
+@media (min-width: 901px) {
+  .content-fit > .completion-view {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+  }
+  .content-fit .completion-panels {
+    flex: 1;
+    min-height: 0;
+    align-items: stretch;
+  }
+  .content-fit .completion-panel {
+    min-height: 0;
+  }
+  .content-fit .completion-panel h3 {
+    flex: none;
+  }
+  .content-fit .completion-list {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+  }
+}
+
+@media (max-width: 900px) {
+  .completion-panels {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Missing-details popup: fixed header + footer, scrollable body. */
+.modal.modal-fixed {
+  display: flex;
+  flex-direction: column;
+  max-height: 85vh;
+  overflow: hidden;
+}
+.modal.modal-fixed h3 {
+  flex: none;
+}
+.modal.modal-fixed .modal-body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+}
+.modal.modal-fixed .row {
+  flex: none;
 }

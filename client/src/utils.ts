@@ -1,4 +1,4 @@
-import type { Column, TabMeta } from './types';
+import type { Column, TabData, TabMeta } from './types';
 
 export function expandedGroups(meta: TabMeta): string[] {
   const row = meta.headers[0] || [];
@@ -64,6 +64,56 @@ export function clsx(...parts: (string | false | null | undefined)[]): string {
 
 export function isCpLabel(label: string): boolean {
   return label.trim().toUpperCase() === 'CP';
+}
+
+/** Member-view columns that are managed by an admin (not editable by the member). */
+export const MEMBER_READONLY = new Set(['CP', 'ROLE', 'STATUS']);
+
+export interface ProfileColumn {
+  index: number;
+  group: string;
+  sub: string;
+}
+
+/**
+ * Editable, real (non-empty) columns of a tab — skips the IGN column and the
+ * admin-managed fields. Shared by the member progress bar and the admin
+ * Profile Completion tool so both compute the same percentage.
+ */
+export function profileColumns(meta: TabMeta): ProfileColumn[] {
+  const h0 = meta.headers[0] || [];
+  const h1 = meta.headers[1] || [];
+  const groups = expandedGroups(meta);
+  const width = Math.max(h0.length, h1.length);
+  const out: ProfileColumn[] = [];
+  for (let i = 1; i < width; i++) {
+    const first = String(h0[i] ?? '').trim();
+    if (meta.headerRows === 2) {
+      const g = String(groups[i] ?? '').trim();
+      const s = String(h1[i] ?? '').trim();
+      if ((g || s) && !MEMBER_READONLY.has((s || g).toUpperCase())) out.push({ index: i, group: g, sub: s });
+    } else if (first && !MEMBER_READONLY.has(first.toUpperCase())) {
+      out.push({ index: i, group: '', sub: first });
+    }
+  }
+  return out;
+}
+
+/** Percentage of a member's editable profile fields that are filled in. */
+export function memberCompletion(tabs: TabData[], ign: string): number {
+  const want = ign.trim().toLowerCase();
+  let total = 0;
+  let filled = 0;
+  for (const tab of tabs) {
+    const cols = profileColumns(tab.meta);
+    if (cols.length === 0) continue;
+    const row = tab.rows.find((r) => (r.cells[0] || '').trim().toLowerCase() === want);
+    for (const c of cols) {
+      total += 1;
+      if ((row?.cells[c.index] ?? '').trim()) filled += 1;
+    }
+  }
+  return total > 0 ? Math.round((filled / total) * 100) : 0;
 }
 
 export function formatCp(value: string): string {

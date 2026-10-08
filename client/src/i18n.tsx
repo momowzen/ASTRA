@@ -202,6 +202,11 @@ const DICT: Record<string, { en: string; ko: string; ja: string; zh: string }> =
   },
   'member.currentPassword': { en: 'Current password', ko: '현재 비밀번호', ja: "現在のパスワード", zh: '当前密码' },
   'member.passwordUpdated': { en: 'Password updated', ko: '비밀번호가 변경되었습니다', ja: "パスワードを更新しました", zh: '密码已更新' },
+  'member.progressLabel': { en: 'Profile completion', ko: '프로필 완성도', ja: "プロフィール完成度", zh: '资料完成度' },
+  'member.showMissing': { en: "See what's missing", ko: '채워야 할 항목 보기', ja: "未入力の項目を見る", zh: '查看缺少的项目' },
+  'member.hideDetails': { en: 'Hide details', ko: '상세 숨기기', ja: "詳細を隠す", zh: '隐藏详情' },
+  'member.missingTitle': { en: 'MISSING DETAILS', ko: '빠진 항목', ja: "未入力の項目", zh: '缺少的项目' },
+  'member.allComplete': { en: 'Profile complete — nothing missing!', ko: '프로필이 완성되었습니다!', ja: "プロフィールは完成しています！", zh: '资料已完整填写！' },
   'member.usernameSection': { en: 'Change username', ko: '아이디 변경', ja: "ユーザー名の変更", zh: '修改用户名' },
   'member.passwordSection': { en: 'Change password', ko: '비밀번호 변경', ja: "パスワードの変更", zh: '修改密码' },
   'member.newUsername': { en: 'New username', ko: '새 아이디', ja: "新しいユーザー名", zh: '新用户名' },
@@ -311,6 +316,8 @@ const DICT: Record<string, { en: string; ko: string; ja: string; zh: string }> =
 
   // ---- admin tools / distribution ----
   'tools.section': { en: 'ADMIN TOOLS', ko: '관리자 도구', ja: "管理者ツール", zh: '管理员工具' },
+  'tools.profileCompletion': { en: 'Profile completion', ko: '프로필 완성도', ja: "プロフィール完成度", zh: '资料完成度' },
+  'tools.noGuild': { en: 'NO GUILD', ko: '길드 없음', ja: "ギルドなし", zh: '无公会' },
   'tools.distribution': { en: 'Boss attendance distribution', ko: '보스 출석 분배', ja: "ボス出席分配", zh: '首领出勤分配' },
   'tools.distTitle': { en: 'Boss Attendance Distribution', ko: '보스 출석 분배', ja: "ボス出席分配", zh: '首领出勤分配' },
   'tools.band': { en: 'Top 30% contributors', ko: '상위 30% 기여자', ja: "上位30%貢献者", zh: '前 30% 贡献者' },

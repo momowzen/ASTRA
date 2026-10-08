@@ -89,9 +89,19 @@ export async function request<T>(path: string, init?: RequestInit): Promise<T> {
   }
 
   if (res.status === 401) {
-    clearSession();
-    window.dispatchEvent(new Event('astra:unauthorized'));
-    throw new ApiError('Your session expired. Please sign in again.', 401);
+    // A 401 on an authenticated request means the stored session is dead;
+    // a 401 without a token (e.g. a login attempt) means bad credentials, so
+    // surface the server's actual reason instead of "session expired".
+    if (token) {
+      clearSession();
+      window.dispatchEvent(new Event('astra:unauthorized'));
+      throw new ApiError('Your session expired. Please sign in again.', 401);
+    }
+    const message =
+      body && typeof body === 'object' && 'error' in body
+        ? String((body as { error: unknown }).error)
+        : 'Invalid username or password';
+    throw new ApiError(message, 401);
   }
 
   if (!res.ok) {
@@ -106,6 +116,9 @@ export async function request<T>(path: string, init?: RequestInit): Promise<T> {
 }
 
 export async function login(username: string, password: string): Promise<Session> {
+  // Drop any stale token so the login request is clean and a 401 reports the
+  // real reason (bad credentials) rather than "session expired".
+  clearSession();
   const res = await request<{ token: string; role: Session['role']; username: string; ign: string }>(
     '/auth/login',
     { method: 'POST', body: JSON.stringify({ username, password }) },

@@ -1,10 +1,11 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { MEMBER_HIDDEN_TABS } from '../types';
 import type { Column, DataResponse, Session, TabData } from '../types';
-import { buildColumns, formatCp, initials, isCpLabel, isMark, optionColor } from '../utils';
+import { buildColumns, formatCp, initials, isCpLabel, isMark, MEMBER_READONLY, optionColor } from '../utils';
 import { ApiError, saveCells } from '../api';
 import { IconClose, IconGear, IconGrid, IconLogout, IconMenu } from './icons';
 import MemberSettingsModal from './MemberSettingsModal';
+import ProfileProgress from './ProfileProgress';
 import { LangToggle, useLang } from '../i18n';
 import { colLabel, tabLabel } from '../display';
 
@@ -27,8 +28,6 @@ function prettyTitle(title: string): string {
     .replace(/\bof\b/gi, 'of');
 }
 
-const MEMBER_READONLY = new Set(['CP', 'ROLE', 'STATUS']);
-
 function Field({
   label,
   value,
@@ -36,6 +35,8 @@ function Field({
   readOnly,
   format,
   onCommit,
+  dataTab,
+  dataCol,
 }: {
   label: string;
   value: string;
@@ -43,6 +44,8 @@ function Field({
   readOnly?: boolean;
   format?: boolean;
   onCommit: (value: string) => Promise<void>;
+  dataTab?: string;
+  dataCol?: number;
 }) {
   const { t } = useLang();
   const [val, setVal] = useState(() => (format ? formatCp(value) : value));
@@ -74,7 +77,7 @@ function Field({
   if (readOnly) {
     const shown = format ? formatCp(value) : value;
     return (
-      <div className="field">
+      <div className="field" data-tab={dataTab} data-col={dataCol}>
         <label>{label}</label>
         <div className="field-ro" title={t('member.adminManaged')}>
           {shown.trim() || '—'}
@@ -88,7 +91,7 @@ function Field({
     : [];
 
   return (
-    <div className="field">
+    <div className="field" data-tab={dataTab} data-col={dataCol}>
       <label style={{ display: 'flex', justifyContent: 'space-between', gap: 8 }}>
         <span>{label}</span>
         <span
@@ -241,6 +244,7 @@ export default function MemberApp({
   const [activeTitle, setActiveTitle] = useState('');
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [jump, setJump] = useState<{ tab: string; col: number } | null>(null);
   const stripRef = useRef<HTMLElement>(null);
 
   const { t, lang } = useLang();
@@ -264,6 +268,30 @@ export default function MemberApp({
     setActiveTitle(title);
     setMenuOpen(false);
   }
+
+  function jumpToField(tabTitle: string, col: number) {
+    const upper = tabTitle.toUpperCase();
+    const isDash = upper === 'BASIC INFORMATION' || upper === 'EQUIPMENT';
+    setActiveTitle(isDash ? '' : tabTitle);
+    setJump({ tab: tabTitle, col });
+  }
+
+  useEffect(() => {
+    if (!jump) return;
+    const id = window.setTimeout(() => {
+      const el = [...document.querySelectorAll<HTMLElement>('.content [data-tab][data-col]')].find(
+        (n) => n.dataset.tab === jump.tab && n.dataset.col === String(jump.col),
+      );
+      if (el) {
+        el.scrollIntoView({ block: 'center', behavior: 'smooth' });
+        el.classList.add('field-flash');
+        window.setTimeout(() => el.classList.remove('field-flash'), 1600);
+      }
+      setJump(null);
+    }, 80);
+    return () => window.clearTimeout(id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [jump, activeTitle]);
 
   useEffect(() => {
     const el = stripRef.current?.querySelector<HTMLElement>('.main-tab.active');
@@ -434,6 +462,7 @@ export default function MemberApp({
                 )}
               </div>
             </div>
+            <ProfileProgress tabs={data.tabs} ign={session.ign} tabText={tabText} onJump={jumpToField} />
           </div>
 
           {isDashboard && (rosterTab || equipTab) && (
@@ -458,8 +487,10 @@ export default function MemberApp({
                             value={rosterRow.cells[c.index] ?? ''}
                             options={rosterTab.meta.options?.[c.index]}
                             readOnly={MEMBER_READONLY.has(c.label.trim().toUpperCase())}
-                            format={isCpLabel(c.label)}
-                            onCommit={(v) => commit(rosterTab, rosterRow.row, c.index, v)}
+                      format={isCpLabel(c.label)}
+                      dataTab={rosterTab.meta.title}
+                      dataCol={c.index}
+                      onCommit={(v) => commit(rosterTab, rosterRow.row, c.index, v)}
                           />
                         ))}
                       </div>
@@ -486,8 +517,10 @@ export default function MemberApp({
                             value={equipRow.cells[c.index] ?? ''}
                             options={equipTab.meta.options?.[c.index]}
                             readOnly={MEMBER_READONLY.has(c.label.trim().toUpperCase())}
-                            format={isCpLabel(c.label)}
-                            onCommit={(v) => commit(equipTab, equipRow.row, c.index, v)}
+                      format={isCpLabel(c.label)}
+                      dataTab={equipTab.meta.title}
+                      dataCol={c.index}
+                      onCommit={(v) => commit(equipTab, equipRow.row, c.index, v)}
                           />
                         ))}
                       </div>
@@ -521,6 +554,8 @@ export default function MemberApp({
                       options={activeTab.meta.options?.[c.index]}
                       readOnly={MEMBER_READONLY.has(c.label.trim().toUpperCase())}
                       format={isCpLabel(c.label)}
+                      dataTab={activeTab.meta.title}
+                      dataCol={c.index}
                       onCommit={(v) => commit(activeTab, row.row, c.index, v)}
                     />
                   ))}
@@ -540,7 +575,12 @@ export default function MemberApp({
                             lang,
                           );
                           return (
-                            <div className="coll-item" key={c.index}>
+                            <div
+                              className="coll-item"
+                              key={c.index}
+                              data-tab={activeTab.meta.title}
+                              data-col={c.index}
+                            >
                               <span className="coll-sub">{sub}</span>
                               <CollectionCell
                                 value={row.cells[c.index] ?? ''}
