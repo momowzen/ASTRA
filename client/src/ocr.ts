@@ -182,12 +182,39 @@ async function ocrAttendanceAI(image: string): Promise<string[]> {
   return [text];
 }
 
+/**
+ * Reader for CP screenshots: 'ai' uses the server vision route with a name+CP
+ * prompt and falls back to the local Tesseract passes on failure; 'tesseract'
+ * runs the local passes directly.
+ */
+export const CP_READER: 'ai' | 'tesseract' = 'ai';
+
+async function ocrCpAI(image: string): Promise<string[]> {
+  const { texts } = await request<{ texts: string[] }>('/ocr/cp', {
+    method: 'POST',
+    body: JSON.stringify({ image }),
+  });
+  if (!texts || texts.length === 0) throw new Error('empty reading');
+  return texts;
+}
+
+async function ocrCp(image: string): Promise<string[]> {
+  if (CP_READER === 'ai') {
+    try {
+      return await ocrCpAI(image);
+    } catch {
+      /* fall back to the local Tesseract passes below */
+    }
+  }
+  return runPasses(image, PSM.SINGLE_BLOCK, false);
+}
+
 /** Run the configured reader for one image and return the raw text of each pass. */
 export async function ocrVariants(image: string, flow: OcrFlow = 'cp'): Promise<string[]> {
   if (flow === 'attendance') {
     return ATTENDANCE_READER === 'ai' ? ocrAttendanceAI(image) : ocrAttendance(image);
   }
-  return runPasses(image, PSM.SINGLE_BLOCK, false);
+  return ocrCp(image);
 }
 
 /** Normalize for matching: lowercase, unify confusable chars, keep only letters + numbers. */

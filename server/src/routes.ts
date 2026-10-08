@@ -457,6 +457,14 @@ Rules:
 - No numbering, no bullets, no quotes, no commentary.
 - If no player names are visible, output nothing.`;
 
+const CP_PROMPT = `You read combat-power (CP) rows from a game guild screenshot.
+For every visible member row, output one line: <player name>\t<combat power>
+Rules:
+- Transcribe the player name exactly as displayed, including decorations, spaces, punctuation, symbols and mixed scripts.
+- Output the combat power as digits only (no commas, spaces or symbols).
+- One line per row, in reading order. No headers, no numbering, no bullets, no quotes, no commentary.
+- Skip a row if its name or number is unreadable.`;
+
 interface DeepSeekResponse {
   error?: { message?: string };
   choices?: { message?: { content?: string } }[];
@@ -472,14 +480,14 @@ interface GeminiResponse {
   candidates?: { content?: { parts?: { text?: string }[] } }[];
 }
 
-async function readWithGroq(image: string): Promise<string> {
+async function readWithGroq(image: string, prompt: string): Promise<string> {
   const upstream = await fetch('https://api.groq.com/openai/v1/chat/completions', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${config.groqApiKey}` },
     body: JSON.stringify({
       model: 'qwen/qwen3.8-27b',
       messages: [
-        { role: 'system', content: ATTENDANCE_PROMPT },
+        { role: 'system', content: prompt },
         {
           role: 'user',
           content: [
@@ -518,7 +526,7 @@ const GEMINI_MODELS = [
   'gemini-3.1-flash-lite',
 ];
 
-async function readWithDeepSeek(image: string): Promise<string> {
+async function readWithDeepSeek(image: string, prompt: string): Promise<string> {
   const upstream = await fetch('https://api.deepseek.com/chat/completions', {
     method: 'POST',
     headers: {
@@ -528,7 +536,7 @@ async function readWithDeepSeek(image: string): Promise<string> {
     body: JSON.stringify({
       model: 'deepseek-flash',
       messages: [
-        { role: 'system', content: ATTENDANCE_PROMPT },
+        { role: 'system', content: prompt },
         {
           role: 'user',
           content: [
@@ -550,7 +558,7 @@ async function readWithDeepSeek(image: string): Promise<string> {
   return text;
 }
 
-async function readWithGemini(image: string): Promise<string> {
+async function readWithGemini(image: string, prompt: string): Promise<string> {
   const mime = image.slice(image.indexOf('data:') + 5, image.indexOf(';'));
   const data = image.slice(image.indexOf(',') + 1);
   let lastError = '';
@@ -568,12 +576,12 @@ async function readWithGemini(image: string): Promise<string> {
               contents: [
                 {
                   parts: [
-                    { text: 'Transcribe the player names in this image.' },
+                    { text: 'Read this screenshot.' },
                     { inline_data: { mime_type: mime, data } },
                   ],
                 },
               ],
-              systemInstruction: { parts: [{ text: ATTENDANCE_PROMPT }] },
+              systemInstruction: { parts: [{ text: prompt }] },
               ...(thinking ? { generationConfig: { thinkingConfig: { thinkingBudget: 0 } } } : {}),
             }),
             signal: AbortSignal.timeout(60_000),
@@ -601,7 +609,7 @@ async function readWithGemini(image: string): Promise<string> {
   throw new Error(lastError || 'Gemini request failed');
 }
 
-function readerFor(provider: string): { name: string; key: string; read: (image: string) => Promise<string> } | null {
+function readerFor(provider: string): { name: string; key: string; read: (image: string, prompt: string) => Promise<string> } | null {
   switch (provider) {
     case 'groq':
       return { name: 'Groq', key: config.groqApiKey, read: readWithGroq };
@@ -614,33 +622,83 @@ function readerFor(provider: string): { name: string; key: string; read: (image:
   }
 }
 
-api.post('/ocr/attendance', requireAuth, requireAdmin, async (req, res) => {
-  const image = String(req.body?.image ?? '');
+/** Validate the image and run the configured AI readers in order (first success wins). */
+async function runOcrReader(
+  image: string,
+  prompt: string,
+): Promise<{ ok: true; text: string } | { ok: false; status: number; error: string }> {
   if (!image.startsWith('data:image/') || !image.includes(';base64,')) {
-    return bad(res, 400, 'A base64 image data URL is required');
+    return { ok: false, status: 400, error: 'A base64 image data URL is required' };
   }
-  if (image.length > 12_000_000) return bad(res, 413, 'Image is too large');
+  if (image.length > 12_000_000) return { ok: false, status: 413, error: 'Image is too large' };
 
   const chosen = config.aiProviders.map(readerFor);
   if (chosen.some((r) => r === null)) {
-    return bad(res, 400, `Unknown AI_PROVIDER value: ${config.aiProviders.join(', ')}`);
+    return { ok: false, status: 400, error: `Unknown AI_PROVIDER value: ${config.aiProviders.join(', ')}` };
   }
   const ready = chosen.filter((r): r is NonNullable<typeof r> => r !== null && r.key !== '');
   if (ready.length === 0) {
-    return bad(res, 503, 'No AI reader key is configured on the server');
+    return { ok: false, status: 503, error: 'No AI reader key is configured on the server' };
   }
 
   const errors: string[] = [];
   for (const reader of ready) {
     try {
-      const text = await reader.read(image);
-      return res.json({ text });
+      const text = await reader.read(image, prompt);
+      return { ok: true, text };
     } catch (err) {
       console.error(`[ocr] ${reader.name} failed:`, err);
       errors.push(`${reader.name}: ${(err as Error).message}`);
     }
   }
-  bad(res, 502, errors.join(' | '));
+  return { ok: false, status: 502, error: errors.join(' | ') };
+}
+
+/** Query every ready reader and return all non-empty readings (best-effort merge). */
+async function runOcrReadersAll(
+  image: string,
+  prompt: string,
+): Promise<{ ok: true; texts: string[] } | { ok: false; status: number; error: string }> {
+  if (!image.startsWith('data:image/') || !image.includes(';base64,')) {
+    return { ok: false, status: 400, error: 'A base64 image data URL is required' };
+  }
+  if (image.length > 12_000_000) return { ok: false, status: 413, error: 'Image is too large' };
+
+  const chosen = config.aiProviders.map(readerFor);
+  if (chosen.some((r) => r === null)) {
+    return { ok: false, status: 400, error: `Unknown AI_PROVIDER value: ${config.aiProviders.join(', ')}` };
+  }
+  const ready = chosen.filter((r): r is NonNullable<typeof r> => r !== null && r.key !== '');
+  if (ready.length === 0) {
+    return { ok: false, status: 503, error: 'No AI reader key is configured on the server' };
+  }
+
+  const settled = await Promise.allSettled(ready.map((r) => r.read(image, prompt)));
+  const texts: string[] = [];
+  const errors: string[] = [];
+  settled.forEach((res, i) => {
+    if (res.status === 'fulfilled' && res.value.trim()) {
+      texts.push(res.value);
+    } else {
+      const msg = res.status === 'rejected' ? (res.reason as Error).message : 'empty reading';
+      console.error(`[ocr] ${ready[i].name} failed:`, msg);
+      errors.push(`${ready[i].name}: ${msg}`);
+    }
+  });
+  if (texts.length === 0) return { ok: false, status: 502, error: errors.join(' | ') || 'No reader produced text' };
+  return { ok: true, texts };
+}
+
+api.post('/ocr/attendance', requireAuth, requireAdmin, async (req, res) => {
+  const result = await runOcrReader(String(req.body?.image ?? ''), ATTENDANCE_PROMPT);
+  if (!result.ok) return bad(res, result.status, result.error);
+  res.json({ text: result.text });
+});
+
+api.post('/ocr/cp', requireAuth, requireAdmin, async (req, res) => {
+  const result = await runOcrReadersAll(String(req.body?.image ?? ''), CP_PROMPT);
+  if (!result.ok) return bad(res, result.status, result.error);
+  res.json({ texts: result.texts });
 });
 
 api.post('/cp/update', requireAuth, requireAdmin, async (req, res) => {
