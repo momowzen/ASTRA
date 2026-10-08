@@ -57,12 +57,16 @@ export default function ProfileProgress({ tabs, ign, tabText, onJump }: Props) {
       >
         <span className={`progress-fill ${pct >= 100 ? 'done' : ''}`} style={{ width: `${pct}%` }} />
       </div>
-      <button type="button" className="hero-progress-tip" onClick={() => setOpen(true)}>
-        {t('member.showMissing')}
-        <span className="caret">▾</span>
-      </button>
+      {missingCount === 0 ? (
+        <div className="hero-progress-done">{t('member.congrats')}</div>
+      ) : (
+        <button type="button" className="hero-progress-tip" onClick={() => setOpen(true)}>
+          {t('member.showMissing')}
+          <span className="caret">▾</span>
+        </button>
+      )}
 
-      {open && (
+      {open && missingCount > 0 && (
         <div className="overlay" onMouseDown={(e) => e.target === e.currentTarget && setOpen(false)}>
           <div className="modal modal-fixed">
             <h3>{t('member.missingTitle')}</h3>

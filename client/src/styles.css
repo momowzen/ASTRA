@@ -937,6 +937,12 @@ tr:hover .icon-btn {
 .hero-progress-tip .caret.up {
   transform: rotate(180deg);
 }
+.hero-progress-done {
+  align-self: flex-start;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--green);
+}
 .missing-list {
   display: flex;
   flex-direction: column;

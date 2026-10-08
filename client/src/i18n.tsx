@@ -206,6 +206,7 @@ const DICT: Record<string, { en: string; ko: string; ja: string; zh: string }> =
   'member.passwordUpdated': { en: 'Password updated', ko: '비밀번호가 변경되었습니다', ja: "パスワードを更新しました", zh: '密码已更新' },
   'member.progressLabel': { en: 'Profile completion', ko: '프로필 완성도', ja: "プロフィール完成度", zh: '资料完成度' },
   'member.showMissing': { en: "See what's missing", ko: '채워야 할 항목 보기', ja: "未入力の項目を見る", zh: '查看缺少的项目' },
+  'member.congrats': { en: 'Congratulations!', ko: '축하합니다!', ja: "おめでとうございます！", zh: '恭喜！' },
   'member.hideDetails': { en: 'Hide details', ko: '상세 숨기기', ja: "詳細を隠す", zh: '隐藏详情' },
   'member.missingTitle': { en: 'MISSING DETAILS', ko: '빠진 항목', ja: "未入力の項目", zh: '缺少的项目' },
   'member.allComplete': { en: 'Profile complete — nothing missing!', ko: '프로필이 완성되었습니다!', ja: "プロフィールは完成しています！", zh: '资料已完整填写！' },
