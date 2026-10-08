@@ -241,6 +241,12 @@ export function jamoFold(s: string): string {
   return out;
 }
 
+/** Multiset of jamo/latin characters — two names with the same bag are anagrams
+ *  (e.g. the Hangul trio) and cannot be told apart by a fuzzy OCR read. */
+export function jamoBag(s: string): string {
+  return [...jamoFold(s)].sort().join('');
+}
+
 function levenshtein(a: string, b: string): number {
   const m = a.length;
   const n = b.length;
@@ -302,6 +308,16 @@ export function scoreIgn(name: string, roster: string[]): { ign: string; score: 
     if (score > bestScore) {
       bestScore = score;
       bestIgn = r;
+    }
+  }
+  // Roster names that are anagrams in jamo space (e.g. the Hangul trio
+  // 꾸뀨꾸뀨 / 뀨꾸뀨꾸 / 뀨뀨꾸꾸) are indistinguishable from a fuzzy read. Without
+  // an exact match, leave the row unmatched so an admin selects the right
+  // member instead of writing CP against a sibling.
+  if (bestScore < 1) {
+    const bag = jamoBag(bestIgn);
+    for (const r of roster) {
+      if (r !== bestIgn && jamoBag(r) === bag) return { ign: name, score: 0 };
     }
   }
   return { ign: bestIgn, score: bestScore };
