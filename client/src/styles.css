@@ -1451,6 +1451,11 @@ table.coll td.ign-col {
     grid-area: add;
     white-space: nowrap;
   }
+  /* CP history: search only, spans the full width. */
+  .toolbar-search-only {
+    grid-template-columns: 1fr;
+    grid-template-areas: 'search';
+  }
   /* Clear moves inside the search box on mobile; keep the filter slots
      reserved so the 2-line layout never shifts. */
   .toolbar .toolbar-clear {
@@ -1687,6 +1692,25 @@ table.coll td.ign-col {
 }
 .roster-view .panel-card {
   flex: none;
+}
+
+/* ---------- CP history (admin) ---------- */
+.cp-latest {
+  font-weight: 700;
+  color: #fff;
+}
+.cp-delta {
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+}
+.cp-delta.up {
+  color: var(--green);
+}
+.cp-delta.down {
+  color: var(--red);
+}
+.cp-delta.flat {
+  color: var(--muted);
 }
 
 @media (max-width: 640px) {

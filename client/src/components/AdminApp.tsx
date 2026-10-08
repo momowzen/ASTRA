@@ -10,6 +10,7 @@ import BossTracker from './BossTracker';
 import GuildRoster from './GuildRoster';
 import AdminTools from './AdminTools';
 import CpUpdate from './CpUpdate';
+import CpHistoryView from './CpHistoryView';
 import { LangToggle, useLang } from '../i18n';
 import { colLabel, tabLabel } from '../display';
 
@@ -184,6 +185,7 @@ export default function AdminApp({
 
   const tab = data.tabs.find((t) => t.meta.title === activeTitle) || data.tabs[0];
   const isBasic = (tab?.meta.title ?? '').toUpperCase() === 'BASIC INFORMATION';
+  const isCpH = (tab?.meta.title ?? '').toUpperCase() === 'CP HISTORY';
 
   // Nickname search: map matching nicknames to IGNs from the roster so the same
   // search box works on every sheet tab, not just Basic Information.
@@ -490,7 +492,7 @@ export default function AdminApp({
           </h2>
           <div className="grow" />
           {!bossView && !toolView && !rosterView && (
-            <div className="toolbar">
+            <div className={`toolbar ${isCpH ? 'toolbar-search-only' : ''}`}>
               <div className="search">
                 <IconSearch />
                 <input
@@ -514,7 +516,8 @@ export default function AdminApp({
                   </button>
                 )}
               </div>
-              <div className="col-filter">
+              {!isCpH && (
+                <div className="col-filter">
                 <select
                   className="select"
                   value={showCol}
@@ -551,6 +554,7 @@ export default function AdminApp({
                   ))}
                 </select>
               </div>
+              )}
               <button
                 className={`btn btn-ghost btn-sm toolbar-clear ${search || showCol >= 0 || filterVal ? '' : 'is-empty'}`}
                 disabled={!search && showCol < 0 && !filterVal}
@@ -562,9 +566,11 @@ export default function AdminApp({
               >
                 {t('admin.clear')}
               </button>
-              <button className="btn btn-primary toolbar-add" onClick={() => setAddOpen(true)}>
-                <IconPlus /> {t('admin.addRow')}
-              </button>
+              {!isCpH && (
+                <button className="btn btn-primary toolbar-add" onClick={() => setAddOpen(true)}>
+                  <IconPlus /> {t('admin.addRow')}
+                </button>
+              )}
             </div>
           )}
           <span className={`live ${live === 'live' ? '' : live}`}>
@@ -596,6 +602,8 @@ export default function AdminApp({
             ) : (
               <AdminTools data={data} toast={toast} />
             )
+          ) : isCpH && tab ? (
+            <CpHistoryView tab={tab} rows={rows} />
           ) : (
             <div className="table-card">
             <div className="table-meta">

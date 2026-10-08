@@ -72,6 +72,12 @@ export function formatCp(value: string): string {
   return Number(digits).toLocaleString('en-US');
 }
 
+/** Numeric value of a formatted CP string (strips separators). NaN when empty. */
+export function parseCpNumber(value: string | undefined): number {
+  const digits = (value ?? '').replace(/[^0-9]/g, '');
+  return digits === '' ? NaN : Number(digits);
+}
+
 const OPTION_PALETTE: Record<string, string> = {
   o: '#3ddc97',
   x: '#ff6b7a',

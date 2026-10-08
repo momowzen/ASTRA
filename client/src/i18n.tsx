@@ -247,6 +247,14 @@ const DICT: Record<string, { en: string; ko: string; ja: string; zh: string }> =
     zh: '尚未记录数据。',
   },
 
+  // ---- CP history (admin) ----
+  'cp.change': { en: 'Change', ko: '변동', ja: "変化", zh: '变化' },
+  'cp.historyHint': {
+    en: 'Latest CP first · change vs the previous date',
+    ko: '최신 CP 우선 · 이전 날짜 대비 변동', ja: "最新CP順 · 前回日付との変化",
+    zh: '最新 CP 优先 · 与上一日期相比的变化',
+  },
+
   // ---- boss tracker ----
   'boss.seeding': { en: 'Seeding the boss list…', ko: '보스 목록 생성 중…', ja: "ボスリストを作成中…", zh: '正在生成首领列表…' },
   'boss.noBosses': { en: 'No bosses configured yet.', ko: '아직 설정된 보스가 없습니다.', ja: "まだボスが設定されていません。", zh: '尚未配置首领。' },
