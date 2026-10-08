@@ -748,13 +748,9 @@
       .relic-result { min-width: 0; height: 2.4rem; }
     }
 
-/* ---- ASTRA host embed: hide the viewer's own chrome. ASTRA provides the
-   navigation and language; only the alarm button stays. ---- */
-.astra-header .brand,
-.astra-header .live-pill,
-.astra-header .lang-btn,
-.astra-header .nav-pill,
-#alarmBtn,
+/* ---- ASTRA host embed: the viewer's own header is replaced entirely by the
+   ASTRA topbar (navigation, language, live status, voice alarm), so hide it
+   rather than leaving an empty bar above the content. ---- */
+.astra-header,
 .status-bar { display: none !important; }
-.astra-header { justify-content: flex-end; }
   
