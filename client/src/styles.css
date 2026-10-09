@@ -1789,7 +1789,7 @@ table.coll td.ign-col {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
   gap: 16px;
-  align-items: start;
+  align-items: stretch;
 }
 .roster-split .panel-card + .panel-card {
   margin-top: 0;
