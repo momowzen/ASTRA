@@ -250,6 +250,7 @@ const DICT: Record<string, { en: string; ko: string; ja: string; zh: string }> =
   'roster.mainWeapon': { en: 'Main Weapon', ko: '메인 무기', ja: "メイン武器", zh: '主武器' },
   'roster.role': { en: 'Role', ko: '역할', ja: "役割", zh: '角色' },
   'roster.status': { en: 'Status', ko: '상태', ja: "ステータス", zh: '状态' },
+  'roster.guilds': { en: 'Guilds', ko: '길드', ja: "ギルド", zh: '公会' },
   'roster.summaryMeta': {
     en: '{n} of {m} filled',
     ko: '{m}행 중 {n}행 기입', ja: "{m}行中 {n}行入力済み",

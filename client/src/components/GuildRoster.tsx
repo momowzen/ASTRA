@@ -144,6 +144,26 @@ export default function GuildRoster({ data }: Props) {
   const roleSummary = useMemo(() => columnSummary(basic, 'ROLE'), [basic]);
   const statusSummary = useMemo(() => columnSummary(basic, 'STATUS'), [basic]);
 
+  const guildSummary = useMemo(() => {
+    const empty = { rows: [] as { label: string; value: number; count: string }[] };
+    if (!basic) return empty;
+    const col = buildColumns(basic.meta).find((c) => c.label.trim().toUpperCase() === 'GUILD');
+    if (!col) return empty;
+    const counts = new Map<string, number>();
+    for (const r of basic.rows) {
+      const v = (r.cells[col.index] ?? '').trim();
+      if (v) counts.set(v, (counts.get(v) ?? 0) + 1);
+    }
+    // Available guilds come from the GUILD dropdown options (so guilds with no
+    // members still appear); fall back to whatever values are present.
+    const opts = (basic.meta.options?.[col.index] ?? []).map((o) => o.trim()).filter(Boolean);
+    const names = opts.length ? opts : [...counts.keys()];
+    const rows = [...new Set(names)]
+      .map((name) => ({ label: name, value: counts.get(name) ?? 0, count: String(counts.get(name) ?? 0) }))
+      .sort((a, b) => b.value - a.value || a.label.localeCompare(b.label));
+    return { rows };
+  }, [basic]);
+
   return (
     <div className="roster-view">
       <div className="stat-row" style={{ top: topOffset }}>
@@ -171,13 +191,24 @@ export default function GuildRoster({ data }: Props) {
         <SummaryPanel titleKey="roster.status" data={statusSummary} />
       </div>
 
-      <div className="panel-card">
-        <h3>{t('roster.distTitle')}</h3>
-        {withCp.length ? (
-          <DistList rows={brackets} />
-        ) : (
-          <div className="empty">{t('roster.noCp')}</div>
-        )}
+      <div className="roster-split">
+        <div className="panel-card">
+          <h3>{t('roster.distTitle')}</h3>
+          {withCp.length ? (
+            <DistList rows={brackets} />
+          ) : (
+            <div className="empty">{t('roster.noCp')}</div>
+          )}
+        </div>
+
+        <div className="panel-card">
+          <h3>{t('roster.guilds')}</h3>
+          {guildSummary.rows.length > 0 ? (
+            <DistList rows={guildSummary.rows} />
+          ) : (
+            <div className="empty">{t('roster.noData')}</div>
+          )}
+        </div>
       </div>
 
       <div className="table-card">

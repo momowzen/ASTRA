@@ -1783,6 +1783,17 @@ table.coll td.ign-col {
 .roster-summaries .panel-card + .panel-card {
   margin-top: 0;
 }
+
+/* CP distribution + guilds share one row (stacks on narrow screens). */
+.roster-split {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 16px;
+  align-items: start;
+}
+.roster-split .panel-card + .panel-card {
+  margin-top: 0;
+}
 .roster-summary-meta {
   font-size: 13px;
 }
