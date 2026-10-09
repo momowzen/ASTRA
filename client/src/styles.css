@@ -394,7 +394,7 @@ select option {
   display: flex;
   flex-direction: column;
   padding: 20px 14px;
-  gap: 3px;
+  gap: 2px;
   position: sticky;
   top: 0;
   height: 100vh;
@@ -408,13 +408,13 @@ select option {
   letter-spacing: 0.18em;
   text-transform: uppercase;
   color: var(--faint);
-  padding: 14px 10px 6px;
+  padding: 10px 10px 4px;
 }
 .nav-item {
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 9px 12px;
+  padding: 6px 12px;
   border-radius: var(--radius-sm);
   color: var(--muted);
   cursor: pointer;
@@ -454,14 +454,14 @@ select option {
   overflow-y: auto;
   display: flex;
   flex-direction: column;
-  gap: 3px;
+  gap: 2px;
 }
 .sidebar .userbox {
   border-top: 1px solid var(--line-soft);
   padding-top: 12px;
   display: flex;
   flex-direction: column;
-  gap: 3px;
+  gap: 2px;
 }
 
 .main {
@@ -1475,7 +1475,7 @@ table.coll td.ign-col {
     flex-direction: column;
     align-items: stretch;
     padding: 16px 14px;
-    gap: 3px;
+    gap: 2px;
     overflow-y: auto;
     overflow-x: hidden;
     border-right: 1px solid var(--line-soft);
@@ -1498,7 +1498,7 @@ table.coll td.ign-col {
   }
   .nav-item {
     width: 100%;
-    padding: 11px 12px;
+    padding: 8px 12px;
   }
 
   .nav-backdrop {
