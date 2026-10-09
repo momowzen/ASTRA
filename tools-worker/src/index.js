@@ -1,9 +1,9 @@
 const MARKET_BASE = 'https://api.nextmarket.games/l9asia';
 const FX_URL      = 'https://open.er-api.com/v6/latest/USD';
-const TTL         = 60000; // serve cached prices for 60s before refetching
+const TTL         = 60000;
 const PAGE_SIZE   = 500;
-const MARKET_SIZE = 100;   // max listings returned for the gear market section
-const DETAIL_CONCURRENCY = 8; // parallel detail (price-trend) fetches
+const MARKET_SIZE = 100;
+const DETAIL_CONCURRENCY = 8;
 
 const CORS = {
   'Access-Control-Allow-Origin':  '*',
@@ -12,16 +12,12 @@ const CORS = {
   'Cache-Control': 'no-store'
 };
 
-// Accept-Language headers used to request localized item names from NEXT Market.
 const LANGS = { en: 'en-US', ko: 'ko-KR', ja: 'ja-JP' };
 
-// NEXT Market background colors per tier (T1..T5) observed from the live API.
 const BG_BY_TIER = { T1:'NONE', T2:'GREEN', T3:'BLUE', T4:'MAGENTA', T5:'ORANGE' };
 
-let mem = {}; // keyed by realmCode+'|'+lang -> { ts, json }
+let mem = {};
 
-// Preset tree used by the gear market. Top-level category ids map to sub-types;
-// grade ids are used as a second entry in presetIdList.
 const MARKET_PRESETS = {
   '1':    { name: 'Weapon', sub: { 2:'Knuckles', 58:'Gadgets', 60:'Scythe', 3:'Sword and Shield', 4:'Battle Staff', 5:'Battle Shield', 6:'Greatsword', 7:'Staff', 8:'Dual Daggers', 9:'Bow', 10:'Crossbow' } },
   '11':   { name: 'Cloth Armor', sub: { 12:'Helm', 13:'Upper Armor', 14:'Lower Armor', 15:'Gloves', 16:'Boots' } },
@@ -33,9 +29,6 @@ const MARKET_PRESETS = {
 const MARKET_GRADES = { '51': 'Legendary', '52': 'Mythic' };
 const MARKET_SORTS = { 'PRICE_ASC': 'PRICE_ASC', 'PRICE_DESC': 'PRICE_DESC', 'RECENT': '' };
 
-// Fetch a single page of marketplace listings. The NEXT Market search API is
-// a POST to /v1/sale/c2c with a JSON body; listings are returned cheapest-first
-// when sort=PRICE_ASC is provided.
 async function fetchPage(page, realmCode, acceptLang) {
   const headers = { 'Content-Type': 'application/json' };
   if (acceptLang) headers['Accept-Language'] = acceptLang;
@@ -51,9 +44,6 @@ async function fetchPage(page, realmCode, acceptLang) {
   return r.json();
 }
 
-// Scan all pages for the given language, returning { tier: { priceUSDT, name, imageUrl, sku, bg } }.
-// Tier detection relies on the English naming ("T1 ... x1,000"), so this is only
-// reliable with Accept-Language: en-US.
 async function scanPages(realmCode, acceptLang) {
   const page0 = await fetchPage(0, realmCode, acceptLang);
   const total = page0.totalElements || 0;
@@ -86,9 +76,6 @@ async function scanPages(realmCode, acceptLang) {
   return cheap;
 }
 
-// Scan pages in the requested locale and collect every chest listing's SKU ->
-// localized name. SKUs are language-independent, so we can overlay the translated
-// names onto the English-detected tiers without parsing localized text.
 async function scanNames(realmCode, acceptLang) {
   const page0 = await fetchPage(0, realmCode, acceptLang);
   const total = page0.totalElements || 0;
@@ -107,9 +94,6 @@ async function scanNames(realmCode, acceptLang) {
   return names;
 }
 
-// Build cheapest-per-tier prices for the requested language. Tier detection runs
-// against English names; when a non-English lang is requested, we overlay the
-// localized names by SKU (language-independent).
 async function fetchCheapest(realmCode, lang) {
   const acceptLang = LANGS[lang] || 'en-US';
   const en = await scanPages(realmCode, 'en-US');
@@ -143,13 +127,10 @@ function json(data, status) {
   });
 }
 
-// Search a category+grade on the NEXT Market C2C API. Returns listings with the
-// fields the app needs (icon, name, current USDT price, grade color, enhance, preset).
 async function fetchMarketList({ category, sub, grade, sort, realmCode }) {
   const presetIdList = [];
   if (category) presetIdList.push(+category);
   if (sub) {
-    // Use subtype INSTEAD of top-level category when a subtype is chosen.
     presetIdList.length = 0;
     presetIdList.push(+sub);
   }
@@ -189,7 +170,6 @@ function findEnhance(abilityOptionList) {
   return null;
 }
 
-// Fetch listing details (prices + stats) for a batch of ids.
 function normalizeStats(abilityOptionList) {
   if (!Array.isArray(abilityOptionList)) return [];
   return abilityOptionList.map(o => ({
@@ -273,7 +253,6 @@ export default {
       const cheap = await fetchCheapest(realmCode, lang);
       if (!Object.keys(cheap).length) throw new Error('no listings');
 
-      // Build the prices object in the { tier: { priceUSDT, name, imageUrl } } shape the app expects
       const prices = {};
       for (const tier of ['T1','T2','T3','T4','T5']) {
         if (cheap[tier]) prices[tier] = cheap[tier];

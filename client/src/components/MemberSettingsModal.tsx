@@ -13,13 +13,11 @@ interface Props {
 export default function MemberSettingsModal({ session, onClose, onSessionChange, toast }: Props) {
   const { t } = useLang();
 
-  // ---- change username ----
   const [username, setUsername] = useState(session.username);
   const [unamePw, setUnamePw] = useState('');
   const [unameErr, setUnameErr] = useState('');
   const [unameBusy, setUnameBusy] = useState(false);
 
-  // ---- change password ----
   const [current, setCurrent] = useState('');
   const [next, setNext] = useState('');
   const [confirm, setConfirm] = useState('');

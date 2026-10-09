@@ -2,13 +2,10 @@ export interface Boss {
   id: string;
   name: string;
   level: number;
-  /** Respawn interval in seconds for interval bosses. */
   respawn?: number;
-  /** True for bosses that spawn on a weekly schedule instead of an interval. */
   weekly?: boolean;
 }
 
-/** Boss catalog mirrored from the ASTRA-Boss-Timer repo (translations.js). */
 export const BOSSES: Boss[] = [
   { id: 'Venatus', name: 'Venatus', level: 60, respawn: 36000 },
   { id: 'Viorent', name: 'Viorent', level: 65, respawn: 36000 },

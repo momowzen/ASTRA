@@ -47,8 +47,6 @@ export const config = {
   maxRows: num(process.env.SYNC_MAX_ROWS, 2000),
   adminUsername: 'admin',
   adminInitialPassword: 'admin',
-  // Ordered AI reader providers for attendance scans, e.g. 'groq,gemini'.
-  // Each entry falls through to the next when its key is missing or it fails.
   aiProviders: (process.env.AI_PROVIDER || 'gemini')
     .split(',')
     .map((s) => s.trim().toLowerCase())
@@ -56,8 +54,6 @@ export const config = {
   groqApiKey: process.env.GROQ_API_KEY || '',
   geminiApiKey: process.env.GEMINI_API_KEY || '',
   deepseekApiKey: process.env.DEEPSEEK_API_KEY || '',
-  // openai-edge-tts (https://github.com/travisvn/openai-edge-tts) OpenAI-compatible
-  // speech endpoint used by the member Boss Tracker voice alarm.
   ttsUrl: (process.env.TTS_URL || 'http://localhost:5050').replace(/\/+$/, ''),
   ttsApiKey: process.env.TTS_API_KEY || 'your_api_key_here',
   ttsVoice: process.env.TTS_VOICE || '',

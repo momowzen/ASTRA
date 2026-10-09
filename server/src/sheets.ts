@@ -106,7 +106,6 @@ export async function getSpreadsheetMeta(): Promise<{ sheets: SheetProperties[] 
   return { sheets: (data.sheets || []).map((s) => s.properties).filter((p): p is SheetProperties => !!p) };
 }
 
-/** Quote a sheet title for use in A1 ranges. */
 export function q(title: string): string {
   return `'${title.replace(/'/g, "''")}'`;
 }
@@ -129,19 +128,12 @@ export async function getValues(title: string): Promise<string[][]> {
   return res[title] || [];
 }
 
-/** Dropdown options per column index, keyed by sheet title. */
 export type ValidationOptions = Record<string, Record<number, string[]>>;
 
 interface CellValidation {
   condition?: { type?: string; values?: { userEnteredValue?: string }[] };
 }
 
-/**
- * Read data-validation (dropdown) rules for the given sheets.
- * Options are collected from the first ~20 rows, which is where sheets
- * typically carry the rule for the whole column. Returns null on failure so
- * the caller can keep serving its previous cache.
- */
 export async function fetchValidations(titles: string[]): Promise<ValidationOptions | null> {
   const out: ValidationOptions = {};
   if (titles.length === 0) return out;
@@ -188,7 +180,6 @@ export async function fetchValidations(titles: string[]): Promise<ValidationOpti
   return out;
 }
 
-/** Read arbitrary A1 ranges (e.g. `'Sheet'!A5`); returns the first row of each range. */
 export async function getCells(ranges: string[]): Promise<string[][]> {
   if (ranges.length === 0) return [];
   const params = ranges.map((r) => `ranges=${encodeURIComponent(r)}`).join('&');
@@ -203,7 +194,6 @@ function cellToString(v: unknown): string {
   return String(v);
 }
 
-/** Retry transient Google API failures once (never quota errors). */
 async function withRetry<T>(fn: () => Promise<T>): Promise<T> {
   try {
     return await fn();
@@ -223,7 +213,6 @@ export async function batchUpdateValues(
     sheetsRequest(`/spreadsheets/${config.spreadsheetId}/values:batchUpdate`, {
       method: 'POST',
       body: JSON.stringify({
-        // USER_ENTERED parses numbers/dates the same way typing into the sheet does.
         valueInputOption: 'USER_ENTERED',
         includeValuesInResponse: false,
         data: updates.map((u) => ({ range: `${q(title)}!${u.a1}`, values: u.values })),
@@ -285,7 +274,6 @@ export async function setSheetHidden(sheetId: number, hidden: boolean): Promise<
   });
 }
 
-/** 0 -> A, 25 -> Z, 26 -> AA */
 export function columnLetter(index: number): string {
   let out = '';
   let n = index + 1;

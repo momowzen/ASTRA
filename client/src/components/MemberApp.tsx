@@ -35,7 +35,6 @@ const ROSTER_COLS = [
   { key: 'cp', label: 'CP' },
 ] as const;
 
-// IGN is shown but not filterable.
 const ROSTER_FILTER_COLS = ROSTER_COLS.filter((c) => c.key !== 'ign');
 
 type ToolView = 'tracker' | 'hidden' | 'relic';

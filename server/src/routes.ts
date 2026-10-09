@@ -17,7 +17,6 @@ export const api = Router();
 const MAX_VALUE_LEN = 1000;
 const MAX_UPDATES = 200;
 
-/** Database-only tabs backing the boss attendance tracker — never shown to any role. */
 const INTERNAL_TABS = ['BOSS ATTENDANCE', 'BOSS CONFIG', 'DISTRIBUTION HISTORY', 'CP HISTORY'];
 
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
@@ -49,7 +48,6 @@ api.get('/health', (_req, res) => {
     rev = snap.rev;
     tabs = snap.tabs.length;
   } catch {
-    /* not loaded yet */
   }
   res.json({ ok: rev !== null, rev, tabs, lastError });
 });
@@ -78,7 +76,6 @@ api.post('/auth/login', async (req, res) => {
       canonical = cred.username;
       ign = role === 'ADMIN' ? '' : cred.ign || canonical;
     } else {
-      // First login: members sign in with IGN / IGN until they set a password.
       const found = findIgn(username);
       if (!found || password !== found) {
         return bad(res, 401, 'Invalid username or password');
@@ -119,7 +116,6 @@ api.post('/auth/password', requireAuth, async (req, res) => {
     if (cred) {
       ok = await verifyCredential(cred, current);
     } else {
-      // No stored password yet: the current password is still the initial one (IGN).
       ok = current === s.ign || current === s.username;
       if (ok && s.role === 'ADMIN') {
         ok = current === config.adminInitialPassword;
@@ -198,8 +194,6 @@ api.get('/data', requireAuth, (req, res) => {
       rows: isAdmin ? t.rows : t.rows.filter((r) => (r.cells[0] || '').trim().toLowerCase() === ign),
     }));
 
-  // Read-only roster (IGN/ROLE/GUILD/CP) for the member "Roster" view — the
-  // per-tab rows above are filtered to the caller, so expose these columns.
   const basic = snap.tabs.find((t) => t.meta.title.toUpperCase() === 'BASIC INFORMATION');
   const roster: { ign: string; role: string; guild: string; cp: string }[] = [];
   if (basic) {
@@ -413,7 +407,6 @@ api.post('/boss/distribute', requireAuth, requireAdmin, async (req, res) => {
     const header1 = distTab?.meta.headers[1] || [];
     const date = distributionDate(new Date());
 
-    // Locate today's date group (Points at odd columns) or append a new one.
     let pointsCol = -1;
     for (let i = 1; i < header0.length; i += 2) {
       if ((header0[i] || '').trim() === date) {
@@ -533,11 +526,6 @@ async function readWithGroq(image: string, prompt: string): Promise<string> {
   return text;
 }
 
-/**
- * Free-tier friendly: models are tried in order, so a per-model daily quota
- * (429) or a transient overload (503) falls through to the next one. The
- * lite models reject thinkingConfig (400) and are retried without it.
- */
 const GEMINI_MODELS = [
   'gemini-3.5-flash',
   'gemini-3.6-flash',
@@ -622,9 +610,7 @@ async function readWithGemini(image: string, prompt: string): Promise<string> {
         message = (err as Error).message;
       }
       lastError = `${model}: ${message || `HTTP ${status}`}`;
-      // Key or permission problems are provider-wide — other models won't help.
       if (status === 401 || status === 403) throw new Error(lastError);
-      // Only a 400 is worth retrying without thinkingConfig (lite models).
       if (status !== 400 || !thinking) break;
     }
   }
@@ -644,7 +630,6 @@ function readerFor(provider: string): { name: string; key: string; read: (image:
   }
 }
 
-/** Validate the image and run the configured AI readers in order (first success wins). */
 async function runOcrReader(
   image: string,
   prompt: string,
@@ -676,7 +661,6 @@ async function runOcrReader(
   return { ok: false, status: 502, error: errors.join(' | ') };
 }
 
-/** Query every ready reader and return all non-empty readings (best-effort merge). */
 async function runOcrReadersAll(
   image: string,
   prompt: string,
@@ -723,10 +707,6 @@ api.post('/ocr/cp', requireAuth, requireAdmin, async (req, res) => {
   res.json({ texts: result.texts });
 });
 
-// Proxy text-to-speech to an openai-edge-tts instance
-// (https://github.com/travisvn/openai-edge-tts) so the browser gets same-origin
-// audio without exposing the TTS host or its API key. Falls back to nothing on
-// failure — the client then uses the built-in Web Speech API.
 api.post('/tts', requireAuth, async (req, res) => {
   const input = typeof req.body?.input === 'string' ? req.body.input.trim() : '';
   if (!input) return bad(res, 400, 'input is required');
@@ -787,7 +767,6 @@ api.post('/cp/update', requireAuth, requireAdmin, async (req, res) => {
 
     const header0 = cpHist.meta.headers[0] || ['IGN'];
     const date = distributionDate(new Date());
-    // Reuse today's dated column when it already exists instead of adding a duplicate.
     const existingCol = header0.findIndex((h) => String(h ?? '').trim() === date);
     const reusedColumn = existingCol >= 0;
     const colIndex = reusedColumn ? existingCol : header0.length;

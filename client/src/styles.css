@@ -78,7 +78,6 @@ select option {
   background-clip: padding-box;
 }
 
-/* ---------- primitives ---------- */
 
 .btn {
   display: inline-flex;
@@ -174,7 +173,6 @@ select option {
   padding-right: 30px;
 }
 
-/* Language dropdown (compact, sits in the header / login corner). */
 .lang-toggle {
   width: auto;
   padding: 6px 26px 6px 10px;
@@ -225,7 +223,6 @@ select option {
   color: var(--muted);
 }
 
-/* ---------- live badge ---------- */
 
 .live {
   display: inline-flex;
@@ -266,7 +263,6 @@ select option {
   }
 }
 
-/* ---------- login ---------- */
 
 .auth {
   min-height: 100vh;
@@ -380,7 +376,6 @@ select option {
   line-height: 1.6;
 }
 
-/* ---------- shell ---------- */
 
 .shell {
   display: grid;
@@ -447,7 +442,6 @@ select option {
 .sidebar .spacer {
   flex: 1;
 }
-/* Only the sheet-tab list scrolls; everything else stays pinned. */
 .sidebar .tab-scroll {
   flex: 1;
   min-height: 120px;
@@ -472,7 +466,6 @@ select option {
     radial-gradient(1000px 400px at 80% -10%, rgba(139, 124, 255, 0.08), transparent 60%),
     var(--bg);
 }
-/* Member view is an app shell: lock the page so only panel bodies scroll. */
 .shell-member .main {
   height: 100vh;
   height: 100dvh;
@@ -498,7 +491,6 @@ select option {
   margin: 0;
   font-weight: 700;
 }
-/* Mobile shows a fixed brand label so the header never resizes per tab. */
 .topbar-brand {
   display: none;
 }
@@ -516,7 +508,6 @@ select option {
   padding: 7px 10px;
   font-size: 13px;
 }
-/* Filter 2 / Clear keep a fixed slot on mobile; hidden here when inactive. */
 .val-filter.is-empty,
 .toolbar-clear.is-empty {
   display: none;
@@ -579,9 +570,6 @@ select option {
   min-height: 0;
 }
 
-/* Views flagged .content-fit (sheet tabs, CP update, distribution) fill the
-   viewport exactly: --topbar-h is measured at runtime by AdminApp, so the card
-   keeps a uniform 22px gap on all four sides and only inner lists scroll. */
 @media (min-width: 901px) {
   .content-fit {
     flex: none;
@@ -633,7 +621,6 @@ select option {
   }
 }
 
-/* ---------- data table ---------- */
 
 .table-card {
   background: var(--panel);
@@ -741,8 +728,6 @@ table.grid tbody tr:hover td {
 table.grid tbody tr:hover td.ign-col {
   background: linear-gradient(180deg, #1c2444, #161d38);
 }
-/* Anchor cell editors to the cell box: absolutely positioned editors are out
-   of flow, so clicking a cell can never change row/column measurements. */
 table.grid tbody td {
   position: relative;
 }
@@ -803,7 +788,6 @@ tr:hover .icon-btn {
   opacity: 0.7;
 }
 
-/* ---------- member profile ---------- */
 
 .profile-hero {
   position: relative;
@@ -871,7 +855,6 @@ tr:hover .icon-btn {
   background: rgba(61, 220, 151, 0.08);
 }
 
-/* ---------- member profile completion ---------- */
 .hero-progress {
   margin-left: auto;
   flex: 0 1 auto;
@@ -981,8 +964,6 @@ tr:hover .icon-btn {
   border-color: rgba(245, 185, 66, 0.7);
 }
 
-/* Brief red-neon highlight on the control a missing-item pill jumps to.
-   Applied to the input/select itself, not the label. */
 .field-flash .input,
 .field-flash .select,
 .field-flash .field-ro,
@@ -1026,7 +1007,6 @@ tr:hover .icon-btn {
   margin-top: 14px;
 }
 
-/* Panel bodies are the only scrollable region in the member shell. */
 .panel-card > .field-grid,
 .panel-card > .coll-grid,
 .panel-card > .empty {
@@ -1034,7 +1014,6 @@ tr:hover .icon-btn {
   min-height: 0;
 }
 
-/* Member profile: one panel that scrolls through Basic Information + Equipment. */
 .profile-panel {
   overflow: hidden;
 }
@@ -1071,7 +1050,6 @@ tr:hover .icon-btn {
   color: var(--red);
 }
 
-/* ---------- member collection cards (vertical scroll only) ---------- */
 .coll-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(215px, 1fr));
@@ -1144,7 +1122,6 @@ tr:hover .icon-btn {
   box-shadow: 0 0 0 3px rgba(139, 124, 255, 0.18);
 }
 
-/* collection grids */
 .coll-wrap {
   overflow: auto;
   max-height: calc(100vh - 420px);
@@ -1245,7 +1222,6 @@ table.coll td.ign-col {
   font-size: 12.5px;
 }
 
-/* ---------- modal ---------- */
 
 .overlay {
   position: fixed;
@@ -1351,7 +1327,6 @@ table.coll td.ign-col {
   gap: 12px;
 }
 
-/* ---------- toast ---------- */
 
 .toasts {
   position: fixed;
@@ -1386,7 +1361,6 @@ table.coll td.ign-col {
   }
 }
 
-/* ---------- mobile controls (hidden on desktop) ---------- */
 
 .menu-btn,
 .drawer-close {
@@ -1415,7 +1389,6 @@ table.coll td.ign-col {
   display: none;
 }
 
-/* ---------- responsive ---------- */
 
 @media (max-width: 900px) {
   .shell {
@@ -1464,7 +1437,6 @@ table.coll td.ign-col {
     margin-left: auto;
   }
 
-  /* Off-canvas navigation drawer */
   .sidebar {
     position: fixed;
     inset: 0 auto 0 0;
@@ -1511,7 +1483,6 @@ table.coll td.ign-col {
     animation: fade 0.15s ease;
   }
 
-  /* Prominent, scrollable sheet-tab strip inside the sticky header */
   .main-tabs {
     display: flex;
     flex-basis: 100%;
@@ -1584,13 +1555,10 @@ table.coll td.ign-col {
     grid-area: add;
     white-space: nowrap;
   }
-  /* CP history: search only, spans the full width. */
   .toolbar-search-only {
     grid-template-columns: 1fr;
     grid-template-areas: 'search';
   }
-  /* Clear moves inside the search box on mobile; keep the filter slots
-     reserved so the 2-line layout never shifts. */
   .toolbar .toolbar-clear {
     display: none;
   }
@@ -1624,7 +1592,6 @@ table.coll td.ign-col {
     max-height: none;
   }
 
-  /* Comfortable touch targets + avoid iOS input zoom */
   .input,
   .select,
   .coll-select,
@@ -1637,7 +1604,6 @@ table.coll td.ign-col {
     min-height: 40px;
   }
 
-  /* Compact member hero */
   .profile-hero {
     padding: 12px 14px;
     gap: 12px;
@@ -1684,13 +1650,11 @@ table.coll td.ign-col {
     padding: 4px 9px;
   }
 
-  /* Roster stats: flush with the 14px content padding */
   .roster-view .stat-row {
     margin: -14px -14px 0;
   }
 }
 
-/* Row-action buttons must be reachable without hover on touch devices. */
 @media (hover: none) {
   .icon-btn {
     opacity: 1;
@@ -1708,7 +1672,6 @@ table.coll td.ign-col {
   }
 }
 
-/* ---------- boss attendance tracker ---------- */
 
 .boss-view {
   display: flex;
@@ -1745,7 +1708,6 @@ table.coll td.ign-col {
   overflow-wrap: anywhere;
 }
 
-/* Narrow cards: stay 2-up and give the number more room to fit. */
 @media (max-width: 900px) {
   .stat-card {
     min-width: 0;
@@ -1754,7 +1716,6 @@ table.coll td.ign-col {
   }
 }
 
-/* ---------- guild roster ---------- */
 
 .roster-view {
   display: flex;
@@ -1762,9 +1723,6 @@ table.coll td.ign-col {
   gap: 16px;
 }
 
-/* Stat cards stay pinned under the topbar and never move with scrolling:
-   the negative top margin cancels .content's padding so the band's natural
-   position equals its sticky position. */
 .roster-view .stat-row {
   position: sticky;
   z-index: 20;
@@ -1784,7 +1742,6 @@ table.coll td.ign-col {
   margin-top: 0;
 }
 
-/* CP distribution + guilds share one row (stacks on narrow screens). */
 .roster-split {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
@@ -1847,7 +1804,6 @@ table.coll td.ign-col {
   flex: none;
 }
 
-/* ---------- CP history (admin) ---------- */
 .cp-latest {
   font-weight: 700;
   color: #fff;
@@ -1930,7 +1886,6 @@ table.coll td.ign-col {
   font-weight: 800;
 }
 
-/* Boss Config: compact two-column table (Boss + Points close together). */
 table.grid.boss-config {
   width: auto;
   max-width: 100%;
@@ -1949,7 +1904,6 @@ table.grid.boss-config th:not(.ign-col) {
   width: 160px;
 }
 
-/* ---------- admin tools: distribution announcement ---------- */
 
 .announce {
   background: var(--panel);
@@ -2018,7 +1972,6 @@ table.grid.boss-config th:not(.ign-col) {
   font-weight: 600;
 }
 
-/* ---------- admin tools: CP update ---------- */
 
 .cp-update {
   height: calc(100vh - 120px);
@@ -2183,7 +2136,6 @@ button.cp-ign:hover {
   }
 }
 
-/* ---------- admin tools: profile completion ---------- */
 .completion-view {
   display: flex;
   flex-direction: column;
@@ -2195,8 +2147,6 @@ button.cp-ign:hover {
   gap: 16px;
   align-items: start;
 }
-/* Grid panels sit side by side — cancel the stacked-card top margin so they
-   stretch to the same height. */
 .completion-panels .panel-card + .panel-card {
   margin-top: 0;
 }
@@ -2245,7 +2195,6 @@ button.completion-ign:hover {
   font-weight: 600;
 }
 
-/* Fill the viewport (titles fixed, only the member lists scroll). */
 @media (min-width: 901px) {
   .content-fit > .completion-view {
     flex: 1;
@@ -2277,7 +2226,6 @@ button.completion-ign:hover {
   }
 }
 
-/* Missing-details popup: fixed header + footer, scrollable body. */
 .modal.modal-fixed {
   display: flex;
   flex-direction: column;
@@ -2296,7 +2244,6 @@ button.completion-ign:hover {
   flex: none;
 }
 
-/* ---------- member roster ---------- */
 .roster-panel {
   min-height: 0;
 }
@@ -2316,8 +2263,6 @@ button.completion-ign:hover {
   width: auto;
   min-width: 130px;
 }
-/* Roster table has no row-number column, so pin IGN at the left edge and let it
-   shrink to its content (the other columns share the remaining width). */
 table.grid.roster-grid th.ign-col,
 table.grid.roster-grid td.ign-col {
   left: 0;
@@ -2326,7 +2271,6 @@ table.grid.roster-grid td.ign-col {
   white-space: nowrap;
 }
 
-/* ---------- member tools (embedded ASTRA Web Viewer) ---------- */
 .tools-frame {
   flex: 1;
   width: 100%;
@@ -2336,7 +2280,6 @@ table.grid.roster-grid td.ign-col {
   background: var(--bg);
 }
 
-/* Alarm toggle (moved into the topbar, shown only on the Boss Tracker tool). */
 .topbar-alarm {
   display: inline-flex;
   align-items: center;

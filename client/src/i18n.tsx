@@ -6,7 +6,6 @@ export type Lang = 'en' | 'ko' | 'ja' | 'zh';
 const LANG_KEY = 'astra.lang';
 
 const DICT: Record<string, { en: string; ko: string; ja: string; zh: string }> = {
-  // ---- app ----
   'app.connectionLost': { en: 'connection lost', ko: '연결 끊김', ja: "接続が切断されました", zh: '连接断开' },
   'app.waiting': { en: 'waiting for data…', ko: '데이터 대기 중…', ja: "データを待機中…", zh: '等待数据…' },
   'app.live': { en: 'live', ko: '실시간', ja: "ライブ", zh: '实时' },
@@ -22,7 +21,6 @@ const DICT: Record<string, { en: string; ko: string; ja: string; zh: string }> =
     zh: '电子表格没有可见的标签页，或服务账号已失去访问权限。',
   },
 
-  // ---- common ----
   'common.signOut': { en: 'Sign out', ko: '로그아웃', ja: "ログアウト", zh: '退出登录' },
   'common.settings': { en: 'Settings', ko: '설정', ja: "設定", zh: '设置' },
   'common.cancel': { en: 'Cancel', ko: '취소', ja: "キャンセル", zh: '取消' },
@@ -32,7 +30,6 @@ const DICT: Record<string, { en: string; ko: string; ja: string; zh: string }> =
   'common.menu': { en: 'Menu', ko: '메뉴', ja: "メニュー", zh: '菜单' },
   'common.close': { en: 'Close', ko: '닫기', ja: "閉じる", zh: '关闭' },
 
-  // ---- login ----
   'login.tag': { en: 'Guild Manager', ko: '길드 관리자', ja: "ギルドマネージャー", zh: '公会管理' },
   'login.welcome': { en: 'Welcome back', ko: '다시 오신 것을 환영합니다', ja: "おかえりなさい", zh: '欢迎回来' },
   'login.sub': {
@@ -52,7 +49,6 @@ const DICT: Record<string, { en: string; ko: string; ja: string; zh: string }> =
   },
   'login.failed': { en: 'Login failed', ko: '로그인에 실패했습니다', ja: "ログインに失敗しました", zh: '登录失败' },
 
-  // ---- admin ----
   'admin.trackerSection': { en: 'Boss Attendance Tracker', ko: '보스 출석 트래커', ja: "ボス出席トラッカー", zh: '首领出勤追踪' },
   'admin.rosterSection': { en: 'Guild Roster', ko: '길드 로스터', ja: "ギルドロスター", zh: '公会名单' },
   'admin.rosterOverview': { en: 'Overview', ko: '개요', ja: "概要", zh: '概览' },
@@ -170,7 +166,6 @@ const DICT: Record<string, { en: string; ko: string; ja: string; zh: string }> =
   'admin.rowDeleted': { en: 'Row deleted', ko: '행이 삭제되었습니다', ja: "行を削除しました", zh: '行已删除' },
   'admin.couldNotDeleteRow': { en: 'Could not delete the row', ko: '행을 삭제할 수 없습니다', ja: "行を削除できませんでした", zh: '无法删除该行' },
 
-  // ---- member ----
   'member.tag': { en: 'Member', ko: '멤버', ja: "メンバー", zh: '成员' },
   'member.myProfile': { en: 'My profile', ko: '내 프로필', ja: "自分のプロフィール", zh: '我的资料' },
   'member.profile': { en: 'Profile', ko: '프로필', ja: "プロフィール", zh: '个人资料' },
@@ -227,12 +222,10 @@ const DICT: Record<string, { en: string; ko: string; ja: string; zh: string }> =
   'member.couldNotChangeUsername': { en: 'Could not change username', ko: '아이디를 변경할 수 없습니다', ja: "ユーザー名を変更できませんでした", zh: '无法修改用户名' },
   'member.couldNotSave': { en: 'Could not save', ko: '저장할 수 없습니다', ja: "保存できませんでした", zh: '无法保存' },
 
-  // ---- collection cell ----
   'cell.mark': { en: 'Click to mark', ko: '클릭하여 표시', ja: "クリックして記録", zh: '点击标记' },
   'cell.clear': { en: 'Click to clear', ko: '클릭하여 해제', ja: "クリックしてクリア", zh: '点击清除' },
   'cell.edit': { en: 'Click to edit', ko: '클릭하여 편집', ja: "クリックして編集", zh: '点击编辑' },
 
-  // ---- guild roster ----
   'roster.members': { en: 'Members', ko: '멤버', ja: "メンバー", zh: '成员' },
   'roster.totalCp': { en: 'Total CP', ko: '총 CP', ja: "合計CP", zh: '总 CP' },
   'roster.avgCp': { en: 'Average CP', ko: '평균 CP', ja: "平均CP", zh: '平均 CP' },
@@ -262,7 +255,6 @@ const DICT: Record<string, { en: string; ko: string; ja: string; zh: string }> =
     zh: '尚未记录数据。',
   },
 
-  // ---- CP history (admin) ----
   'cp.change': { en: 'Change', ko: '변동', ja: "変化", zh: '变化' },
   'cp.historyHint': {
     en: 'Latest CP first · change vs the previous date',
@@ -270,7 +262,6 @@ const DICT: Record<string, { en: string; ko: string; ja: string; zh: string }> =
     zh: '最新 CP 优先 · 与上一日期相比的变化',
   },
 
-  // ---- boss tracker ----
   'boss.seeding': { en: 'Seeding the boss list…', ko: '보스 목록 생성 중…', ja: "ボスリストを作成中…", zh: '正在生成首领列表…' },
   'boss.noBosses': { en: 'No bosses configured yet.', ko: '아직 설정된 보스가 없습니다.', ja: "まだボスが設定されていません。", zh: '尚未配置首领。' },
   'boss.seed': { en: 'Seed bosses', ko: '보스 목록 생성', ja: "ボスを作成", zh: '生成首领' },
@@ -324,7 +315,6 @@ const DICT: Record<string, { en: string; ko: string; ja: string; zh: string }> =
   'boss.pts': { en: 'pts', ko: '점', ja: "pt", zh: '分' },
   'boss.weekly': { en: 'Weekly', ko: '주간', ja: "週間", zh: '每周' },
 
-  // ---- admin tools / distribution ----
   'tools.section': { en: 'ADMIN TOOLS', ko: '관리자 도구', ja: "管理者ツール", zh: '管理员工具' },
   'tools.profileCompletion': { en: 'Profile completion', ko: '프로필 완성도', ja: "プロフィール完成度", zh: '资料完成度' },
   'tools.noGuild': { en: 'NO GUILD', ko: '길드 없음', ja: "ギルドなし", zh: '无公会' },
@@ -353,7 +343,6 @@ const DICT: Record<string, { en: string; ko: string; ja: string; zh: string }> =
   },
   'tools.ok': { en: 'OK', ko: '확인', ja: "OK", zh: '确定' },
 
-  // ---- admin tools / CP update ----
   'tools.cpUpdate': { en: 'CP Update', ko: 'CP 업데이트', ja: "CP更新", zh: 'CP 更新' },
   'tools.cpLeft': { en: 'Current CP', ko: '현재 CP', ja: "現在のCP", zh: '当前 CP' },
   'tools.cpRight': { en: 'Screenshot', ko: '스크린샷', ja: "スクリーンショット", zh: '截图' },
@@ -384,7 +373,6 @@ const DICT: Record<string, { en: string; ko: string; ja: string; zh: string }> =
     zh: '保存到 {basic} 并在 {history} 中记录今天的日期。',
   },
 
-  // ---- password modal ----
   'pw.newPassword': { en: 'New password', ko: '새 비밀번호', ja: "新しいパスワード", zh: '新密码' },
   'pw.confirmNew': { en: 'Confirm new password', ko: '새 비밀번호 확인', ja: "新しいパスワード（確認）", zh: '确认新密码' },
   'pw.update': { en: 'Update password', ko: '비밀번호 변경', ja: "パスワードを更新", zh: '更新密码' },
@@ -392,7 +380,6 @@ const DICT: Record<string, { en: string; ko: string; ja: string; zh: string }> =
   'pw.tooShort': { en: 'New password must be at least 6 characters', ko: '새 비밀번호는 6자 이상이어야 합니다', ja: "新しいパスワードは6文字以上にしてください", zh: '新密码至少需要 6 个字符' },
   'pw.couldNot': { en: 'Could not change password', ko: '비밀번호를 변경할 수 없습니다', ja: "パスワードを変更できませんでした", zh: '无法修改密码' },
 
-  // ---- sheet tab titles (display-only) ----
   'tab.basicInformation': { en: 'Basic Information', ko: '기본 정보', ja: "基本情報", zh: '基本信息' },
   'tab.equipment': { en: 'Equipment', ko: '장비', ja: "装備", zh: '装备' },
   'tab.bossCollection': { en: 'Boss Collection', ko: '보스 컬렉션', ja: "ボスコレクション", zh: '首领图鉴' },
@@ -404,7 +391,6 @@ const DICT: Record<string, { en: string; ko: string; ja: string; zh: string }> =
   'tab.distributionHistory': { en: 'Distribution History', ko: '분배 내역', ja: "分配履歴", zh: '分配历史' },
   'tab.cpHistory': { en: 'CP History', ko: 'CP 기록', ja: "CP履歴", zh: 'CP 记录' },
 
-  // ---- sheet column headers (display-only) ----
   'col.nation': { en: 'Nation', ko: '국가', ja: "国", zh: '国家' },
   'col.guild': { en: 'Guild', ko: '길드', ja: "ギルド", zh: '公会' },
   'col.role': { en: 'Role', ko: '역할', ja: "役割", zh: '角色' },
@@ -440,7 +426,6 @@ const DICT: Record<string, { en: string; ko: string; ja: string; zh: string }> =
   'col.successorCloak3': { en: "Successor's Cloak+3", ko: '계승자의 망토+3', ja: "継承者のマント+3", zh: '继承者披风+3' },
   'col.successorCloak5': { en: "Successor's Cloak+5", ko: '계승자의 망토+5', ja: "継承者のマント+5", zh: '继承者披风+5' },
 
-  // ---- boss names (display-only; ko/ja from ASTRA-Boss-Timer) ----
   'boss.venatus': { en: 'Venatus', ko: '베나투스', ja: "ベナトゥス", zh: '维纳图斯' },
   'boss.viorent': { en: 'Viorent', ko: '비오렌트', ja: "ビオレント", zh: '维奥伦特' },
   'boss.ego': { en: 'Ego', ko: '에고', ja: "エゴ", zh: '埃戈' },

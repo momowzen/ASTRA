@@ -66,10 +66,8 @@ export function isCpLabel(label: string): boolean {
   return label.trim().toUpperCase() === 'CP';
 }
 
-/** Member-view columns that are managed by an admin (not editable by the member). */
 export const MEMBER_READONLY = new Set(['CP', 'ROLE', 'STATUS']);
 
-/** Fields left out of the profile-completion % (admin-managed plus nickname/notes). */
 export const COMPLETION_EXCLUDED = new Set(['CP', 'ROLE', 'STATUS', 'NICKNAME', 'NOTES']);
 
 export interface ProfileColumn {
@@ -78,11 +76,6 @@ export interface ProfileColumn {
   sub: string;
 }
 
-/**
- * Editable, real (non-empty) columns of a tab — skips the IGN column and the
- * admin-managed fields. Shared by the member progress bar and the admin
- * Profile Completion tool so both compute the same percentage.
- */
 export function profileColumns(meta: TabMeta): ProfileColumn[] {
   const h0 = meta.headers[0] || [];
   const h1 = meta.headers[1] || [];
@@ -102,7 +95,6 @@ export function profileColumns(meta: TabMeta): ProfileColumn[] {
   return out;
 }
 
-/** Percentage of a member's editable profile fields that are filled in. */
 export function memberCompletion(tabs: TabData[], ign: string): number {
   const want = ign.trim().toLowerCase();
   let total = 0;
@@ -125,7 +117,6 @@ export function formatCp(value: string): string {
   return Number(digits).toLocaleString('en-US');
 }
 
-/** Numeric value of a formatted CP string (strips separators). NaN when empty. */
 export function parseCpNumber(value: string | undefined): number {
   const digits = (value ?? '').replace(/[^0-9]/g, '');
   return digits === '' ? NaN : Number(digits);

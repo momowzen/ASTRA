@@ -9,7 +9,6 @@ export interface Credential {
   role: 'ADMIN' | 'MEMBER';
   createdAt: string;
   updatedAt: string;
-  /** Roster identity (IGN column of the roster tab). Stable across username changes. */
   ign: string;
 }
 
@@ -19,7 +18,6 @@ function now(): string {
   return new Date().toISOString();
 }
 
-/** Create the hidden credentials tab if it does not exist yet. */
 export async function ensureCredentialsTab(): Promise<void> {
   const meta = await sheets.getSpreadsheetMeta();
   let tab = meta.sheets.find((s) => s.title === config.credentialsTab);
@@ -35,7 +33,6 @@ export async function ensureCredentialsTab(): Promise<void> {
       console.log(`[auth] created hidden credentials tab "${config.credentialsTab}" with seeded admin`);
       return;
     } catch (err) {
-      // another instance may have created it concurrently — re-check below
       console.warn('[auth] addSheet failed, re-checking:', err instanceof Error ? err.message : err);
       tab = (await sheets.getSpreadsheetMeta()).sheets.find((s) => s.title === config.credentialsTab);
       if (!tab) throw err;
@@ -48,11 +45,6 @@ export async function ensureCredentialsTab(): Promise<void> {
   await ensureAdminCredential();
 }
 
-/**
- * Make sure an ADMIN credential exists. Seeds one from the configured initial
- * password when the tab exists but the admin row was removed (or the tab is
- * empty), so the configured credentials always work.
- */
 async function ensureAdminCredential(): Promise<void> {
   const values = await sheets.getValues(config.credentialsTab);
   if (values.length === 0) {
@@ -75,7 +67,6 @@ function parse(rows: string[][]): Credential[] {
     const username = (r[0] || '').trim();
     if (!username) continue;
     const role = (r[3] || 'MEMBER').toUpperCase() === 'ADMIN' ? 'ADMIN' : 'MEMBER';
-    // Older rows have no IGN column — for members the username was the IGN.
     const ign = (r[6] || '').trim() || (role === 'ADMIN' ? '' : username);
     out.push({
       username,
@@ -101,7 +92,6 @@ export async function findCredential(username: string): Promise<Credential | nul
   return all.find((c) => c.username.toLowerCase() === want) || null;
 }
 
-/** Find a member's credential by their stable roster IGN. */
 export async function findCredentialByIgn(ign: string): Promise<Credential | null> {
   const want = ign.trim().toLowerCase();
   if (!want) return null;
@@ -109,10 +99,6 @@ export async function findCredentialByIgn(ign: string): Promise<Credential | nul
   return all.find((c) => c.ign && c.ign.toLowerCase() === want) || null;
 }
 
-/**
- * Create or update a credential row. Returns the sheet row number.
- * `ign` is only used when creating a new row.
- */
 export async function setPassword(
   username: string,
   password: string,
@@ -124,7 +110,6 @@ export async function setPassword(
   const { hash, salt } = await hashPassword(password);
   const title = config.credentialsTab;
   if (idx >= 0) {
-    // row in the sheet (header is row 1)
     const sheetRow = idx + 2;
     await sheets.updateValues(title, `B${sheetRow}:C${sheetRow}`, [[hash, salt]]);
     await sheets.updateValues(title, `D${sheetRow}:D${sheetRow}`, [[role]]);
@@ -134,10 +119,6 @@ export async function setPassword(
   }
 }
 
-/**
- * Change only the login username of an existing credential, keeping the IGN.
- * Persists the IGN column if it was never written.
- */
 export async function renameUsername(currentUsername: string, newUsername: string, ign: string): Promise<void> {
   const all = await listCredentials();
   const idx = all.findIndex((c) => c.username.toLowerCase() === currentUsername.trim().toLowerCase());

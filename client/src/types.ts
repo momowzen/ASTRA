@@ -5,7 +5,6 @@ export interface TabMeta {
   headerRows: 1 | 2;
   headers: string[][];
   columnCount: number;
-  /** Dropdown options from sheet data validation, keyed by column index. */
   options?: Record<number, string[]>;
 }
 
@@ -51,8 +50,6 @@ export interface Column {
   group: string;
 }
 
-/** Database-only sheet tabs backing the boss attendance tracker. Never shown in any nav. */
 export const INTERNAL_TABS = ['BOSS ATTENDANCE', 'BOSS CONFIG'];
 
-/** Sheet tabs hidden from members but visible to admins. */
 export const MEMBER_HIDDEN_TABS = ['BOSS ATTENDANCE', 'BOSS CONFIG', 'DISTRIBUTION HISTORY', 'CP HISTORY'];

@@ -154,8 +154,6 @@ export default function GuildRoster({ data }: Props) {
       const v = (r.cells[col.index] ?? '').trim();
       if (v) counts.set(v, (counts.get(v) ?? 0) + 1);
     }
-    // Available guilds come from the GUILD dropdown options (so guilds with no
-    // members still appear); fall back to whatever values are present.
     const opts = (basic.meta.options?.[col.index] ?? []).map((o) => o.trim()).filter(Boolean);
     const names = opts.length ? opts : [...counts.keys()];
     const rows = [...new Set(names)]

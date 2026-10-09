@@ -295,7 +295,6 @@ function AttendanceView({
           const variants = await ocrVariants(dataUrl, 'attendance');
           for (const ign of scanPartyIgns(variants, memberNames)) found.add(ign);
         } catch (err) {
-          /* unreadable file or reader failure — keep going with the rest */
           if (!scanErr) scanErr = err instanceof ApiError ? err.message : (err as Error)?.message || '';
         }
       }

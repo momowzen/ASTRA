@@ -1,6 +1,5 @@
 
 
-    /* ASTRA Web Viewer - Core Logic. All business logic, data, and Firebase integration is preserved. */
 
     firebase.initializeApp({
       apiKey: "AIzaSyAboQqH7BmtLCO0ciHUvgGIUOU6SMzHnzo",
@@ -473,7 +472,6 @@ function langNext(){
       {key:'T5',qty:100000}
     ];
     const CURR={usd:{sym:'$',rate:'usd'},php:{sym:'\u20B1',rate:'php'},jpy:{sym:'\u00A5',rate:'jpy'},krw:{sym:'\u20A9',rate:'krw'}};
-    // NEXT Market grade palette (from next-market css vars) + tile gradients (142deg)
     const NEXT_BG_COLOR={NONE:'#ffffff',GREEN:'#34d361',BLUE:'#3b9cff',MAGENTA:'#9d66ff',ORANGE:'#ff9500',RED:'#ef4444',YELLOW:'#ffc83d'};
     const NEXT_BG_TILE={NONE:'linear-gradient(142deg,#282a2b,#4c4c4c)',GREY:'linear-gradient(142deg,#474a4c,#6a6e71)',GREEN:'linear-gradient(142deg,#243128,#325539)',BLUE:'linear-gradient(142deg,#1d273b,#214075)',MAGENTA:'linear-gradient(142deg,#282131,#422958)',YELLOW:'linear-gradient(142deg,#46391c,#8b6a1b)',ORANGE:'linear-gradient(142deg,#37291f,#6f441b)',RED:'linear-gradient(142deg,#412022,#7e1b1d)'};
     function gradeColor(g){return NEXT_BG_COLOR[g]||'';}
@@ -1365,7 +1363,6 @@ function fitRelic(){
       rRelicSoft();
     }
 
-    /* ---- Chinese (zh) language pack (added for the ASTRA member embed) ---- */
     LOCS.zh={Venatus:"被污染的河流",Viorent:"吉尔溪流",Ego:"夺回的集结地",Clemantis:"白魔女的摇篮",Livera:"黑风暴半岛",Araneo:"提里奥萨地下墓地 1层",Undomiel:"实验体研究所",Saphirus:"月光的束缚",Neutro:"爱憎战场",LadyDalia:"血色之影",GeneralAquleus:"提里奥萨地下墓地 2层",Thymele:"暴走的刻印",Amentis:"石灰岩海角",BaronBraudmore:"蔷薇藤桥",Milavy:"提里奥萨地下墓地 3层",Wannitas:"陷阱沼泽",Metus:"追随者的原野",Duplican:"睁眼人偶的王座",Shuliar:"猎犬的假面舞会",Ringor:"火炬大道",Roderick:"加尔巴纳地下水道 1层",Gareth:"死者之地 第1区",Titore:"死者之地 第2区",Larba:"加尔巴纳夺回地",Catena:"死者之地 第3区",Auraq:"加尔巴纳地下水道 2层",Secreta:"卡利昂之墓",Ordo:"继承者的乐园",Asta:"黄金血平原",Supore:"黄金血平原",Chaiflock:"卡利昂之墓",Benji:"复仇之巢",Libitina:"永恒臣服礼拜堂",Rakajeth:"赛克瑞塔的惩罚",Icaruthia:"王族之谷",Motti:"伊芙琳的外庭",Camalia:"受控研究所",Nevaeh:"赛琳的中庭",Tumier:"加尔巴纳地下水道 3层",Lucus:"寂静的冶炼所"};
     LANG.zh={brand:'ASTRA',dash:'仪表盘',bsTab:'首领',live:'在线',offline:'离线',nextSpawn:'下次刷新',upcoming:'即将到来',today:'今天',tomorrow:'明天',noSpawns:'无刷新',schedTag:'时间表',schedTitle:'时间表',ivTag:'间隔',ivTitle:'间隔',every:'每',lv:'等级',spawned:'已刷新',now:'现在',updated:'已更新',ago:'前',tracker:'追踪',hiddenClass:'隐藏职业',history:'活动',killed:'已击杀',missed:'已错过',days:['日','一','二','三','四','五','六'],timeRemaining:'剩余时间',relic:'遗物',relicLevels:'遗物等级',current:'当前',goal:'目标',totalTP:'所需时空碎片总数',rareDism:'稀有分解（每个 84 TP）',epicDism:'史诗分解（每个 450 TP）',marketPrices:'实时市场价格',origin:'起源',refresh:'刷新',bestPerTP:'最佳 $/TP',buyQty:(n,t)=>'购买 '+t+' ['+fmtNum(n)+']',mktLoading:'正在获取市场价格...',mktErr:'离线 — 显示缓存价格',mktEmpty:'在上方设置遗物目标以查看市场价格',mktNoL:'起源市场无宝箱挂单',priceLabel:'价格',recoTitle:'推荐购买',gPieces:'时空碎片',gUp:'总等级',gCp:'战斗力',cpRef:'CP 参考',chestMarket:'时空碎片市场',per1k:'/1千',chests:'宝箱',chest:'宝箱',setGoal:'设置等级以计算',piecesNeeded:'所需碎片',cpTotal:'CP 合计',bestTag:'最佳 / 1千',viewBest:'查看最佳',att:'攻击',def:'防御',res:'资源',pve:'PvE',pvp:'PvP',oth:'其他',snipe:'抄底',best:'最佳',memDeal:'记忆特价',cpUnit:'每',nm:['贝纳图斯','比欧兰特','艾果','克莱曼蒂斯','黎维菈','爱拉诺','温多米尔','塞费洛丝','奈特洛','达利亚女士','将军雅奎勒司','希梅','亚曼蒂斯','男爵布劳德莫尔','弥拉威','汪尼塔偲','美图思','杜普利坎','修莱儿','林格','洛德利','卡雷司','帝朵','拉娃','卡戴纳','奥拉克','赛克瑞塔','欧多','阿斯达','苏波尔','夏普洛','斑吉','利毕提娜','拉卡爵司','伊卡露西雅','莫蒂','卡玛莉雅','涅巴','图米尔','鲁库斯'],ttsIn:(n,m)=>`${n} 将在 ${m} 分钟后刷新。`,ttsSpawned:n=>`${n} 已刷新。`,ttsWbIn:(m)=>`世界首领将在 ${m} 分钟后刷新。`,ttsWbSpawned:`世界首领已刷新。`,age:(m)=>{if(m<1)return '刚刚';if(m<60)return m+'分钟前';const h=Math.floor(m/60);return h<24?h+'小时前':Math.floor(h/24)+'天前'},relicNames:['毁灭之源','结界守护','生命结晶','魔力风暴'],mktInsight:'成本与效率',mktCostCp:'每 1 CP',mktBestTier:'最佳购买档位',mktBestTip:'每 1,000 个碎片最便宜。',mktCalc:'计算方法',mktCalcPieces:'所需碎片 = 等级成本之和',mktCalcCp:'获得 CP = 里程碑 + 基础属性',mktCalcCost:'成本 = 碎片 ÷ 宝箱数量 × 价格',mktTable:'遗物效率',mktHRelic:'遗物',mktHLevel:'等级',mktHCp:'CP',mktHCost:'成本',mktHCpCur:'每 CP',mktSavings:'节省',mktSavingsMsg:'购买最便宜的档位可节省',mktAlreadyBest:'您已在购买性价比最高的宝箱',mktEffic:'每货币获得最多 CP',mktFromTo:'至',mktPerChunk:'每 1,000',mktExpand:'展开详情',mktCollapse:'收起'};
     FLAGS.zh='CN';
@@ -1481,8 +1478,6 @@ function fitRelic(){
       add("Recovers HP of the caster and party members within a 10m radius equal to 10% of Max HP every 2 sec for 10 sec. Reduces Healing Received for 60 sec. [Recovery cannot exceed Max 5,000 per instance.]","10 秒内每 2 秒恢复施法者及 10m 半径内队员相当于最大 HP 10% 的 HP。60 秒内降低受到的治疗效果。[每次恢复量不能超过最大 5,000。]");
     })();
 
-    // ---- ASTRA host bridge (same-origin iframe) ----
-    // The host app drives navigation, language and reads the alarm/online state.
     window.ASTRA_TOOLS={
       onStatusChange:null,
       onAlarmChange:null,
@@ -1517,5 +1512,4 @@ function fitRelic(){
       requestAnimationFrame(()=>requestAnimationFrame(positionNavIndicator));
       if(document.fonts&&document.fonts.ready){document.fonts.ready.then(()=>requestAnimationFrame(positionNavIndicator));}
     }catch(e){$('exportInfo').querySelector('span').textContent='Init error: '+e.message}
-    
-  
+

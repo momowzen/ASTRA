@@ -1,11 +1,5 @@
 import type { Lang, T } from './i18n';
 
-/**
- * Display-only translation of raw sheet strings (tab titles, column headers,
- * boss names). Raw values are ALWAYS used for data identity — API paths,
- * onPatch keys, lookups — these helpers are safe only at JSX render points.
- * English keeps the exact current appearance (helpers only swap in ko/ja).
- */
 
 const norm = (s: string): string => s.trim().toUpperCase();
 
@@ -112,8 +106,6 @@ export const BOSS_KEYS: Record<string, string> = {
   KRANSIA: 'boss.kransia',
 };
 
-/** Raw tab title → translated title. `fallback` lets callers keep their
- *  current English rendering (e.g. member mode's prettyTitle). */
 export function tabLabel(raw: string, t: T, lang: Lang, fallback?: (s: string) => string): string {
   if (lang !== 'en') {
     const key = TAB_KEYS[norm(raw)];
@@ -122,8 +114,6 @@ export function tabLabel(raw: string, t: T, lang: Lang, fallback?: (s: string) =
   return fallback ? fallback(raw) : raw;
 }
 
-/** Raw column header/group → translated label; boss-name groups included.
- *  Unknown strings (dates, renames) pass through untouched. */
 export function colLabel(raw: string, t: T, lang: Lang): string {
   if (lang !== 'en') {
     const key = COL_KEYS[norm(raw)] ?? BOSS_KEYS[norm(raw)];
@@ -132,7 +122,6 @@ export function colLabel(raw: string, t: T, lang: Lang): string {
   return raw;
 }
 
-/** Raw boss name → translated boss name. */
 export function bossLabel(raw: string, t: T, lang: Lang): string {
   if (lang !== 'en') {
     const key = BOSS_KEYS[norm(raw)];

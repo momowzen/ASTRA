@@ -9,7 +9,6 @@ export interface TabMeta {
   headerRows: 1 | 2;
   headers: string[][];
   columnCount: number;
-  /** Dropdown options from sheet data validation, keyed by column index (omitted when none). */
   options?: Record<number, string[]>;
 }
 
@@ -34,12 +33,6 @@ let inFlight: Promise<void> | null = null;
 let timer: NodeJS.Timeout | null = null;
 export let lastError: string | null = null;
 
-/**
- * Google can serve stale reads for a couple of seconds after a write, so a
- * refresh that lands after a fresh one may still contain pre-write values.
- * Remember recent writes and overlay them onto every load until Google has
- * certainly caught up, so a stale read can never regress the snapshot.
- */
 const RECENT_WRITE_TTL_MS = 8_000;
 const recentWrites = new Map<string, { row: number; col: number; value: string; expires: number }>();
 
@@ -67,9 +60,6 @@ function detectHeaderRows(values: string[][]): 1 | 2 {
   const second = values[1] || [];
   const secondCol = (second[0] || '').trim();
   const secondHasData = second.some((c) => c.trim() !== '');
-  // A member data row always carries the IGN in column 0, so a second row with
-  // an empty column 0 but other content is a sub-header row (2-row header).
-  // (The group row above it may leave A1 blank, e.g. SUCCESSOR COLLECTION.)
   return secondCol === '' && secondHasData ? 2 : 1;
 }
 
@@ -105,11 +95,6 @@ function buildTab(
   };
 }
 
-/**
- * Dropdown rules change rarely, and each fetch is a Google read request
- * against a per-minute quota — so validations are cached and re-read at most
- * once a minute (or when the set of tabs changes).
- */
 const VALIDATION_TTL_MS = 60_000;
 let validationCache: sheets.ValidationOptions | null = null;
 let validationCacheKey = '';
@@ -179,11 +164,6 @@ async function load(): Promise<Snapshot> {
   return { rev, ts: Date.now(), tabs };
 }
 
-/**
- * Apply a successful write straight into the snapshot so other clients see it
- * on their next poll without spending a Google read. The recent-writes overlay
- * keeps the following load() consistent until Google has caught up.
- */
 export function applyLocalWrite(title: string, row: number, col: number, value: string): void {
   if (!snapshot) return;
   const tab = snapshot.tabs.find((t) => t.meta.title === title);
@@ -257,7 +237,6 @@ function refresh(): Promise<void> {
   return inFlight;
 }
 
-/** Single coalesced refresh after a structural write (append/delete/etc). */
 let refreshTimer: NodeJS.Timeout | null = null;
 export function scheduleRefresh(): void {
   if (refreshTimer) return;
@@ -288,7 +267,6 @@ export function getTab(title: string): TabData | undefined {
   return getSnapshot().tabs.find((t) => t.meta.title === title);
 }
 
-/** Canonical IGN for a login name, looked up in the IGN column of the roster tab. */
 export function findIgn(name: string): string | null {
   const want = name.trim().toLowerCase();
   if (!want) return null;

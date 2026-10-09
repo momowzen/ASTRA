@@ -51,7 +51,6 @@ export function requireAdmin(req: Request, res: Response, next: NextFunction): v
   next();
 }
 
-/** Minimal fixed-window rate limiter for login attempts. */
 const buckets = new Map<string, { count: number; resetAt: number }>();
 
 export function rateLimit(key: string, max: number, windowMs: number): boolean {

@@ -1,7 +1,4 @@
 
-    /* ASTRA Web Viewer - Premium Visual Redesign */
-    /* Theme: Dark fantasy / Astral / Constellation / Premium game dashboard */
-    /* Preserves all existing functionality and business logic. */
 
     :root {
       --void-900: #02040a;
@@ -586,7 +583,6 @@
       .skill-block-text { min-height: 0; -webkit-line-clamp: 3; }
     }
 
-    /* ---- Relic section ---- */
     .relic-page { overflow: hidden; }
     .relic-scroll { flex: 1; min-height: 0; overflow: hidden; display: flex; align-items: stretch; justify-content: center; }
     .relic-grid { flex: 1 1 auto; min-height: 0; width: 100%; display: grid; grid-template-columns: 1.25fr 1fr; grid-template-rows: 1fr; gap: var(--space-4); transform-origin: center center; }
@@ -733,7 +729,7 @@
       .tier-row { font-size: clamp(0.62rem, 2.4vw, 0.74rem); gap: var(--space-2); padding: var(--space-2); }
       .tier-row .tier-cost { font-size: clamp(0.74rem, 2.8vw, 0.88rem); }
       .tier-row .tier-name { font-size: clamp(0.62rem, 2.2vw, 0.72rem); }
-      
+
       .mkt-status { gap: var(--space-1); padding-top: var(--space-1); }
       .mkt-updated { font-size: 0.60rem; }
       .mkt-currency { flex-wrap: wrap; justify-content: flex-start; }
@@ -748,9 +744,5 @@
       .relic-result { min-width: 0; height: 2.4rem; }
     }
 
-/* ---- ASTRA host embed: the viewer's own header is replaced entirely by the
-   ASTRA topbar (navigation, language, live status, voice alarm), so hide it
-   rather than leaving an empty bar above the content. ---- */
 .astra-header,
 .status-bar { display: none !important; }
-  

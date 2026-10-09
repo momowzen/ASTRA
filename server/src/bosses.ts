@@ -1,4 +1,3 @@
-/** Boss names mirrored from the ASTRA-Boss-Timer repo, used to seed BOSS CONFIG. */
 export const BOSS_NAMES: string[] = [
   'Venatus',
   'Viorent',

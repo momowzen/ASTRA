@@ -165,8 +165,6 @@ export default function AdminApp({
     el?.scrollIntoView({ inline: 'center', block: 'nearest' });
   }, [activeTitle, rosterView, bossView, toolView]);
 
-  // Views that should fill the viewport exactly: the page never scrolls and the
-  // panels keep a uniform 22px gap on every side (list bodies scroll instead).
   const fit = toolView === 'distribution' || toolView === 'cp-update' || toolView === 'profile-completion' || (!rosterView && !bossView && !toolView);
 
   useLayoutEffect(() => {
@@ -188,8 +186,6 @@ export default function AdminApp({
   const isBasic = (tab?.meta.title ?? '').toUpperCase() === 'BASIC INFORMATION';
   const isCpH = (tab?.meta.title ?? '').toUpperCase() === 'CP HISTORY';
 
-  // Nickname search: map matching nicknames to IGNs from the roster so the same
-  // search box works on every sheet tab, not just Basic Information.
   const rosterTab = useMemo(
     () =>
       data.tabs.find((tb) => tb.meta.title.toUpperCase() === 'BASIC INFORMATION') ||
@@ -220,8 +216,6 @@ export default function AdminApp({
     [allCols, showCol, projecting],
   );
 
-  // Distinct values of the column chosen in the first filter — choices for the
-  // second (value) filter, in sheet order.
   const filterChoices = useMemo(() => {
     if (!tab || showCol < 0) return [];
     const seen = new Set<string>();

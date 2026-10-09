@@ -18,8 +18,6 @@ export function apiBase(): string {
   }
   const override = sessionStorage.getItem(API_SESSION_KEY);
   if (override) return override.replace(/\/+$/, '');
-  // In dev, Vite proxies /api to the local backend — ignore config.js so a
-  // deployed API URL never hijacks local development.
   if (!import.meta.env.DEV) {
     const cfg = window.ASTRA_CONFIG?.apiBase?.trim();
     if (cfg) return cfg.replace(/\/+$/, '');
@@ -89,9 +87,6 @@ export async function request<T>(path: string, init?: RequestInit): Promise<T> {
   }
 
   if (res.status === 401) {
-    // A 401 on an authenticated request means the stored session is dead;
-    // a 401 without a token (e.g. a login attempt) means bad credentials, so
-    // surface the server's actual reason instead of "session expired".
     if (token) {
       clearSession();
       window.dispatchEvent(new Event('astra:unauthorized'));
@@ -116,8 +111,6 @@ export async function request<T>(path: string, init?: RequestInit): Promise<T> {
 }
 
 export async function login(username: string, password: string): Promise<Session> {
-  // Drop any stale token so the login request is clean and a 401 reports the
-  // real reason (bad credentials) rather than "session expired".
   clearSession();
   const res = await request<{ token: string; role: Session['role']; username: string; ign: string }>(
     '/auth/login',

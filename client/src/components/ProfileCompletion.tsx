@@ -74,7 +74,6 @@ export default function ProfileCompletion({ data }: Props) {
       return groups.get(k)!;
     };
 
-    // Seed panels in the GUILD dropdown's option order.
     for (const o of options) {
       const k = key(o);
       if (k) ensure(k, o.trim());

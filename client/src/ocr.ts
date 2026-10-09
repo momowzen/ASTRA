@@ -4,11 +4,6 @@ import { request } from './api';
 
 setLogging(false);
 
-/**
- * No single Tesseract language covers these screenshots: eng mangles Hangul,
- * kor mangles Latin/kana, jpn mangles Hangul. We run one pass per language and
- * later keep whichever reading scores best against the roster.
- */
 type OcrLanguage = 'eng' | 'kor' | 'jpn';
 
 const workers = new Map<OcrLanguage, Promise<Worker>>();
@@ -61,13 +56,6 @@ function otsuThreshold(gray: Uint8ClampedArray, total: number): number {
   return threshold;
 }
 
-/**
- * Upscale, grayscale, and (optionally) binarize the image. Tesseract reads
- * enlarged, high-contrast black-on-white text far more reliably than raw
- * screenshots (which may be small, low-contrast, or light-on-dark). The Korean
- * model does better on smooth grayscale than on hard-thresholded pixels, so
- * binarization is per-language.
- */
 async function preprocess(image: string, factor = 3, binarize = true): Promise<string> {
   const img = await loadImage(image);
   const w = Math.max(1, Math.round(img.naturalWidth * factor));
@@ -90,7 +78,6 @@ async function preprocess(image: string, factor = 3, binarize = true): Promise<s
     sum += v;
   }
 
-  // Dark UI (light text on dark background) needs inverting so text is dark.
   const invert = sum / total < 128;
   if (invert) for (let i = 0; i < total; i++) gray[i] = 255 - gray[i];
 
@@ -121,11 +108,6 @@ async function recognize(lang: OcrLanguage, image: string, psm: PSM): Promise<st
   }
 }
 
-/**
- * Page-segmentation mode per flow. CP screenshots (a name+CP list) read best
- * as one dense block; attendance screenshots are full-app captures with
- * sidebar, cards, and tables, so sparse-text detection reads their rows better.
- */
 export type OcrFlow = 'cp' | 'attendance';
 
 async function runPasses(image: string, psm: PSM, korBinarize: boolean): Promise<string[]> {
@@ -139,19 +121,6 @@ async function runPasses(image: string, psm: PSM, korBinarize: boolean): Promise
   return [eng, kor, jpn];
 }
 
-/**
- * Attendance scans union three tuned passes on top of the base passes, because
- * game-UI lists and app tables break differently:
- * - sparse binarized (base) reads latin roster names in app tables;
- * - kor on 4x grayscale reads Hangul names like 꾸뀨꾸뀨 that binarize into mush;
- * - eng as a single block rejoins "A - VIZ" with its trailing CP, which sparse
- *   mode splits (and sometimes drops entirely).
- * Sequential rounds keep same-worker setParameters calls race-free.
- */
-/**
- * Tesseract attendance reader. Disabled while ATTENDANCE_READER is 'ai';
- * flip the flag to 'tesseract' to restore these passes (e.g. offline).
- */
 async function ocrAttendance(image: string): Promise<string[]> {
   const binarized = await preprocess(image, 3, true);
   const gray4 = await preprocess(image, 4, false);
@@ -167,11 +136,6 @@ async function ocrAttendance(image: string): Promise<string[]> {
   return [eng, kor, jpn, korBig, engBlock];
 }
 
-/**
- * Reader for attendance scans: 'ai' sends the screenshot to the server's
- * DeepSeek vision route (returns names as text); 'tesseract' runs the local
- * multi-language passes above.
- */
 export const ATTENDANCE_READER: 'ai' | 'tesseract' = 'ai';
 
 async function ocrAttendanceAI(image: string): Promise<string[]> {
@@ -182,11 +146,6 @@ async function ocrAttendanceAI(image: string): Promise<string[]> {
   return [text];
 }
 
-/**
- * Reader for CP screenshots: 'ai' uses the server vision route with a name+CP
- * prompt and falls back to the local Tesseract passes on failure; 'tesseract'
- * runs the local passes directly.
- */
 export const CP_READER: 'ai' | 'tesseract' = 'ai';
 
 async function ocrCpAI(image: string): Promise<string[]> {
@@ -203,13 +162,11 @@ async function ocrCp(image: string): Promise<string[]> {
     try {
       return await ocrCpAI(image);
     } catch {
-      /* fall back to the local Tesseract passes below */
     }
   }
   return runPasses(image, PSM.SINGLE_BLOCK, false);
 }
 
-/** Run the configured reader for one image and return the raw text of each pass. */
 export async function ocrVariants(image: string, flow: OcrFlow = 'cp'): Promise<string[]> {
   if (flow === 'attendance') {
     return ATTENDANCE_READER === 'ai' ? ocrAttendanceAI(image) : ocrAttendance(image);
@@ -217,7 +174,6 @@ export async function ocrVariants(image: string, flow: OcrFlow = 'cp'): Promise<
   return ocrCp(image);
 }
 
-/** Normalize for matching: lowercase, unify confusable chars, keep only letters + numbers. */
 export function normalize(s: string): string {
   return s
     .toLowerCase()
@@ -243,11 +199,6 @@ const COMPOUND_FOLD: Record<string, string> = {
   'ㄾ': 'ㄹㅌ', 'ㄿ': 'ㄹㅍ', 'ㅀ': 'ㄹㅎ', 'ㅄ': 'ㅂㅅ',
 };
 
-/**
- * Fold Hangul syllables down to jamo (splitting compounds, collapsing double
- * consonants) so OCR confusion like 꾸/꾸 or 뀨/규 reads as a near-match
- * instead of a completely different character.
- */
 export function jamoFold(s: string): string {
   let out = '';
   for (const ch of normalize(s)) {
@@ -268,8 +219,6 @@ export function jamoFold(s: string): string {
   return out;
 }
 
-/** Multiset of jamo/latin characters — two names with the same bag are anagrams
- *  (e.g. the Hangul trio) and cannot be told apart by a fuzzy OCR read. */
 export function jamoBag(s: string): string {
   return [...jamoFold(s)].sort().join('');
 }
@@ -298,7 +247,6 @@ function similarity(a: string, b: string): number {
   return 1 - levenshtein(a, b) / Math.max(a.length, b.length);
 }
 
-/** Extract the trailing combat-power number from an OCR line, returning the name and raw digits. */
 export function parseCpLine(line: string): { name: string; cp: string } | null {
   const m = line.match(/(\d{1,3}(?:[.,]\d{3})+|\d+)\s*$/);
   if (!m || m.index === undefined) return null;
@@ -314,7 +262,6 @@ export function parseCpLine(line: string): { name: string; cp: string } | null {
 
 export const MATCH_THRESHOLD = 0.6;
 
-/** Score one OCR'd name against the roster, returning the best roster IGN and how well it fits. */
 export function scoreIgn(name: string, roster: string[]): { ign: string; score: number } {
   const n = normalize(name);
   const j = jamoFold(name);
@@ -337,10 +284,6 @@ export function scoreIgn(name: string, roster: string[]): { ign: string; score: 
       bestIgn = r;
     }
   }
-  // Roster names that are anagrams in jamo space (e.g. the Hangul trio
-  // 꾸뀨꾸뀨 / 뀨꾸뀨꾸 / 뀨뀨꾸꾸) are indistinguishable from a fuzzy read. Without
-  // an exact match, leave the row unmatched so an admin selects the right
-  // member instead of writing CP against a sibling.
   if (bestScore < 1) {
     const bag = jamoBag(bestIgn);
     for (const r of roster) {
@@ -350,7 +293,6 @@ export function scoreIgn(name: string, roster: string[]): { ign: string; score: 
   return { ign: bestIgn, score: bestScore };
 }
 
-/** Match an OCR'd name to the roster, favoring the roster IGNs. */
 export function matchIgn(name: string, roster: string[]): { ign: string; matched: boolean } {
   const { ign, score } = scoreIgn(name, roster);
   if (score >= MATCH_THRESHOLD) return { ign, matched: true };
@@ -363,14 +305,9 @@ export interface ScannedRow {
   ign: string;
   matched: boolean;
   score: number;
-  /** How many language passes produced a reading for this row (corroboration). */
   size: number;
 }
 
-/**
- * Parse every language pass of one screenshot, group readings that agree on CP,
- * and keep the reading that matches the roster best for each row.
- */
 export function mergeVariants(variants: string[], roster: string[]): ScannedRow[] {
   const groups = new Map<string, { name: string; cp: string }[]>();
   for (const text of variants) {
@@ -413,16 +350,6 @@ export function mergeVariants(variants: string[], roster: string[]): ScannedRow[
   return rows;
 }
 
-/**
- * Find roster IGNs in party screenshots: run every language pass, take each
- * line (with and without a trailing CP number) as a candidate, and keep the
- * roster names that score well enough to trust. Exact reads (after
- * normalize/jamoFold) always count. Near-misses must clear a higher bar than
- * MATCH_THRESHOLD because OCR noise like "A-RERT" ~ "A · Zer0" (0.6) or
- * "NATION" ~ "Kaion" (0.667) would otherwise auto-check the wrong members.
- * Short fragments (under 4 normalized chars, e.g. "pt") need an almost-exact
- * hit; they are usually one-off noise, not a roster name.
- */
 export function scanPartyIgns(variants: string[], roster: string[]): string[] {
   const best = new Map<string, number>();
   for (const text of variants) {

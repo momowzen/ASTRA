@@ -38,7 +38,6 @@ export default function App() {
     try {
       localStorage.setItem('astra.lang', l);
     } catch {
-      /* ignore */
     }
   }, []);
   const t = useCallback(
