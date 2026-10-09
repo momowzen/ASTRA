@@ -3,7 +3,7 @@ import { MEMBER_HIDDEN_TABS } from '../types';
 import type { Column, DataResponse, Session, TabData } from '../types';
 import { buildColumns, formatCp, initials, isCpLabel, isMark, MEMBER_READONLY, optionColor } from '../utils';
 import { ApiError, apiBase, saveCells } from '../api';
-import { IconClose, IconGear, IconGrid, IconLogout, IconMenu } from './icons';
+import { IconClose, IconGear, IconGem, IconGrid, IconLogout, IconMenu, IconSheet, IconSparkles, IconTimer, IconUser, IconUsers } from './icons';
 import MemberSettingsModal from './MemberSettingsModal';
 import ProfileProgress from './ProfileProgress';
 import { LangToggle, useLang } from '../i18n';
@@ -471,13 +471,13 @@ export default function MemberApp({
           onClick={() => selectTab('')}
         >
           <span className="ico">
-            <IconGrid />
+            <IconUser />
           </span>
           {t('member.profile')}
         </button>
         <button className={`nav-item ${rosterView ? 'active' : ''}`} onClick={showRoster}>
           <span className="ico">
-            <IconGrid />
+            <IconUsers />
           </span>
           {t('member.roster')}
         </button>
@@ -488,7 +488,7 @@ export default function MemberApp({
             onClick={() => selectTab(t.meta.title)}
           >
             <span className="ico">
-              <IconGrid />
+              <IconSheet />
             </span>
             {tabText(t.meta.title)}
           </button>
@@ -500,7 +500,7 @@ export default function MemberApp({
           onClick={() => showTool('tracker')}
         >
           <span className="ico">
-            <IconGrid />
+            <IconTimer />
           </span>
           {t('member.toolBossTracker')}
         </button>
@@ -509,7 +509,7 @@ export default function MemberApp({
           onClick={() => showTool('hidden')}
         >
           <span className="ico">
-            <IconGrid />
+            <IconSparkles />
           </span>
           {t('member.toolHiddenClass')}
         </button>
@@ -518,7 +518,7 @@ export default function MemberApp({
           onClick={() => showTool('relic')}
         >
           <span className="ico">
-            <IconGrid />
+            <IconGem />
           </span>
           {t('member.toolRelic')}
         </button>
