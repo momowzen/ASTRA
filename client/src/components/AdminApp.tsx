@@ -2,7 +2,7 @@ import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import type { RefObject } from 'react';
 import { INTERNAL_TABS } from '../types';
 import type { Column, DataResponse, Session } from '../types';
-import { buildColumns, formatCp, isCpLabel, optionColor } from '../utils';
+import { buildColumns, formatCp, isCpLabel, isDateLabel, optionColor, toIsoDate } from '../utils';
 import { addRow as apiAddRow, deleteRow as apiDeleteRow, saveCells, ApiError } from '../api';
 import { IconBulb, IconClose, IconGear, IconGrid, IconLogout, IconMenu, IconPlus, IconSearch, IconTrash } from './icons';
 import PasswordModal from './PasswordModal';
@@ -29,16 +29,18 @@ function EditableCell({
   initial,
   options,
   format,
+  isDate,
   onCommit,
   onCancel,
 }: {
   initial: string;
   options?: string[];
   format?: boolean;
+  isDate?: boolean;
   onCommit: (value: string) => Promise<boolean>;
   onCancel: () => void;
 }) {
-  const [val, setVal] = useState(initial);
+  const [val, setVal] = useState(() => (isDate ? toIsoDate(initial) : initial));
   const ref = useRef<HTMLInputElement | HTMLSelectElement>(null);
   const closing = useRef(false);
 
@@ -52,6 +54,31 @@ function EditableCell({
     closing.current = true;
     const ok = await onCommit(format ? formatCp(val) : val);
     if (!ok) closing.current = false;
+  }
+
+  if (isDate) {
+    return (
+      <input
+        ref={ref as RefObject<HTMLInputElement>}
+        className="cell-input"
+        type="date"
+        value={val}
+        onChange={(e) => setVal(e.target.value)}
+        onBlur={() => void commit()}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter') {
+            e.preventDefault();
+            void commit();
+          } else if (e.key === 'Escape') {
+            closing.current = true;
+            e.preventDefault();
+            onCancel();
+          }
+          e.stopPropagation();
+        }}
+        onClick={(e) => e.stopPropagation()}
+      />
+    );
   }
 
   if (options) {
@@ -700,6 +727,7 @@ export default function AdminApp({
                                 initial={value}
                                 options={tab.meta.options?.[c.index]}
                                 format={isCpLabel(c.label)}
+                                isDate={isDateLabel(c.label)}
                                 onCommit={(v) => commitCell(r.row, c.index, v)}
                                 onCancel={() => setEditing(null)}
                               />
@@ -893,6 +921,20 @@ function AddRowModal({
                         </option>
                       ))}
                     </select>
+                  ) : isDateLabel(col.label) ? (
+                    <input
+                      className="input"
+                      type="date"
+                      value={toIsoDate(values[i] ?? '')}
+                      autoFocus={i === 0}
+                      onChange={(e) =>
+                        setValues((prev) => {
+                          const next = [...prev];
+                          next[i] = e.target.value;
+                          return next;
+                        })
+                      }
+                    />
                   ) : (
                     <input
                       className="input"

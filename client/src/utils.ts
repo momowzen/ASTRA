@@ -148,3 +148,35 @@ const OPTION_PALETTE: Record<string, string> = {
 export function optionColor(value: string): string | undefined {
   return OPTION_PALETTE[value.trim().toLowerCase()];
 }
+
+export function isDateLabel(label: string): boolean {
+  return /\bdate\b/i.test(label.trim());
+}
+
+export function toIsoDate(raw: string | undefined): string {
+  const v = (raw ?? '').trim();
+  if (!v) return '';
+  if (/^\d{4}-\d{2}-\d{2}$/.test(v)) return v;
+  if (/^\d+(\.\d+)?$/.test(v)) {
+    const serial = Number(v);
+    if (serial > 0) {
+      const d = new Date(Date.UTC(1899, 11, 30) + Math.round(serial) * 86400000);
+      if (!Number.isNaN(d.getTime())) return d.toISOString().slice(0, 10);
+    }
+  }
+  const ymd = v.match(/^(\d{4})\s*[./-]\s*(\d{1,2})\s*[./-]\s*(\d{1,2})/);
+  if (ymd) return `${ymd[1]}-${ymd[2].padStart(2, '0')}-${ymd[3].padStart(2, '0')}`;
+  const mdy = v.match(/^(\d{1,2})\s*[./-]\s*(\d{1,2})\s*[./-]\s*(\d{2,4})/);
+  if (mdy) {
+    const year = Number(mdy[3]) < 100 ? Number(mdy[3]) + 2000 : Number(mdy[3]);
+    return `${year}-${mdy[1].padStart(2, '0')}-${mdy[2].padStart(2, '0')}`;
+  }
+  const d = new Date(v.replace(/\./g, '').replace(/,/g, ' ').replace(/\s+/g, ' ').trim());
+  if (!Number.isNaN(d.getTime())) {
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${y}-${m}-${day}`;
+  }
+  return '';
+}

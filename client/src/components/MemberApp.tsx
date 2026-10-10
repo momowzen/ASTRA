@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { MEMBER_HIDDEN_TABS } from '../types';
 import type { Column, DataResponse, Session, TabData } from '../types';
-import { buildColumns, formatCp, initials, isCpLabel, isMark, MEMBER_READONLY, optionColor } from '../utils';
+import { buildColumns, formatCp, initials, isCpLabel, isDateLabel, isMark, MEMBER_READONLY, optionColor, toIsoDate } from '../utils';
 import { ApiError, apiBase, saveCells } from '../api';
 import { IconClose, IconGear, IconGem, IconGrid, IconLogout, IconMenu, IconSheet, IconSparkles, IconTimer, IconUser, IconUsers } from './icons';
 import MemberSettingsModal from './MemberSettingsModal';
@@ -55,6 +55,7 @@ function Field({
   options,
   readOnly,
   format,
+  isDate,
   onCommit,
   dataTab,
   dataCol,
@@ -64,6 +65,7 @@ function Field({
   options?: string[];
   readOnly?: boolean;
   format?: boolean;
+  isDate?: boolean;
   onCommit: (value: string) => Promise<void>;
   dataTab?: string;
   dataCol?: number;
@@ -88,6 +90,18 @@ function Field({
     try {
       await onCommit(final);
       setVal(final);
+      setStatus('saved');
+      setTimeout(() => setStatus((s) => (s === 'saved' ? 'idle' : s)), 1800);
+    } catch {
+      setStatus('error');
+    }
+  }
+
+  async function commitDate(next: string) {
+    if (next === toIsoDate(value)) return;
+    setStatus('saving');
+    try {
+      await onCommit(next);
       setStatus('saved');
       setTimeout(() => setStatus((s) => (s === 'saved' ? 'idle' : s)), 1800);
     } catch {
@@ -124,7 +138,16 @@ function Field({
           {status === 'error' && t('common.failed')}
         </span>
       </label>
-      {options ? (
+      {isDate ? (
+        <input
+          ref={inputRef}
+          className="input"
+          type="date"
+          value={toIsoDate(value)}
+          onFocus={() => (focused.current = true)}
+          onChange={(e) => void commitDate(e.target.value)}
+        />
+      ) : options ? (
         <select
           className="select"
           value={val}
@@ -768,6 +791,7 @@ export default function MemberApp({
                             options={rosterTab.meta.options?.[c.index]}
                             readOnly={MEMBER_READONLY.has(c.label.trim().toUpperCase())}
                       format={isCpLabel(c.label)}
+                      isDate={isDateLabel(c.label)}
                       dataTab={rosterTab.meta.title}
                       dataCol={c.index}
                       onCommit={(v) => commit(rosterTab, rosterRow.row, c.index, v)}
@@ -798,6 +822,7 @@ export default function MemberApp({
                             options={equipTab.meta.options?.[c.index]}
                             readOnly={MEMBER_READONLY.has(c.label.trim().toUpperCase())}
                       format={isCpLabel(c.label)}
+                      isDate={isDateLabel(c.label)}
                       dataTab={equipTab.meta.title}
                       dataCol={c.index}
                       onCommit={(v) => commit(equipTab, equipRow.row, c.index, v)}
@@ -834,6 +859,7 @@ export default function MemberApp({
                       options={activeTab.meta.options?.[c.index]}
                       readOnly={MEMBER_READONLY.has(c.label.trim().toUpperCase())}
                       format={isCpLabel(c.label)}
+                      isDate={isDateLabel(c.label)}
                       dataTab={activeTab.meta.title}
                       dataCol={c.index}
                       onCommit={(v) => commit(activeTab, row.row, c.index, v)}
