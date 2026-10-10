@@ -474,12 +474,6 @@ export default function MemberApp({
           </span>
           {t('member.profile')}
         </button>
-        <button className={`nav-item ${rosterView ? 'active' : ''}`} onClick={showRoster}>
-          <span className="ico">
-            <IconUsers />
-          </span>
-          {t('member.roster')}
-        </button>
         {memberTabs.map((t) => (
           <button
             key={t.meta.title}
@@ -494,6 +488,12 @@ export default function MemberApp({
         ))}
 
         <div className="section-label">{t('member.tools')}</div>
+        <button className={`nav-item ${rosterView ? 'active' : ''}`} onClick={showRoster}>
+          <span className="ico">
+            <IconUsers />
+          </span>
+          {t('member.roster')}
+        </button>
         <button
           className={`nav-item ${toolsView === 'tracker' ? 'active' : ''}`}
           onClick={() => showTool('tracker')}
@@ -596,9 +596,6 @@ export default function MemberApp({
             <button className={`main-tab ${isDashboard ? 'active' : ''}`} onClick={() => selectTab('')}>
               {t('member.profile')}
             </button>
-            <button className={`main-tab ${rosterView ? 'active' : ''}`} onClick={showRoster}>
-              {t('member.roster')}
-            </button>
             {memberTabs.map((mt) => (
               <button
                 key={mt.meta.title}
@@ -608,6 +605,9 @@ export default function MemberApp({
                 {tabText(mt.meta.title)}
               </button>
             ))}
+            <button className={`main-tab ${rosterView ? 'active' : ''}`} onClick={showRoster}>
+              {t('member.roster')}
+            </button>
             <button
               className={`main-tab ${toolsView === 'tracker' ? 'active' : ''}`}
               onClick={() => showTool('tracker')}
