@@ -2,7 +2,7 @@ import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import type { RefObject } from 'react';
 import { INTERNAL_TABS } from '../types';
 import type { Column, DataResponse, Session } from '../types';
-import { buildColumns, formatCp, isCpLabel, isDateLabel, optionColor, toIsoDate } from '../utils';
+import { buildColumns, formatCp, isCpLabel, isDateLabel, optionColor, timeInGuildParts, toIsoDate } from '../utils';
 import { addRow as apiAddRow, deleteRow as apiDeleteRow, saveCells, ApiError } from '../api';
 import { DatePicker, Select } from './Dropdown';
 import { IconBulb, IconClose, IconGear, IconGrid, IconLogout, IconMenu, IconPlus, IconSearch, IconTrash } from './icons';
@@ -142,6 +142,13 @@ export default function AdminApp({
 
   const { t, lang } = useLang();
 
+  const guildDuration = (value: string): string => {
+    const p = timeInGuildParts(value);
+    if (!p) return '';
+    if (p.n === 0) return t('time.today');
+    return t(`time.${p.unit}${p.n === 1 ? '' : 's'}`, { n: p.n });
+  };
+
   const sheetTabs = data.tabs.filter((tb) => !INTERNAL_TABS.includes(tb.meta.title.toUpperCase()));
 
   function selectTab(title: string) {
@@ -206,6 +213,8 @@ export default function AdminApp({
 
   const allCols = useMemo(() => (tab ? buildColumns(tab.meta) : []), [tab]);
   const projecting = showCol >= 0;
+  const joinedIdx = useMemo(() => allCols.find((c) => /date\s*joined/i.test(c.label))?.index ?? -1, [allCols]);
+  const showTime = (tab?.meta.title ?? '').toUpperCase() === 'BASIC INFORMATION' && !projecting && joinedIdx >= 0;
   const cols = useMemo(
     () => (projecting ? allCols.filter((c) => c.index === 0 || c.index === showCol) : allCols),
     [allCols, showCol, projecting],
@@ -623,7 +632,7 @@ export default function AdminApp({
                 ·{' '}
                 {projecting
                   ? t('admin.showingCols', { a: cols.length, b: allCols.length })
-                  : t('admin.columnsCount', { a: cols.length })}
+                  : t('admin.columnsCount', { a: cols.length + (showTime ? 1 : 0) })}
               </span>
               <div className="table-meta-right">
                 <span className="muted">{t('admin.editHint')}</span>
@@ -666,6 +675,7 @@ export default function AdminApp({
                       {cols.slice(1).map((c) => (
                         <th key={c.index}>{colLabel(c.label, t, lang)}</th>
                       ))}
+                      {showTime && <th className="time-col">{t('col.timeInGuild')}</th>}
                       <th className="actions" />
                     </tr>
                   )}
@@ -701,6 +711,11 @@ export default function AdminApp({
                           </td>
                         );
                       })}
+                      {showTime && (
+                        <td className="time-col">
+                          <div className="cell">{guildDuration(r.cells[joinedIdx] ?? '')}</div>
+                        </td>
+                      )}
                       <td className="actions">
                         <button
                           className="icon-btn"
@@ -714,7 +729,7 @@ export default function AdminApp({
                   ))}
                   {rows.length === 0 && (
                     <tr>
-                      <td colSpan={cols.length + 2}>
+                      <td colSpan={cols.length + 2 + (showTime ? 1 : 0)}>
                         <div className="empty">
                           <div className="big">
                             <IconGrid />

@@ -180,3 +180,22 @@ export function toIsoDate(raw: string | undefined): string {
   }
   return '';
 }
+
+export function timeInGuildParts(
+  dateJoined: string | undefined,
+  now: Date = new Date(),
+): { n: number; unit: 'day' | 'month' | 'year' } | null {
+  const iso = toIsoDate(dateJoined);
+  if (!iso) return null;
+  const joined = new Date(`${iso}T00:00:00`);
+  if (Number.isNaN(joined.getTime())) return null;
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const days = Math.floor((today.getTime() - joined.getTime()) / 86400000);
+  if (days < 0) return null;
+  if (days < 1) return { n: 0, unit: 'day' };
+  let months = (today.getFullYear() - joined.getFullYear()) * 12 + (today.getMonth() - joined.getMonth());
+  if (today.getDate() < joined.getDate()) months -= 1;
+  if (months < 1) return { n: days, unit: 'day' };
+  if (months < 12) return { n: months, unit: 'month' };
+  return { n: Math.floor(months / 12), unit: 'year' };
+}

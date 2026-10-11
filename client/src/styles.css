@@ -2539,3 +2539,7 @@ table.grid.roster-grid td.ign-col {
 .cal-foot button:hover {
   background: var(--panel-2);
 }
+
+.time-col {
+  white-space: nowrap;
+}

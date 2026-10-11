@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { MEMBER_HIDDEN_TABS } from '../types';
 import type { Column, DataResponse, Session, TabData } from '../types';
-import { buildColumns, formatCp, initials, isCpLabel, isDateLabel, isMark, MEMBER_READONLY, optionColor, toIsoDate } from '../utils';
+import { buildColumns, formatCp, initials, isCpLabel, isDateLabel, isMark, MEMBER_READONLY, optionColor, timeInGuildParts, toIsoDate } from '../utils';
 import { ApiError, apiBase, saveCells } from '../api';
 import { IconClose, IconGear, IconGem, IconGrid, IconLogout, IconMenu, IconSheet, IconSparkles, IconTimer, IconUser, IconUsers } from './icons';
 import MemberSettingsModal from './MemberSettingsModal';
@@ -277,6 +277,13 @@ export default function MemberApp({
   const { t, lang } = useLang();
   const tabText = (raw: string) => tabLabel(raw, t, lang, prettyTitle);
 
+  const guildDuration = (value: string): string => {
+    const p = timeInGuildParts(value);
+    if (!p) return '';
+    if (p.n === 0) return t('time.today');
+    return t(`time.${p.unit}${p.n === 1 ? '' : 's'}`, { n: p.n });
+  };
+
   const rosterTab =
     data.tabs.find((t) => t.meta.title.toUpperCase() === 'BASIC INFORMATION') ||
     data.tabs.find((t) => (t.meta.headers[0]?.[0] || '').trim().toUpperCase() === 'IGN');
@@ -380,6 +387,7 @@ export default function MemberApp({
   const equipRow = myRow(equipTab);
   const rosterCols = rosterTab ? buildColumns(rosterTab.meta) : [];
   const equipCols = equipTab ? buildColumns(equipTab.meta) : [];
+  const rosterJoinedIdx = rosterCols.find((c) => /date\s*joined/i.test(c.label))?.index ?? -1;
 
   const profileBadges = useMemo(() => {
     if (!rosterTab || !rosterRow) return [] as { label: string; cls: string }[];
@@ -769,6 +777,14 @@ export default function MemberApp({
                       onCommit={(v) => commit(rosterTab, rosterRow.row, c.index, v)}
                           />
                         ))}
+                        {rosterJoinedIdx >= 0 && (
+                          <div className="field">
+                            <label>{t('col.timeInGuild')}</label>
+                            <div className="field-ro" title={t('member.adminManaged')}>
+                              {guildDuration(rosterRow.cells[rosterJoinedIdx] ?? '') || '—'}
+                            </div>
+                          </div>
+                        )}
                       </div>
                     )}
                   </section>
