@@ -37,14 +37,19 @@ function useMenuPosition() {
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') setRect(null);
     };
+    const onScroll = (e: Event) => {
+      const t = e.target as Node | null;
+      if (t && menuRef.current?.contains(t)) return;
+      close();
+    };
     document.addEventListener('mousedown', onDown);
     document.addEventListener('keydown', onKey);
-    window.addEventListener('scroll', close, true);
+    window.addEventListener('scroll', onScroll, true);
     window.addEventListener('resize', close);
     return () => {
       document.removeEventListener('mousedown', onDown);
       document.removeEventListener('keydown', onKey);
-      window.removeEventListener('scroll', close, true);
+      window.removeEventListener('scroll', onScroll, true);
       window.removeEventListener('resize', close);
     };
   }, [rect]);
