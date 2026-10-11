@@ -619,6 +619,24 @@ select option {
     min-height: 0;
     overflow-y: auto;
   }
+  .content-fit .boss-view > .table-card,
+  .content-fit .boss-view > .panel-card {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+  }
+  .content-fit .boss-view > .stat-row,
+  .content-fit .boss-view h3,
+  .content-fit .boss-view .att-toolbar,
+  .content-fit .boss-view .att-actions {
+    flex: none;
+  }
+  .content-fit .boss-view .att-picker {
+    flex: 1;
+    min-height: 0;
+    max-height: none;
+  }
 }
 
 
