@@ -687,7 +687,7 @@ export default function AdminApp({
                       {cols.map((c) => {
                         const isEditing = editing?.row === r.row && editing?.col === c.index;
                         const value = r.cells[c.index] ?? '';
-                        const shown = isCpLabel(c.label) ? formatCp(value) : value;
+                        const shown = isCpLabel(c.label) ? formatCp(value) : isDateLabel(c.label) ? toIsoDate(value) : value;
                         return (
                           <td
                             key={c.index}
