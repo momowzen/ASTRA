@@ -15,6 +15,7 @@ interface MenuRect {
   left: number;
   right: number;
   width: number;
+  side: 'left' | 'right';
 }
 
 function useMenuPosition() {
@@ -93,7 +94,11 @@ export function Select({
     const el = triggerRef.current;
     if (!el) return;
     const r = el.getBoundingClientRect();
-    setRect({ top: r.bottom + 4, left: r.left, right: window.innerWidth - r.right, width: r.width });
+    const minW = Math.max(r.width, 130);
+    let side = align;
+    if (side === 'left' && r.left + minW > window.innerWidth - 8) side = 'right';
+    else if (side === 'right' && window.innerWidth - r.right + minW > window.innerWidth - 8) side = 'left';
+    setRect({ top: r.bottom + 4, left: r.left, right: window.innerWidth - r.right, width: r.width, side });
   }
 
   function pick(v: string) {
@@ -127,7 +132,7 @@ export function Select({
             role="listbox"
             style={{
               top: rect.top,
-              ...(align === 'right' ? { right: rect.right } : { left: rect.left }),
+              ...(rect.side === 'right' ? { right: rect.right } : { left: rect.left }),
               minWidth: Math.max(rect.width, 130),
             }}
           >
@@ -219,7 +224,11 @@ export function DatePicker({
     const s = parseIso(value);
     if (s) setView({ y: s.y, m: s.m });
     const r = el.getBoundingClientRect();
-    setRect({ top: r.bottom + 4, left: r.left, right: window.innerWidth - r.right, width: r.width });
+    const w = 252;
+    let side = align;
+    if (side === 'left' && r.left + w > window.innerWidth - 8) side = 'right';
+    else if (side === 'right' && window.innerWidth - r.right + w > window.innerWidth - 8) side = 'left';
+    setRect({ top: r.bottom + 4, left: r.left, right: window.innerWidth - r.right, width: r.width, side });
   }
 
   function shift(delta: number) {
@@ -259,7 +268,7 @@ export function DatePicker({
             ref={menuRef}
             className="cal-menu"
             role="dialog"
-            style={{ top: rect.top, ...(align === 'right' ? { right: rect.right } : { left: rect.left }) }}
+            style={{ top: rect.top, ...(rect.side === 'right' ? { right: rect.right } : { left: rect.left }) }}
           >
             <div className="cal-head">
               <span className="cal-title">
