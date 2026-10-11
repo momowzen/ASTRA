@@ -2544,3 +2544,27 @@ table.grid.roster-grid td.ign-col {
 .time-col {
   white-space: nowrap;
 }
+
+/* Compact profile fields on mobile: label and value share one row. */
+@media (max-width: 900px) {
+  .profile-panel .field-grid {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+  .profile-panel .field {
+    flex-direction: row;
+    align-items: center;
+    gap: 10px;
+  }
+  .profile-panel .field > label {
+    flex: 0 0 108px;
+    min-width: 0;
+  }
+  .profile-panel .field > .input,
+  .profile-panel .field > .dd-trigger,
+  .profile-panel .field > .field-ro {
+    flex: 1 1 auto;
+    width: auto;
+    min-width: 0;
+  }
+}
