@@ -94,7 +94,7 @@ export function Select({
     const el = triggerRef.current;
     if (!el) return;
     const r = el.getBoundingClientRect();
-    const minW = Math.max(r.width, 130);
+    const minW = r.width;
     let side = align;
     if (side === 'left' && r.left + minW > window.innerWidth - 8) side = 'right';
     else if (side === 'right' && window.innerWidth - r.right + minW > window.innerWidth - 8) side = 'left';
@@ -133,7 +133,7 @@ export function Select({
             style={{
               top: rect.top,
               ...(rect.side === 'right' ? { right: rect.right } : { left: rect.left }),
-              minWidth: Math.max(rect.width, 130),
+              minWidth: rect.width,
             }}
           >
             {clearable && (
