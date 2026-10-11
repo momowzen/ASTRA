@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import type { CSSProperties } from 'react';
 import { createPortal } from 'react-dom';
 import { optionColor } from '../utils';
 
@@ -11,7 +12,8 @@ export interface SelectOption {
 type Variant = 'field' | 'cell' | 'coll' | 'lang';
 
 interface MenuRect {
-  top: number;
+  anchorTop: number;
+  anchorBottom: number;
   left: number;
   right: number;
   width: number;
@@ -22,6 +24,7 @@ function useMenuPosition() {
   const triggerRef = useRef<HTMLButtonElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
   const [rect, setRect] = useState<MenuRect | null>(null);
+  const [placeUp, setPlaceUp] = useState(false);
 
   useEffect(() => {
     if (!rect) return;
@@ -46,7 +49,27 @@ function useMenuPosition() {
     };
   }, [rect]);
 
-  return { triggerRef, menuRef, rect, setRect };
+  useLayoutEffect(() => {
+    const el = menuRef.current;
+    if (!rect || !el) return;
+    const h = el.offsetHeight;
+    const spaceBelow = window.innerHeight - rect.anchorBottom;
+    const spaceAbove = rect.anchorTop;
+    const shouldUp = h + 8 > spaceBelow && spaceAbove > spaceBelow;
+    if (shouldUp !== placeUp) setPlaceUp(shouldUp);
+  }, [rect, placeUp]);
+
+  return { triggerRef, menuRef, rect, setRect, placeUp, setPlaceUp };
+}
+
+function menuStyle(rect: MenuRect, placeUp: boolean, minWidth: number): CSSProperties {
+  const avail = placeUp ? rect.anchorTop : window.innerHeight - rect.anchorBottom;
+  return {
+    ...(placeUp ? { bottom: window.innerHeight - rect.anchorTop + 4 } : { top: rect.anchorBottom + 4 }),
+    ...(rect.side === 'right' ? { right: rect.right } : { left: rect.left }),
+    minWidth,
+    maxHeight: Math.max(140, Math.min(360, avail - 8)),
+  };
 }
 
 function chevron() {
@@ -86,7 +109,7 @@ export function Select({
   align = 'left',
   clearable = true,
 }: SelectProps) {
-  const { triggerRef, menuRef, rect, setRect } = useMenuPosition();
+  const { triggerRef, menuRef, rect, setRect, placeUp, setPlaceUp } = useMenuPosition();
   const current = options.find((o) => o.value === value);
   const shown = current?.label ?? value;
 
@@ -98,7 +121,8 @@ export function Select({
     let side = align;
     if (side === 'left' && r.left + minW > window.innerWidth - 8) side = 'right';
     else if (side === 'right' && window.innerWidth - r.right + minW > window.innerWidth - 8) side = 'left';
-    setRect({ top: r.bottom + 4, left: r.left, right: window.innerWidth - r.right, width: r.width, side });
+    setPlaceUp(false);
+    setRect({ anchorTop: r.top, anchorBottom: r.bottom, left: r.left, right: window.innerWidth - r.right, width: r.width, side });
   }
 
   function pick(v: string) {
@@ -130,11 +154,7 @@ export function Select({
             ref={menuRef}
             className="dd-menu"
             role="listbox"
-            style={{
-              top: rect.top,
-              ...(rect.side === 'right' ? { right: rect.right } : { left: rect.left }),
-              minWidth: rect.width,
-            }}
+            style={menuStyle(rect, placeUp, rect.width)}
           >
             {clearable && (
               <div className={`dd-item ${value === '' ? 'active' : ''}`} role="option" aria-selected={value === ''} onClick={() => pick('')}>
@@ -191,7 +211,7 @@ export function DatePicker({
   ariaLabel,
   align = 'left',
 }: DatePickerProps) {
-  const { triggerRef, menuRef, rect, setRect } = useMenuPosition();
+  const { triggerRef, menuRef, rect, setRect, placeUp, setPlaceUp } = useMenuPosition();
   const selected = parseIso(value);
   const today = new Date();
   const [view, setView] = useState(() => {
@@ -228,7 +248,8 @@ export function DatePicker({
     let side = align;
     if (side === 'left' && r.left + w > window.innerWidth - 8) side = 'right';
     else if (side === 'right' && window.innerWidth - r.right + w > window.innerWidth - 8) side = 'left';
-    setRect({ top: r.bottom + 4, left: r.left, right: window.innerWidth - r.right, width: r.width, side });
+    setPlaceUp(false);
+    setRect({ anchorTop: r.top, anchorBottom: r.bottom, left: r.left, right: window.innerWidth - r.right, width: r.width, side });
   }
 
   function shift(delta: number) {
@@ -268,7 +289,7 @@ export function DatePicker({
             ref={menuRef}
             className="cal-menu"
             role="dialog"
-            style={{ top: rect.top, ...(rect.side === 'right' ? { right: rect.right } : { left: rect.left }) }}
+            style={menuStyle(rect, placeUp, 252)}
           >
             <div className="cal-head">
               <span className="cal-title">

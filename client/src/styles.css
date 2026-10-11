@@ -2447,6 +2447,7 @@ table.grid.roster-grid td.ign-col {
   border-radius: var(--radius-sm);
   box-shadow: var(--shadow);
   padding: 10px;
+  overflow: auto;
   animation: dd-pop 0.12s ease;
 }
 .cal-head {
