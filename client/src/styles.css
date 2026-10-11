@@ -2568,3 +2568,35 @@ table.grid.roster-grid td.ign-col {
     min-width: 0;
   }
 }
+
+.dd-search {
+  position: sticky;
+  top: -5px;
+  z-index: 2;
+  margin: -5px -5px 5px;
+  padding: 5px;
+  background: var(--panel);
+}
+.dd-search input {
+  width: 100%;
+  box-sizing: border-box;
+  background: var(--bg-2);
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  padding: 7px 9px;
+  color: var(--text);
+  font: inherit;
+  font-size: 13px;
+  outline: none;
+}
+.dd-search input:focus {
+  border-color: var(--accent);
+}
+.dd-search input::placeholder {
+  color: var(--faint);
+}
+.dd-empty {
+  padding: 8px 10px;
+  font-size: 13px;
+  color: var(--muted);
+}

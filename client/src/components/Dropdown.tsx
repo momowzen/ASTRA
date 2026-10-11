@@ -99,6 +99,8 @@ interface SelectProps {
   ariaLabel?: string;
   align?: 'left' | 'right';
   clearable?: boolean;
+  searchable?: boolean;
+  searchPlaceholder?: string;
 }
 
 export function Select({
@@ -113,10 +115,18 @@ export function Select({
   ariaLabel,
   align = 'left',
   clearable = true,
+  searchable = false,
+  searchPlaceholder = 'Search…',
 }: SelectProps) {
   const { triggerRef, menuRef, rect, setRect, placeUp, setPlaceUp } = useMenuPosition();
   const current = options.find((o) => o.value === value);
   const shown = current?.label ?? value;
+  const [query, setQuery] = useState('');
+  const searchRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (rect && searchable) searchRef.current?.focus();
+  }, [rect, searchable]);
 
   function openMenu() {
     const el = triggerRef.current;
@@ -126,6 +136,7 @@ export function Select({
     let side = align;
     if (side === 'left' && r.left + minW > window.innerWidth - 8) side = 'right';
     else if (side === 'right' && window.innerWidth - r.right + minW > window.innerWidth - 8) side = 'left';
+    setQuery('');
     setPlaceUp(false);
     setRect({ anchorTop: r.top, anchorBottom: r.bottom, left: r.left, right: window.innerWidth - r.right, width: r.width, side });
   }
@@ -134,6 +145,10 @@ export function Select({
     onChange(v);
     setRect(null);
   }
+
+  const filtered = query
+    ? options.filter((o) => (o.label ?? o.value).toLowerCase().includes(query.trim().toLowerCase()))
+    : options;
 
   return (
     <>
@@ -161,12 +176,24 @@ export function Select({
             role="listbox"
             style={menuStyle(rect, placeUp, rect.width)}
           >
-            {clearable && (
+            {searchable && (
+              <div className="dd-search">
+                <input
+                  ref={searchRef}
+                  value={query}
+                  placeholder={searchPlaceholder}
+                  onChange={(e) => setQuery(e.target.value)}
+                  onClick={(e) => e.stopPropagation()}
+                  aria-label={searchPlaceholder}
+                />
+              </div>
+            )}
+            {clearable && !query && (
               <div className={`dd-item ${value === '' ? 'active' : ''}`} role="option" aria-selected={value === ''} onClick={() => pick('')}>
                 <span className="dd-item-label muted">{placeholder}</span>
               </div>
             )}
-            {options.map((o) => (
+            {filtered.map((o) => (
               <div
                 key={o.value}
                 className={`dd-item ${o.value === value ? 'active' : ''}`}
@@ -179,6 +206,7 @@ export function Select({
                 </span>
               </div>
             ))}
+            {filtered.length === 0 && <div className="dd-empty">No matches</div>}
           </div>,
           document.body,
         )}

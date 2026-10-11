@@ -265,6 +265,7 @@ const DICT: Record<string, { en: string; ko: string; ja: string; zh: string }> =
 
   'boss.seeding': { en: 'Seeding the boss list…', ko: '보스 목록 생성 중…', ja: "ボスリストを作成中…", zh: '正在生成首领列表…' },
   'boss.noBosses': { en: 'No bosses configured yet.', ko: '아직 설정된 보스가 없습니다.', ja: "まだボスが設定されていません。", zh: '尚未配置首领。' },
+  'boss.searchBoss': { en: 'Search boss…', ko: '보스 검색…', ja: "ボスを検索…", zh: '搜索首领…' },
   'boss.seed': { en: 'Seed bosses', ko: '보스 목록 생성', ja: "ボスを作成", zh: '生成首领' },
   'boss.seedErr': { en: 'Could not seed', ko: '보스 목록을 생성할 수 없습니다', ja: "作成できませんでした", zh: '无法生成' },
   'boss.meta': {
