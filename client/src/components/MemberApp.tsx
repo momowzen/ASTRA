@@ -6,6 +6,7 @@ import { ApiError, apiBase, saveCells } from '../api';
 import { IconClose, IconGear, IconGem, IconGrid, IconLogout, IconMenu, IconSheet, IconSparkles, IconTimer, IconUser, IconUsers } from './icons';
 import MemberSettingsModal from './MemberSettingsModal';
 import ProfileProgress from './ProfileProgress';
+import { DatePicker, Select } from './Dropdown';
 import { LangToggle, useLang } from '../i18n';
 import { colLabel, tabLabel } from '../display';
 
@@ -139,35 +140,19 @@ function Field({
         </span>
       </label>
       {isDate ? (
-        <input
-          ref={inputRef}
-          className="input"
-          type="date"
+        <DatePicker
           value={toIsoDate(value)}
-          onFocus={() => (focused.current = true)}
-          onChange={(e) => void commitDate(e.target.value)}
+          onChange={(iso) => void commitDate(iso)}
         />
       ) : options ? (
-        <select
-          className="select"
+        <Select
           value={val}
-          style={{ color: optionColor(val) }}
-          onFocus={() => (focused.current = true)}
-          onChange={(e) => {
-            const next = e.target.value;
+          onChange={(next) => {
             setVal(next);
             void commitValue(next);
           }}
-        >
-          <option value="" style={{ color: 'var(--muted)' }}>
-            —
-          </option>
-          {optionList.map((o) => (
-            <option key={o} value={o} style={{ color: optionColor(o) || 'var(--text)' }}>
-              {o}
-            </option>
-          ))}
-        </select>
+          options={optionList.map((o) => ({ value: o, color: optionColor(o) }))}
+        />
       ) : (
         <input
           ref={inputRef}
@@ -206,21 +191,12 @@ function CollectionCell({
   if (options) {
     const list = (options.includes(value) ? options : [value, ...options]).filter((o) => o !== '');
     return (
-      <select
-        className="coll-select"
+      <Select
+        variant="coll"
         value={value}
-        style={{ color: optionColor(value) }}
-        onChange={(e) => onCommit(e.target.value).catch(() => {})}
-      >
-        <option value="" style={{ color: 'var(--muted)' }}>
-          —
-        </option>
-        {list.map((o) => (
-          <option key={o} value={o} style={{ color: optionColor(o) || 'var(--text)' }}>
-            {o}
-          </option>
-        ))}
-      </select>
+        onChange={(v) => void onCommit(v).catch(() => {})}
+        options={list.map((o) => ({ value: o, color: optionColor(o) }))}
+      />
     );
   }
 
@@ -692,34 +668,30 @@ export default function MemberApp({
               <div className="table-meta roster-filter">
                 <span>{t('member.membersCount', { a: rosterRows.length })}</span>
                 <div className="table-meta-right">
-                  <select
-                    className="select"
-                    value={rosterCol}
-                    onChange={(e) => {
-                      setRosterCol(Number(e.target.value));
+                  <Select
+                    value={String(rosterCol)}
+                    onChange={(v) => {
+                      setRosterCol(Number(v));
                       setRosterVal('');
                     }}
-                  >
-                    <option value={-1}>{t('admin.allColumns')}</option>
-                    {ROSTER_FILTER_COLS.map((c, i) => (
-                      <option key={c.key} value={i}>
-                        {colLabel(c.label, t, lang)}
-                      </option>
-                    ))}
-                  </select>
+                    clearable={false}
+                    align="right"
+                    options={[
+                      { value: '-1', label: t('admin.allColumns') },
+                      ...ROSTER_FILTER_COLS.map((c, i) => ({ value: String(i), label: colLabel(c.label, t, lang) })),
+                    ]}
+                  />
                   {rosterCol >= 0 && (
-                    <select
-                      className="select"
+                    <Select
                       value={rosterVal}
-                      onChange={(e) => setRosterVal(e.target.value)}
-                    >
-                      <option value="">{t('admin.allValues')}</option>
-                      {rosterChoices.map((v) => (
-                        <option key={v} value={v}>
-                          {v}
-                        </option>
-                      ))}
-                    </select>
+                      onChange={(v) => setRosterVal(v)}
+                      clearable={false}
+                      align="right"
+                      options={[
+                        { value: '', label: t('admin.allValues') },
+                        ...rosterChoices.map((v) => ({ value: v })),
+                      ]}
+                    />
                   )}
                 </div>
               </div>

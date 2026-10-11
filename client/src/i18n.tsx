@@ -1,5 +1,6 @@
 import { createContext, useContext, useMemo } from 'react';
 import type { ReactNode } from 'react';
+import { Select } from './components/Dropdown';
 
 export type Lang = 'en' | 'ko' | 'ja' | 'zh';
 
@@ -534,17 +535,20 @@ export function LangProvider({
 export function LangToggle() {
   const { lang, setLang } = useLang();
   return (
-    <select
-      className="select lang-toggle"
-      aria-label="Language"
+    <Select
+      variant="lang"
+      className="lang-toggle"
+      ariaLabel="Language"
       title="Language / 언어 / 日本語 / 中文"
+      clearable={false}
       value={lang}
-      onChange={(e) => setLang(e.target.value as Lang)}
-    >
-      <option value="en">English</option>
-      <option value="ko">한국어</option>
-      <option value="ja">日本語</option>
-      <option value="zh">中文</option>
-    </select>
+      onChange={(v) => setLang(v as Lang)}
+      options={[
+        { value: 'en', label: 'English' },
+        { value: 'ko', label: '한국어' },
+        { value: 'ja', label: '日本語' },
+        { value: 'zh', label: '中文' },
+      ]}
+    />
   );
 }

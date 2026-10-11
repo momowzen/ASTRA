@@ -2307,3 +2307,235 @@ table.grid.roster-grid td.ign-col {
   color: var(--green);
   border-color: rgba(61, 220, 151, 0.5);
 }
+
+/* ---------- custom dropdowns / popups ---------- */
+
+.dd-trigger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
+  text-align: left;
+  cursor: pointer;
+  font: inherit;
+  color: var(--text);
+  background: var(--bg-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  padding: 9px 12px;
+  outline: none;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+.dd-trigger:hover {
+  border-color: #34406b;
+}
+.dd-trigger:focus-visible,
+.dd-trigger.open {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(139, 124, 255, 0.18);
+}
+.dd-trigger:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.dd-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.dd-label.muted {
+  color: var(--muted);
+}
+.dd-chevron {
+  display: inline-flex;
+  flex: none;
+  color: var(--muted);
+  transition: transform 0.15s ease;
+}
+.dd-chevron svg {
+  width: 14px;
+  height: 14px;
+}
+.dd-trigger.open .dd-chevron {
+  transform: rotate(180deg);
+}
+
+.dd-trigger.dd-cell {
+  width: auto;
+  min-width: 74px;
+  padding: 3px 8px;
+  border-radius: 6px;
+  border-color: var(--accent);
+  justify-content: center;
+  gap: 5px;
+  font-size: 12.5px;
+}
+.dd-trigger.dd-cell .dd-chevron svg {
+  width: 11px;
+  height: 11px;
+}
+.dd-trigger.dd-coll {
+  width: 100%;
+  padding: 7px 10px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--muted);
+}
+.dd-trigger.dd-lang {
+  width: auto;
+  padding: 6px 10px;
+  font-size: 12px;
+  font-weight: 600;
+  gap: 6px;
+}
+.dd-trigger.dd-lang .dd-chevron svg {
+  width: 12px;
+  height: 12px;
+}
+
+.dd-menu {
+  position: fixed;
+  z-index: 200;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow);
+  padding: 5px;
+  max-height: 320px;
+  overflow: auto;
+  animation: dd-pop 0.12s ease;
+}
+@keyframes dd-pop {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+}
+.dd-item {
+  display: flex;
+  align-items: center;
+  padding: 8px 10px;
+  border-radius: 7px;
+  font-size: 13px;
+  color: var(--text);
+  cursor: pointer;
+  white-space: nowrap;
+}
+.dd-item:hover {
+  background: var(--panel-2);
+}
+.dd-item.active {
+  background: linear-gradient(135deg, rgba(139, 124, 255, 0.2), rgba(139, 124, 255, 0.06));
+  color: #fff;
+}
+.dd-item-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.dd-item-label.muted {
+  color: var(--muted);
+}
+
+.cal-menu {
+  position: fixed;
+  z-index: 200;
+  width: 252px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow);
+  padding: 10px;
+  animation: dd-pop 0.12s ease;
+}
+.cal-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+.cal-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text);
+}
+.cal-nav {
+  display: inline-flex;
+  gap: 4px;
+}
+.cal-nav button {
+  width: 26px;
+  height: 26px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  background: var(--panel-2);
+  color: var(--muted);
+  cursor: pointer;
+  transition: 0.12s ease;
+}
+.cal-nav button svg {
+  width: 14px;
+  height: 14px;
+}
+.cal-nav button:hover {
+  color: var(--text);
+  border-color: var(--accent);
+}
+.cal-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 2px;
+}
+.cal-dow {
+  text-align: center;
+  font-size: 10px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--faint);
+  padding: 4px 0;
+}
+.cal-day {
+  border: 0;
+  background: transparent;
+  color: var(--text);
+  font-size: 12.5px;
+  padding: 6px 0;
+  border-radius: 7px;
+  cursor: pointer;
+  transition: 0.12s ease;
+}
+.cal-day:hover {
+  background: var(--panel-2);
+}
+.cal-day.out {
+  color: var(--faint);
+}
+.cal-day.today {
+  border: 1px solid var(--line);
+}
+.cal-day.sel {
+  background: linear-gradient(135deg, #7b6bff, #6a5bff);
+  color: #fff;
+  font-weight: 700;
+}
+.cal-foot {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 8px;
+}
+.cal-foot button {
+  font-size: 12px;
+  color: var(--accent);
+  background: none;
+  border: 0;
+  cursor: pointer;
+  padding: 4px 6px;
+  border-radius: 6px;
+}
+.cal-foot button:hover {
+  background: var(--panel-2);
+}

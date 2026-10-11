@@ -5,6 +5,7 @@ import type { CpItem } from '../api';
 import { formatCp } from '../utils';
 import { useLang } from '../i18n';
 import { tabLabel } from '../display';
+import { Select } from './Dropdown';
 import { ocrVariants, mergeVariants } from '../ocr';
 import type { ScannedRow } from '../ocr';
 
@@ -241,20 +242,15 @@ export default function CpUpdate({ data, toast }: Props) {
                       <span className={`cp-badge ${matched ? 'ok' : 'warn'}`}>
                         {matched ? t('tools.cpMatched') : t('tools.cpUnmatched')}
                       </span>
-                      <select
-                        className="select"
+                      <Select
                         value={it.ign}
-                        onChange={(e) => patch(i, { ign: e.target.value })}
-                      >
-                        {!roster.some((r) => r.ign === it.ign) && (
-                          <option value={it.ign}>{it.ign}</option>
-                        )}
-                        {roster.map((r) => (
-                          <option key={r.ign} value={r.ign}>
-                            {r.ign}
-                          </option>
-                        ))}
-                      </select>
+                        onChange={(v) => patch(i, { ign: v })}
+                        clearable={false}
+                        options={[
+                          ...(!roster.some((r) => r.ign === it.ign) ? [{ value: it.ign }] : []),
+                          ...roster.map((r) => ({ value: r.ign })),
+                        ]}
+                      />
                       <input
                         className="input"
                         value={it.cp}

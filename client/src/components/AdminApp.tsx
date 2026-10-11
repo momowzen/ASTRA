@@ -4,6 +4,7 @@ import { INTERNAL_TABS } from '../types';
 import type { Column, DataResponse, Session } from '../types';
 import { buildColumns, formatCp, isCpLabel, isDateLabel, optionColor, toIsoDate } from '../utils';
 import { addRow as apiAddRow, deleteRow as apiDeleteRow, saveCells, ApiError } from '../api';
+import { DatePicker, Select } from './Dropdown';
 import { IconBulb, IconClose, IconGear, IconGrid, IconLogout, IconMenu, IconPlus, IconSearch, IconTrash } from './icons';
 import PasswordModal from './PasswordModal';
 import BossTracker from './BossTracker';
@@ -58,40 +59,26 @@ function EditableCell({
 
   if (isDate) {
     return (
-      <input
-        ref={ref as RefObject<HTMLInputElement>}
-        className="cell-input"
-        type="date"
+      <DatePicker
+        variant="cell"
         value={val}
-        onChange={(e) => setVal(e.target.value)}
-        onBlur={() => void commit()}
-        onKeyDown={(e) => {
-          if (e.key === 'Enter') {
-            e.preventDefault();
-            void commit();
-          } else if (e.key === 'Escape') {
-            closing.current = true;
-            e.preventDefault();
-            onCancel();
-          }
-          e.stopPropagation();
+        onChange={(iso) => {
+          closing.current = true;
+          void onCommit(iso).then((ok) => {
+            if (!ok) closing.current = false;
+          });
         }}
-        onClick={(e) => e.stopPropagation()}
       />
     );
   }
 
   if (options) {
-    const list = options.includes(val) ? options : [val, ...options];
+    const list = (options.includes(val) ? options : [val, ...options]).filter((o) => o !== '');
     return (
-      <select
-        ref={ref as RefObject<HTMLSelectElement>}
-        className="cell-input"
+      <Select
+        variant="cell"
         value={val}
-        style={{ color: optionColor(val) }}
-        onChange={(e) => {
-          const next = e.target.value;
-          setVal(next);
+        onChange={(next) => {
           closing.current = true;
           void onCommit(next).then((ok) => {
             if (!ok) {
@@ -100,27 +87,8 @@ function EditableCell({
             }
           });
         }}
-        onKeyDown={(e) => {
-          if (e.key === 'Escape') {
-            closing.current = true;
-            e.preventDefault();
-            onCancel();
-          }
-          e.stopPropagation();
-        }}
-        onClick={(e) => e.stopPropagation()}
-      >
-        <option value="" style={{ color: 'var(--muted)' }}>
-          —
-        </option>
-        {list
-          .filter((o) => o !== '')
-          .map((o) => (
-            <option key={o} value={o} style={{ color: optionColor(o) || 'var(--text)' }}>
-              {o}
-            </option>
-          ))}
-      </select>
+        options={list.map((o) => ({ value: o, color: optionColor(o) }))}
+      />
     );
   }
 
@@ -562,42 +530,36 @@ export default function AdminApp({
               </div>
               {!isCpH && (
                 <div className="col-filter">
-                <select
-                  className="select"
-                  value={showCol}
-                  onChange={(e) => {
-                    setShowCol(Number(e.target.value));
-                    setFilterVal('');
-                    setEditing(null);
-                  }}
-                >
-                  <option value={-1}>{t('admin.allColumns')}</option>
-                  {allCols.map((c) => (
-                    <option key={c.index} value={c.index}>
-                      {colLabel(c.label, t, lang)}
-                    </option>
-                  ))}
-                </select>
-                <select
-                  className={`select val-filter ${showCol < 0 ? 'is-empty' : ''}`}
-                  disabled={showCol < 0}
-                  title={t('admin.filterBy', {
-                    col: colLabel(cols.find((c) => c.index === showCol)?.label ?? '', t, lang),
-                  })}
-                  value={filterVal}
-                  onChange={(e) => {
-                    setFilterVal(e.target.value);
-                    setEditing(null);
-                  }}
-                >
-                  <option value="">{t('admin.allValues')}</option>
-                  {filterChoices.map((v) => (
-                    <option key={v} value={v} style={{ color: optionColor(v) || 'var(--text)' }}>
-                      {v}
-                    </option>
-                  ))}
-                </select>
-              </div>
+                  <Select
+                    value={String(showCol)}
+                    onChange={(v) => {
+                      setShowCol(Number(v));
+                      setFilterVal('');
+                      setEditing(null);
+                    }}
+                    clearable={false}
+                    options={[
+                      { value: '-1', label: t('admin.allColumns') },
+                      ...allCols.map((c) => ({ value: String(c.index), label: colLabel(c.label, t, lang) })),
+                    ]}
+                  />
+                  <Select
+                    value={filterVal}
+                    onChange={(v) => {
+                      setFilterVal(v);
+                      setEditing(null);
+                    }}
+                    disabled={showCol < 0}
+                    clearable={false}
+                    title={t('admin.filterBy', {
+                      col: colLabel(cols.find((c) => c.index === showCol)?.label ?? '', t, lang),
+                    })}
+                    options={[
+                      { value: '', label: t('admin.allValues') },
+                      ...filterChoices.map((v) => ({ value: v, color: optionColor(v) })),
+                    ]}
+                  />
+                </div>
               )}
               <button
                 className={`btn btn-ghost btn-sm toolbar-clear ${search || showCol >= 0 || filterVal ? '' : 'is-empty'}`}
@@ -899,38 +861,24 @@ function AddRowModal({
                     {i === 0 ? ' *' : ''}
                   </label>
                   {opts ? (
-                    <select
-                      className="select"
+                    <Select
                       value={values[i] ?? ''}
-                      style={{ color: optionColor(values[i] ?? '') }}
-                      autoFocus={i === 0}
-                      onChange={(e) =>
+                      onChange={(v) =>
                         setValues((prev) => {
                           const next = [...prev];
-                          next[i] = e.target.value;
+                          next[i] = v;
                           return next;
                         })
                       }
-                    >
-                      <option value="" style={{ color: 'var(--muted)' }}>
-                        —
-                      </option>
-                      {opts.map((o) => (
-                        <option key={o} value={o} style={{ color: optionColor(o) || 'var(--text)' }}>
-                          {o}
-                        </option>
-                      ))}
-                    </select>
+                      options={opts.map((o) => ({ value: o, color: optionColor(o) }))}
+                    />
                   ) : isDateLabel(col.label) ? (
-                    <input
-                      className="input"
-                      type="date"
+                    <DatePicker
                       value={toIsoDate(values[i] ?? '')}
-                      autoFocus={i === 0}
-                      onChange={(e) =>
+                      onChange={(iso) =>
                         setValues((prev) => {
                           const next = [...prev];
-                          next[i] = e.target.value;
+                          next[i] = iso;
                           return next;
                         })
                       }

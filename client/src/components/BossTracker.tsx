@@ -5,6 +5,7 @@ import { addRow, ApiError, saveCells, seedBossConfig } from '../api';
 import { ocrVariants, scanPartyIgns } from '../ocr';
 import { useLang } from '../i18n';
 import { bossLabel } from '../display';
+import { Select } from './Dropdown';
 
 interface Props {
   view: 'dashboard' | 'attendance' | 'config';
@@ -341,18 +342,15 @@ function AttendanceView({
         <div className="att-toolbar">
           <div className="field" style={{ minWidth: 220 }}>
             <label>{t('boss.boss')}</label>
-            <select
-              className="select"
+            <Select
               value={bossName}
-              onChange={(e) => setBossName(e.target.value)}
-            >
-              {BOSSES.map((b) => (
-                <option key={b.id} value={b.name}>
-                  {bossLabel(b.name, t, lang)} — {pointsFor(b.name)}{' '}
-                  {pointsFor(b.name) === 1 ? t('boss.pt') : t('boss.pts')}
-                </option>
-              ))}
-            </select>
+              onChange={(v) => setBossName(v)}
+              clearable={false}
+              options={BOSSES.map((b) => ({
+                value: b.name,
+                label: `${bossLabel(b.name, t, lang)} — ${pointsFor(b.name)} ${pointsFor(b.name) === 1 ? t('boss.pt') : t('boss.pts')}`,
+              }))}
+            />
           </div>
           <div className="att-summary">
             <strong>{selected.size}</strong> {t('boss.selected')} ·{' '}
