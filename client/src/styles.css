@@ -1865,6 +1865,39 @@ table.coll td.ign-col {
   flex-wrap: wrap;
   margin-top: 14px;
 }
+.att-unmatched {
+  margin-top: 12px;
+  padding: 10px 12px;
+  border: 1px solid rgba(245, 185, 66, 0.3);
+  border-radius: var(--radius-sm);
+  background: rgba(245, 185, 66, 0.06);
+}
+.att-unmatched-label {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--accent-2);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-bottom: 8px;
+}
+.att-unmatched-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.att-unmatched-chip {
+  font-size: 12.5px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: var(--panel-2);
+  border: 1px solid var(--line);
+  color: var(--text);
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 .att-picker {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));

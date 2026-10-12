@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import type { DataResponse, TabData } from '../types';
 import { BOSSES } from '../bosses';
 import { addRow, ApiError, saveCells, seedBossConfig } from '../api';
-import { ocrVariants, scanPartyIgns } from '../ocr';
+import { ocrVariants, scanParty } from '../ocr';
 import { useLang } from '../i18n';
 import { bossLabel } from '../display';
 import { Select } from './Dropdown';
@@ -234,6 +234,7 @@ function AttendanceView({
   const [filter, setFilter] = useState('');
   const [recording, setRecording] = useState(false);
   const [scanning, setScanning] = useState(false);
+  const [unmatched, setUnmatched] = useState<string[]>([]);
   const scanRef = useRef<HTMLInputElement>(null);
 
   const roster = data.tabs.find((t) => t.meta.title.toUpperCase() === 'BASIC INFORMATION');
@@ -289,18 +290,22 @@ function AttendanceView({
     setScanning(true);
     try {
       const found = new Set<string>();
+      const missed = new Map<string, string>();
       let scanErr = '';
       for (const f of files) {
         try {
           const dataUrl = await fileToDataUrl(f);
           const variants = await ocrVariants(dataUrl, 'attendance');
-          for (const ign of scanPartyIgns(variants, memberNames)) found.add(ign);
+          const res = scanParty(variants, memberNames);
+          for (const ign of res.matched) found.add(ign);
+          for (const name of res.unmatched) missed.set(name.toLowerCase(), name);
         } catch (err) {
           if (!scanErr) scanErr = err instanceof ApiError ? err.message : (err as Error)?.message || '';
         }
       }
+      setUnmatched([...missed.values()]);
       if (found.size === 0) {
-        toast(scanErr || t('boss.scanNone'), 'err');
+        toast(scanErr || (missed.size > 0 ? t('boss.scanUnmatched', { n: missed.size }) : t('boss.scanNone')), missed.size > 0 ? 'ok' : 'err');
       } else {
         setSelected((prev) => new Set([...prev, ...found]));
         toast(t('boss.scanDone', { n: found.size }), 'ok');
@@ -395,6 +400,19 @@ function AttendanceView({
             {recording ? <span className="spinner" /> : t('boss.record')}
           </button>
         </div>
+
+        {unmatched.length > 0 && (
+          <div className="att-unmatched">
+            <span className="att-unmatched-label">{t('boss.scanUnmatched', { n: unmatched.length })}</span>
+            <div className="att-unmatched-list">
+              {unmatched.map((n) => (
+                <span className="att-unmatched-chip" key={n} title={n}>
+                  {n}
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
 
         <div className="att-picker">
           {filtered.map((name) => {

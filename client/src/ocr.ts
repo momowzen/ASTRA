@@ -372,3 +372,34 @@ export function scanPartyIgns(variants: string[], roster: string[]): string[] {
   }
   return [...best.keys()];
 }
+
+export function scanParty(variants: string[], roster: string[]): { matched: string[]; unmatched: string[] } {
+  const best = new Map<string, number>();
+  const unmatched = new Map<string, string>();
+  for (const text of variants) {
+    for (const raw of text.split('\n')) {
+      const line = raw.trim();
+      if (!line || line.length > 60) continue;
+      const candidates: string[] = [];
+      const cpRow = parseCpLine(line);
+      if (cpRow) candidates.push(cpRow.name);
+      candidates.push(line);
+      let acceptedAny = false;
+      for (const cand of candidates) {
+        const n = normalize(cand);
+        if (n.length < 2 || /^\d+$/.test(n)) continue;
+        const { ign, score } = scoreIgn(cand, roster);
+        const accepted = score >= 1 || (n.length < 4 ? score >= 0.8 : score >= 0.68);
+        if (!accepted) continue;
+        acceptedAny = true;
+        if (score > (best.get(ign) ?? 0)) best.set(ign, score);
+      }
+      if (!acceptedAny) {
+        const name = (cpRow ? cpRow.name : line).trim();
+        const n = normalize(name);
+        if (n.length >= 2 && !/^\d+$/.test(n) && !unmatched.has(n)) unmatched.set(n, name);
+      }
+    }
+  }
+  return { matched: [...best.keys()], unmatched: [...unmatched.values()] };
+}

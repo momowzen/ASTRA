@@ -293,6 +293,12 @@ const DICT: Record<string, { en: string; ko: string; ja: string; zh: string }> =
     ko: '스크린샷에서 길드 멤버를 찾지 못했습니다.', ja: "スクリーンショットからギルドメンバーが見つかりませんでした。",
     zh: '截图中未找到名单成员。',
   },
+  'boss.scanUnmatched': {
+    en: 'Unmatched from scan ({n})',
+    ko: '스캔에서 매칭되지 않음 ({n})',
+    ja: "スキャンで一致しなかった名前 ({n})",
+    zh: '扫描未匹配的名字（{n}）',
+  },
   'boss.record': { en: 'Record attendance', ko: '출석 기록하기', ja: "出席を記録", zh: '记录出勤' },
   'boss.recordedToast': {
     en: 'Recorded {n} members (+{pts} pts each)',
