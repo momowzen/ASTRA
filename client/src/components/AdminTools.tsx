@@ -15,29 +15,24 @@ function intPoints(value: string | undefined): number {
   return Number.isFinite(n) && n >= 0 ? n : 0;
 }
 
-function bandFromData(data: DataResponse): { ign: string; points: number }[] {
+function membersFromData(data: DataResponse): { ign: string; points: number }[] {
   const att = data.tabs.find((t) => t.meta.title.toUpperCase() === 'BOSS ATTENDANCE');
-  const members = (att?.rows ?? [])
+  return (att?.rows ?? [])
     .map((r) => ({ ign: (r.cells[0] || '').trim(), points: intPoints(r.cells[1]) }))
-    .filter((m) => m.ign && m.points > 0)
+    .filter((m) => m.ign)
     .sort((a, b) => b.points - a.points || a.ign.localeCompare(b.ign));
-  const top = members[0]?.points ?? 0;
-  const threshold = top > 0 ? Math.max(1, Math.round(top * 0.3)) : 0;
-  return members.filter((m) => threshold > 0 && m.points >= threshold);
-}
-
-function allocate(band: { ign: string; points: number }[], pool: number): DistributionBand[] {
-  const total = band.reduce((s, m) => s + m.points, 0);
-  const out = band.map((m) => ({ ign: m.ign, points: m.points, diamonds: Math.round((pool * m.points) / total) }));
-  const remainder = pool - out.reduce((s, m) => s + m.diamonds, 0);
-  if (out[0]) out[0].diamonds += remainder;
-  return out;
 }
 
 export default function AdminTools({ data, toast }: Props) {
   const { t, lang } = useLang();
   const distTitle = tabLabel('DISTRIBUTION HISTORY', t, lang);
-  const band = useMemo(() => bandFromData(data), [data]);
+  const members = useMemo(() => membersFromData(data), [data]);
+  const topPoints = members[0]?.points ?? 0;
+  const threshold = topPoints > 0 ? Math.max(1, Math.round(topPoints * 0.3)) : 0;
+  const band = useMemo(
+    () => members.filter((m) => threshold > 0 && m.points >= threshold),
+    [members, threshold],
+  );
   const [poolStr, setPoolStr] = useState('');
   const [saved, setSaved] = useState<DistributionResult | null>(null);
   const [saving, setSaving] = useState(false);
@@ -45,13 +40,20 @@ export default function AdminTools({ data, toast }: Props) {
 
   const pool = parseInt(poolStr, 10);
   const poolValid = Number.isFinite(pool) && pool > 0;
+  const totalBandPoints = band.reduce((s, m) => s + m.points, 0);
 
   const preview = useMemo(() => {
-    if (band.length === 0 || !poolValid) return band.map((m) => ({ ...m, diamonds: 0 }));
-    return allocate(band, pool);
-  }, [band, pool, poolValid]);
+    const alloc = new Map<string, number>();
+    if (band.length > 0 && poolValid) {
+      const total = band.reduce((s, m) => s + m.points, 0);
+      for (const m of band) alloc.set(m.ign, Math.round((pool * m.points) / total));
+      const rem = pool - [...alloc.values()].reduce((s, n) => s + n, 0);
+      alloc.set(band[0].ign, (alloc.get(band[0].ign) ?? 0) + rem);
+    }
+    return members.map((m) => ({ ...m, diamonds: alloc.get(m.ign) ?? 0 }));
+  }, [members, band, pool, poolValid]);
 
-  const rows: DistributionBand[] = saved ? saved.band : preview;
+  const rows: DistributionBand[] = saved ? saved.rows : preview;
   const showDiamonds = !!saved || poolValid;
 
   async function save() {
@@ -68,7 +70,7 @@ export default function AdminTools({ data, toast }: Props) {
     }
   }
 
-  if (band.length === 0 && !saved) {
+  if (members.length === 0 && !saved) {
     return (
       <div className="boss-view">
         <div className="panel-card">
@@ -97,7 +99,7 @@ export default function AdminTools({ data, toast }: Props) {
             <div className="stat-card">
               <div className="stat-label">{t('tools.totalBand')}</div>
               <div className="stat-value">
-                {saved ? saved.totalBandPoints : band.reduce((s, m) => s + m.points, 0)}
+                {saved ? saved.totalBandPoints : totalBandPoints}
               </div>
             </div>
             <div className="stat-card">
@@ -121,22 +123,30 @@ export default function AdminTools({ data, toast }: Props) {
                 </tr>
               </thead>
               <tbody>
-                {rows.map((m, i) => (
-                  <tr key={m.ign}>
-                    <td className="rownum">{i + 1}</td>
-                    <td className="ign-col">
-                      <div className="cell">{m.ign}</div>
-                    </td>
-                    <td>
-                      <div className="cell">{m.points}</div>
-                    </td>
-                    <td>
-                      <div className={`cell ${showDiamonds ? 'dist-diamond' : ''}`}>
-                        {showDiamonds ? m.diamonds : '—'}
-                      </div>
-                    </td>
-                  </tr>
-                ))}
+                {rows.map((m, i) => {
+                  const on = threshold > 0 && m.points >= threshold;
+                  const cellCls = on ? 'cell top-cell' : 'cell';
+                  return (
+                    <tr key={m.ign}>
+                      <td className="rownum">{i + 1}</td>
+                      <td className="ign-col">
+                        <div className={cellCls} title={on ? t('boss.top30') : undefined}>
+                          {m.ign}
+                        </div>
+                      </td>
+                      <td>
+                        <div className={cellCls} title={on ? t('boss.top30') : undefined}>
+                          {m.points > 0 ? m.points : '—'}
+                        </div>
+                      </td>
+                      <td>
+                        <div className={`cell ${showDiamonds ? 'dist-diamond' : ''}`}>
+                          {showDiamonds ? m.diamonds : '—'}
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
@@ -152,7 +162,7 @@ export default function AdminTools({ data, toast }: Props) {
                   value={poolStr}
                   onChange={(e) => setPoolStr(e.target.value)}
                 />
-                <button className="btn btn-primary" disabled={saving || !poolValid} onClick={() => setConfirmOpen(true)}>
+                <button className="btn btn-primary" disabled={saving || !poolValid || band.length === 0} onClick={() => setConfirmOpen(true)}>
                   {saving ? <span className="spinner" /> : t('tools.save')}
                 </button>
               </div>

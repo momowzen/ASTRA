@@ -385,7 +385,7 @@ api.post('/boss/distribute', requireAuth, requireAdmin, async (req, res) => {
 
     const members = attTab.rows
       .map((r) => ({ ign: (r.cells[0] || '').trim(), points: intPoints(r.cells[1]) }))
-      .filter((m) => m.ign && m.points > 0)
+      .filter((m) => m.ign)
       .sort((a, b) => b.points - a.points || a.ign.localeCompare(b.ign));
     const topPoints = members[0]?.points ?? 0;
     const threshold = topPoints > 0 ? Math.max(1, Math.round(topPoints * 0.3)) : 0;
@@ -394,13 +394,12 @@ api.post('/boss/distribute', requireAuth, requireAdmin, async (req, res) => {
 
     const totalBandPoints = band.reduce((s, m) => s + m.points, 0);
 
-    const allocated = band.map((m) => ({
-      ign: m.ign,
-      points: m.points,
-      diamonds: Math.round((pool * m.points) / totalBandPoints),
-    }));
-    const remainder = pool - allocated.reduce((s, m) => s + m.diamonds, 0);
-    allocated[0].diamonds += remainder;
+    const diamonds = new Map<string, number>();
+    for (const m of band) diamonds.set(m.ign, Math.round((pool * m.points) / totalBandPoints));
+    const remainder = pool - [...diamonds.values()].reduce((s, n) => s + n, 0);
+    diamonds.set(band[0].ign, (diamonds.get(band[0].ign) ?? 0) + remainder);
+
+    const rows = members.map((m) => ({ ign: m.ign, points: m.points, diamonds: diamonds.get(m.ign) ?? 0 }));
 
     const distTab = snap.tabs.find((t) => t.meta.title.toUpperCase() === 'DISTRIBUTION HISTORY');
     const header0 = distTab?.meta.headers[0] || [];
@@ -432,15 +431,16 @@ api.post('/boss/distribute', requireAuth, requireAdmin, async (req, res) => {
     }
 
     const newRows: string[][] = [];
-    for (const m of allocated) {
+    for (const m of rows) {
+      const pts = m.points > 0 ? String(m.points) : '';
       const existing = ignRow.get(m.ign);
       if (existing) {
-        writes.push({ a1: `${sheets.columnLetter(pointsCol)}${existing}`, values: [[String(m.points)]] });
+        writes.push({ a1: `${sheets.columnLetter(pointsCol)}${existing}`, values: [[pts]] });
         writes.push({ a1: `${sheets.columnLetter(rewardCol)}${existing}`, values: [[String(m.diamonds)]] });
       } else {
         const cells = new Array(rewardCol + 1).fill('');
         cells[0] = m.ign;
-        cells[pointsCol] = String(m.points);
+        cells[pointsCol] = pts;
         cells[rewardCol] = String(m.diamonds);
         newRows.push(cells);
       }
@@ -456,7 +456,7 @@ api.post('/boss/distribute', requireAuth, requireAdmin, async (req, res) => {
     for (const r of attTab.rows) noteWrite('BOSS ATTENDANCE', r.row, 1, '');
 
     scheduleRefresh();
-    res.json({ ok: true, date, pool, totalBandPoints, band: allocated });
+    res.json({ ok: true, date, pool, totalBandPoints, rows });
   } catch (err) {
     console.error('[boss] distribute failed:', err);
     bad(res, 502, 'Could not distribute diamonds');

@@ -237,7 +237,7 @@ export interface DistributionResult {
   date: string;
   pool: number;
   totalBandPoints: number;
-  band: DistributionBand[];
+  rows: DistributionBand[];
 }
 
 export async function distribute(pool: number): Promise<DistributionResult> {
