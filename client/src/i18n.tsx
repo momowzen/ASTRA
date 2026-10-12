@@ -312,9 +312,10 @@ const DICT: Record<string, { en: string; ko: string; ja: string; zh: string }> =
   'boss.membersOnBoard': { en: 'members on the board', ko: '명이 순위표에 있습니다', ja: "名がランクボードにいます", zh: '名成员在排行榜上' },
   'boss.top30': { en: 'Top 30%', ko: '상위 30%', ja: "上位30%", zh: '前 30%' },
   'boss.top30Meta': {
-    en: '{n} in the top 30% band (≥ {threshold} pts)',
-    ko: '상위 30% 이내 {n}명 (≥ {threshold}점)', ja: "上位30%バンドに {n}名（≥ {threshold}pt）",
-    zh: '前 30% 区间内有 {n} 名（≥ {threshold} 分）',
+    en: '{n} top contributors',
+    ko: '상위 기여자 {n}명',
+    ja: "トップコントリビューター {n}名",
+    zh: '{n} 名顶级贡献者',
   },
   'boss.noAttendance': { en: 'No attendance recorded yet.', ko: '아직 기록된 출석이 없습니다.', ja: "まだ出席が記録されていません。", zh: '尚未记录出勤。' },
   'boss.added': { en: 'Added {name}', ko: '{name} 추가됨', ja: "{name} を追加しました", zh: '已添加 {name}' },

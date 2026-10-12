@@ -478,7 +478,7 @@ function DashboardView({ attendanceTab }: { attendanceTab: TabData | undefined }
             {bandCount > 0 && (
               <>
                 {' '}
-                · {t('boss.top30Meta', { n: bandCount, threshold })}
+                · {t('boss.top30Meta', { n: bandCount })}
               </>
             )}
           </span>

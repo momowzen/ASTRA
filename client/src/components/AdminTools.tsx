@@ -87,7 +87,6 @@ export default function AdminTools({ data, toast }: Props) {
         <div className="announce">
           <div className="announce-head">
             <h2>{t('tools.distTitle')}</h2>
-            <div className="announce-sub">{t('tools.band')}</div>
             {saved && (
               <div className="announce-date">
                 {t('tools.distributedOn')} {saved.date}
