@@ -8,7 +8,7 @@ import MemberSettingsModal from './MemberSettingsModal';
 import ProfileProgress from './ProfileProgress';
 import { DatePicker, Select } from './Dropdown';
 import { LangToggle, useLang } from '../i18n';
-import { colLabel, tabLabel } from '../display';
+import { colLabel, tabLabel, valueLabel } from '../display';
 
 interface Props {
   data: DataResponse;
@@ -71,7 +71,7 @@ function Field({
   dataTab?: string;
   dataCol?: number;
 }) {
-  const { t } = useLang();
+  const { t, lang } = useLang();
   const [val, setVal] = useState(() => (format ? formatCp(value) : value));
   const [status, setStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
   const inputRef = useRef<HTMLInputElement>(null);
@@ -111,7 +111,7 @@ function Field({
   }
 
   if (readOnly) {
-    const shown = format ? formatCp(value) : value;
+    const shown = format ? formatCp(value) : options ? valueLabel(value, t, lang) : value;
     return (
       <div className="field" data-tab={dataTab} data-col={dataCol}>
         <label>{label}</label>
@@ -151,7 +151,7 @@ function Field({
             setVal(next);
             void commitValue(next);
           }}
-          options={optionList.map((o) => ({ value: o, color: optionColor(o) }))}
+          options={optionList.map((o) => ({ value: o, label: valueLabel(o, t, lang), color: optionColor(o) }))}
         />
       ) : (
         <input
@@ -182,7 +182,7 @@ function CollectionCell({
   options?: string[];
   onCommit: (value: string) => Promise<void>;
 }) {
-  const { t } = useLang();
+  const { t, lang } = useLang();
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(value);
   const empty = value.trim() === '';
@@ -195,7 +195,7 @@ function CollectionCell({
         variant="coll"
         value={value}
         onChange={(v) => void onCommit(v).catch(() => {})}
-        options={list.map((o) => ({ value: o, color: optionColor(o) }))}
+        options={list.map((o) => ({ value: o, label: valueLabel(o, t, lang), color: optionColor(o) }))}
       />
     );
   }
@@ -246,7 +246,7 @@ function CollectionCell({
         setEditing(true);
       }}
     >
-      {value}
+      {valueLabel(value, t, lang)}
     </span>
   );
 }
@@ -398,10 +398,10 @@ export default function MemberApp({
       if (!c) continue;
       const v = (rosterRow.cells[c.index] || '').trim();
       if (!v) continue;
-      out.push({ label: label === 'CP' ? formatCp(v) : v, cls: label === 'CP' ? 'gold' : 'violet' });
+      out.push({ label: label === 'CP' ? formatCp(v) : valueLabel(v, t, lang), cls: label === 'CP' ? 'gold' : 'violet' });
     }
     return out;
-  }, [rosterTab, rosterRow]);
+  }, [rosterTab, rosterRow, t, lang]);
 
   async function commit(tab: TabData, row: number, col: number, value: string): Promise<void> {
     try {
@@ -697,7 +697,7 @@ export default function MemberApp({
                       align="right"
                       options={[
                         { value: '', label: t('admin.allValues') },
-                        ...rosterChoices.map((v) => ({ value: v })),
+                        ...rosterChoices.map((v) => ({ value: v, label: valueLabel(v, t, lang) })),
                       ]}
                     />
                   )}
@@ -722,12 +722,12 @@ export default function MemberApp({
                         </td>
                         <td>
                           <div className="cell" style={{ color: optionColor(m.role) }}>
-                            {m.role || '—'}
+                            {m.role ? valueLabel(m.role, t, lang) : '—'}
                           </div>
                         </td>
                         <td>
                           <div className="cell" style={{ color: optionColor(m.guild) }}>
-                            {m.guild || '—'}
+                            {m.guild ? valueLabel(m.guild, t, lang) : '—'}
                           </div>
                         </td>
                         <td>

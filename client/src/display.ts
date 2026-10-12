@@ -24,6 +24,11 @@ export const COL_KEYS: Record<string, string> = {
   STATUS: 'col.status',
   NICKNAME: 'col.nickname',
   NOTES: 'col.notes',
+  'DATE JOINED': 'col.dateJoined',
+  'LEGENDARY CLOAK DISTRIBUTION': 'col.legendaryCloakDistribution',
+  '5 PEICES SET ENCHANTMENT +15': 'col.fivePiece15',
+  'GOLDBLOOD CLOAK+3': 'col.goldBloodCloak3',
+  'GOLDBLOOD CLOAK+5': 'col.goldBloodCloak5',
   'MAIN WEAPON': 'col.mainWeapon',
   'SUB WEAPON': 'col.subWeapon',
   ARMOR: 'col.armor',
@@ -125,6 +130,53 @@ export function colLabel(raw: string, t: T, lang: Lang): string {
 export function bossLabel(raw: string, t: T, lang: Lang): string {
   if (lang !== 'en') {
     const key = BOSS_KEYS[norm(raw)];
+    if (key) return t(key);
+  }
+  return raw;
+}
+
+export const VALUE_KEYS: Record<string, string> = {
+  KOREA: 'opt.country.korea',
+  PHILIPPINES: 'opt.country.philippines',
+  CHINA: 'opt.country.china',
+  THAILAND: 'opt.country.thailand',
+  JAPAN: 'opt.country.japan',
+  COLOMBIAN: 'opt.country.colombian',
+  'GUILD LEADER': 'opt.role.guildLeader',
+  'CO-LEADER': 'opt.role.coLeader',
+  OFFICER: 'opt.role.officer',
+  'GUILD SUPPORT': 'opt.role.guildSupport',
+  SENIOR: 'opt.role.senior',
+  CORE: 'opt.role.core',
+  MEMBER: 'opt.role.member',
+  ACTIVE: 'opt.status.active',
+  BUSY: 'opt.status.busy',
+  RESERVE: 'opt.status.reserve',
+  PROBATION: 'opt.status.probation',
+  'PENDING TRANSFER': 'opt.status.pendingTransfer',
+  INACTIVE: 'opt.status.inactive',
+  KNUCKLES: 'opt.weapon.knuckles',
+  'SWORD AND SHIELD': 'opt.weapon.swordShield',
+  'BATTLE STAFF': 'opt.weapon.battleStaff',
+  'BATTLE SHIELD': 'opt.weapon.battleShield',
+  GREATSWORD: 'opt.weapon.greatsword',
+  SCYTHE: 'opt.weapon.scythe',
+  STAFF: 'opt.weapon.staff',
+  'DUAL DAGGERS': 'opt.weapon.dualDaggers',
+  BOW: 'opt.weapon.bow',
+  CROSSBOW: 'opt.weapon.crossbow',
+  CLOTH: 'opt.armor.cloth',
+  LEATHER: 'opt.armor.leather',
+  PLATE: 'opt.armor.plate',
+  RARE: 'opt.rarity.rare',
+  EPIC: 'opt.rarity.epic',
+  LEGEND: 'opt.rarity.legend',
+  MYTHIC: 'opt.rarity.mythic',
+};
+
+export function valueLabel(raw: string, t: T, lang: Lang): string {
+  if (lang !== 'en') {
+    const key = VALUE_KEYS[norm(raw)];
     if (key) return t(key);
   }
   return raw;

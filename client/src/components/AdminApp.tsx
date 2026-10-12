@@ -14,7 +14,7 @@ import CpUpdate from './CpUpdate';
 import CpHistoryView from './CpHistoryView';
 import ProfileCompletion from './ProfileCompletion';
 import { LangToggle, useLang } from '../i18n';
-import { colLabel, tabLabel } from '../display';
+import { colLabel, tabLabel, valueLabel } from '../display';
 
 interface Props {
   data: DataResponse;
@@ -42,6 +42,7 @@ function EditableCell({
   onCancel: () => void;
 }) {
   const [val, setVal] = useState(() => (isDate ? toIsoDate(initial) : initial));
+  const { t, lang } = useLang();
   const ref = useRef<HTMLInputElement | HTMLSelectElement>(null);
   const closing = useRef(false);
 
@@ -87,7 +88,7 @@ function EditableCell({
             }
           });
         }}
-        options={list.map((o) => ({ value: o, color: optionColor(o) }))}
+        options={list.map((o) => ({ value: o, label: valueLabel(o, t, lang), color: optionColor(o) }))}
       />
     );
   }
@@ -313,7 +314,7 @@ export default function AdminApp({
           <img className="mark" src="./assets/logo.png" alt="" />
           <div>
             <div className="name">ASTRA</div>
-            <div className="tag">Admin</div>
+            <div className="tag">{t('admin.tag')}</div>
           </div>
           <button
             className="drawer-close"
@@ -565,7 +566,7 @@ export default function AdminApp({
                     })}
                     options={[
                       { value: '', label: t('admin.allValues') },
-                      ...filterChoices.map((v) => ({ value: v, color: optionColor(v) })),
+                      ...filterChoices.map((v) => ({ value: v, label: valueLabel(v, t, lang), color: optionColor(v) })),
                     ]}
                   />
                 </div>
@@ -687,7 +688,7 @@ export default function AdminApp({
                       {cols.map((c) => {
                         const isEditing = editing?.row === r.row && editing?.col === c.index;
                         const value = r.cells[c.index] ?? '';
-                        const shown = isCpLabel(c.label) ? formatCp(value) : isDateLabel(c.label) ? toIsoDate(value) : value;
+                        const shown = isCpLabel(c.label) ? formatCp(value) : isDateLabel(c.label) ? toIsoDate(value) : tab.meta.options?.[c.index] ? valueLabel(value, t, lang) : value;
                         return (
                           <td
                             key={c.index}
@@ -719,7 +720,7 @@ export default function AdminApp({
                       <td className="actions">
                         <button
                           className="icon-btn"
-                          title="Delete row"
+                          title={t('admin.deleteRow')}
                           onClick={() => setConfirmDelete(r.row)}
                         >
                           <IconTrash />
@@ -802,7 +803,7 @@ export default function AdminApp({
                 ] as const
               ).map(([label, key]) => (
                 <div className="tip-row" key={label}>
-                  <span className="tip-key">{label}</span>
+                  <span className="tip-key">{valueLabel(label, t, lang)}</span>
                   <span className="tip-desc">{t(key)}</span>
                 </div>
               ))}
@@ -820,7 +821,7 @@ export default function AdminApp({
                 ] as const
               ).map(([label, key]) => (
                 <div className="tip-row" key={label}>
-                  <span className="tip-key">{label}</span>
+                  <span className="tip-key">{valueLabel(label, t, lang)}</span>
                   <span className="tip-desc">{t(key)}</span>
                 </div>
               ))}
@@ -885,7 +886,7 @@ function AddRowModal({
                           return next;
                         })
                       }
-                      options={opts.map((o) => ({ value: o, color: optionColor(o) }))}
+                      options={opts.map((o) => ({ value: o, label: valueLabel(o, t, lang), color: optionColor(o) }))}
                     />
                   ) : isDateLabel(col.label) ? (
                     <DatePicker

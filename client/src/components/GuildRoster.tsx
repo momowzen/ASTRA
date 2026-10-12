@@ -2,6 +2,7 @@ import { useLayoutEffect, useMemo, useState } from 'react';
 import type { DataResponse, TabData } from '../types';
 import { buildColumns, formatCp } from '../utils';
 import { useLang } from '../i18n';
+import { valueLabel } from '../display';
 
 interface Props {
   data: DataResponse;
@@ -70,8 +71,8 @@ function columnSummary(tab: TabData | undefined, label: string): ColumnSummary |
 }
 
 function SummaryPanel({ titleKey, data }: { titleKey: string; data: ColumnSummary | null }) {
-  const { t } = useLang();
-  const rows = data?.rows ?? [];
+  const { t, lang } = useLang();
+  const rows = (data?.rows ?? []).map((r) => ({ ...r, label: valueLabel(r.label, t, lang) }));
   return (
     <div className="panel-card">
       <h3>{t(titleKey)}</h3>

@@ -2,6 +2,7 @@ import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import type { CSSProperties } from 'react';
 import { createPortal } from 'react-dom';
 import { optionColor } from '../utils';
+import { useLang } from '../i18n';
 
 export interface SelectOption {
   value: string;
@@ -119,6 +120,7 @@ export function Select({
   searchPlaceholder = 'Search…',
 }: SelectProps) {
   const { triggerRef, menuRef, rect, setRect, placeUp, setPlaceUp } = useMenuPosition();
+  const { t } = useLang();
   const current = options.find((o) => o.value === value);
   const shown = current?.label ?? value;
   const [query, setQuery] = useState('');
@@ -206,7 +208,7 @@ export function Select({
                 </span>
               </div>
             ))}
-            {filtered.length === 0 && <div className="dd-empty">No matches</div>}
+            {filtered.length === 0 && <div className="dd-empty">{t('common.noMatches')}</div>}
           </div>,
           document.body,
         )}
@@ -239,12 +241,14 @@ export function DatePicker({
   onChange,
   variant = 'field',
   className = '',
-  placeholder = 'Select date',
+  placeholder,
   disabled,
   ariaLabel,
   align = 'left',
 }: DatePickerProps) {
   const { triggerRef, menuRef, rect, setRect, placeUp, setPlaceUp } = useMenuPosition();
+  const { t } = useLang();
+  const ph = placeholder ?? t('common.selectDate');
   const selected = parseIso(value);
   const today = new Date();
   const [view, setView] = useState(() => {
@@ -306,7 +310,7 @@ export function DatePicker({
         aria-expanded={!!rect}
         onClick={() => (rect ? setRect(null) : openMenu())}
       >
-        <span className={`dd-label ${value ? '' : 'muted'}`}>{value || placeholder}</span>
+        <span className={`dd-label ${value ? '' : 'muted'}`}>{value || ph}</span>
         <span className="dd-chevron" aria-hidden="true">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
             <rect x="3" y="4" width="18" height="18" rx="2" />
@@ -329,10 +333,10 @@ export function DatePicker({
                 {MONTHS[view.m]} {view.y}
               </span>
               <span className="cal-nav">
-                <button type="button" aria-label="Previous month" onClick={() => shift(-1)}>
+                <button type="button" aria-label={t('common.prevMonth')} onClick={() => shift(-1)}>
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6" /></svg>
                 </button>
-                <button type="button" aria-label="Next month" onClick={() => shift(1)}>
+                <button type="button" aria-label={t('common.nextMonth')} onClick={() => shift(1)}>
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6" /></svg>
                 </button>
               </span>
@@ -359,11 +363,11 @@ export function DatePicker({
             </div>
             <div className="cal-foot">
               <button type="button" onClick={() => { onChange(todayIso); setRect(null); }}>
-                Today
+                {t('common.today')}
               </button>
               {value && (
                 <button type="button" onClick={() => { onChange(''); setRect(null); }}>
-                  Clear
+                  {t('common.clear')}
                 </button>
               )}
             </div>
