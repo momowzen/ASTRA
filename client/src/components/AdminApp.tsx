@@ -705,7 +705,7 @@ export default function AdminApp({
                                 onCancel={() => setEditing(null)}
                               />
                             ) : (
-                              <div className="cell" title={shown} style={{ color: optionColor(shown) }}>
+                                <div className="cell" title={shown} style={{ color: optionColor(value) }}>
                                 {shown || <span className="muted">—</span>}
                               </div>
                             )}

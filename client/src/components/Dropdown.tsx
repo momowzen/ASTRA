@@ -165,7 +165,7 @@ export function Select({
         aria-expanded={!!rect}
         onClick={() => (rect ? setRect(null) : openMenu())}
       >
-        <span className="dd-label" style={current?.color ? { color: current.color } : undefined}>
+        <span className="dd-label" style={{ color: current?.color ?? optionColor(value) }}>
           {shown || placeholder}
         </span>
         {chevron()}
@@ -203,7 +203,7 @@ export function Select({
                 aria-selected={o.value === value}
                 onClick={() => pick(o.value)}
               >
-                <span className="dd-item-label" style={{ color: o.color ?? optionColor(o.label ?? o.value) }}>
+                <span className="dd-item-label" style={{ color: o.color ?? optionColor(o.value) }}>
                   {o.label ?? o.value}
                 </span>
               </div>
