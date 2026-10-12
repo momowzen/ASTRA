@@ -33,6 +33,7 @@ export interface DataResponse {
 export interface RosterMember {
   ign: string;
   role: string;
+  status: string;
   guild: string;
   cp: string;
 }

@@ -32,6 +32,7 @@ function prettyTitle(title: string): string {
 const ROSTER_COLS = [
   { key: 'ign', label: 'IGN' },
   { key: 'role', label: 'ROLE' },
+  { key: 'status', label: 'STATUS' },
   { key: 'guild', label: 'GUILD' },
   { key: 'cp', label: 'CP' },
 ] as const;
@@ -723,6 +724,11 @@ export default function MemberApp({
                         <td>
                           <div className="cell" style={{ color: optionColor(m.role) }}>
                             {m.role ? valueLabel(m.role, t, lang) : '—'}
+                          </div>
+                        </td>
+                        <td>
+                          <div className="cell" style={{ color: optionColor(m.status) }}>
+                            {m.status ? valueLabel(m.status, t, lang) : '—'}
                           </div>
                         </td>
                         <td>

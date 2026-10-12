@@ -195,10 +195,11 @@ api.get('/data', requireAuth, (req, res) => {
     }));
 
   const basic = snap.tabs.find((t) => t.meta.title.toUpperCase() === 'BASIC INFORMATION');
-  const roster: { ign: string; role: string; guild: string; cp: string }[] = [];
+  const roster: { ign: string; role: string; status: string; guild: string; cp: string }[] = [];
   if (basic) {
     const h = (basic.meta.headers[0] || []).map((x) => String(x).trim().toUpperCase());
     const roleI = h.indexOf('ROLE');
+    const statusI = h.indexOf('STATUS');
     const guildI = h.indexOf('GUILD');
     const cpI = h.indexOf('CP');
     for (const r of basic.rows) {
@@ -207,6 +208,7 @@ api.get('/data', requireAuth, (req, res) => {
       roster.push({
         ign: rowIgn,
         role: roleI >= 0 ? (r.cells[roleI] || '').trim() : '',
+        status: statusI >= 0 ? (r.cells[statusI] || '').trim() : '',
         guild: guildI >= 0 ? (r.cells[guildI] || '').trim() : '',
         cp: cpI >= 0 ? (r.cells[cpI] || '').trim() : '',
       });
