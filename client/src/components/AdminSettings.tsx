@@ -4,11 +4,12 @@ import { useLang } from '../i18n';
 
 interface Props {
   memberEdit: boolean;
+  sheetUrl?: string;
   onClose: () => void;
   toast: (msg: string, kind?: 'ok' | 'err') => void;
 }
 
-export default function AdminSettings({ memberEdit, onClose, toast }: Props) {
+export default function AdminSettings({ memberEdit, sheetUrl, onClose, toast }: Props) {
   const { t } = useLang();
   const [view, setView] = useState<'menu' | 'password' | 'member'>('menu');
 
@@ -76,6 +77,20 @@ export default function AdminSettings({ memberEdit, onClose, toast }: Props) {
                 <polyline points="9 18 15 12 9 6" />
               </svg>
             </button>
+            {sheetUrl && (
+              <button
+                type="button"
+                className="settings-item"
+                onClick={() => window.open(sheetUrl, '_blank', 'noopener,noreferrer')}
+              >
+                <span>{t('settings.googleSheet')}</span>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+                  <polyline points="15 3 21 3 21 9" />
+                  <line x1="10" y1="14" x2="21" y2="3" />
+                </svg>
+              </button>
+            )}
           </div>
         )}
 

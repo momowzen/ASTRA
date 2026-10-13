@@ -393,6 +393,7 @@ const DICT: Record<string, { en: string; ko: string; ja: string; zh: string }> =
   'pw.couldNot': { en: 'Could not change password', ko: '비밀번호를 변경할 수 없습니다', ja: "パスワードを変更できませんでした", zh: '无法修改密码' },
   'settings.changePassword': { en: 'Change password', ko: '비밀번호 변경', ja: "パスワード変更", zh: '修改密码' },
   'settings.memberAccess': { en: 'Member access', ko: '멤버 접근 권한', ja: "メンバーアクセス", zh: '成员权限' },
+  'settings.googleSheet': { en: 'Go to Google Sheet', ko: 'Google 스프레드시트 열기', ja: "Google スプレッドシートを開く", zh: '打开 Google 表格' },
   'settings.memberEdit': { en: 'Allow members to edit their profile', ko: '멤버의 프로필 수정 허용', ja: "メンバーのプロフィール編集を許可", zh: '允许成员编辑个人资料' },
   'settings.memberEditOn': { en: 'Members can edit their profile.', ko: '멤버가 프로필을 수정할 수 있습니다.', ja: "メンバーはプロフィールを編集できます。", zh: '成员可以编辑自己的资料。' },
   'settings.memberEditOff': { en: 'Members can view their profile but cannot edit it.', ko: '멤버는 프로필을 볼 수 있지만 수정할 수 없습니다.', ja: "メンバーはプロフィールを閲覧できますが、編集はできません。", zh: '成员可以查看资料，但不能编辑。' },

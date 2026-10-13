@@ -232,6 +232,9 @@ api.get('/data', requireAuth, (req, res) => {
     roster,
     leaderboard,
     memberEdit: memberEditEnabled(),
+    sheetUrl: config.spreadsheetId
+      ? `https://docs.google.com/spreadsheets/d/${config.spreadsheetId}/edit`
+      : '',
   });
 });
 

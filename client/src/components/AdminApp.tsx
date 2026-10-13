@@ -778,6 +778,7 @@ export default function AdminApp({
       {settingsOpen && (
         <AdminSettings
           memberEdit={data.memberEdit !== false}
+          sheetUrl={data.sheetUrl}
           onClose={() => setSettingsOpen(false)}
           toast={toast}
         />

@@ -29,6 +29,7 @@ export interface DataResponse {
   roster?: RosterMember[];
   leaderboard?: { ign: string; points: number }[];
   memberEdit?: boolean;
+  sheetUrl?: string;
   unchanged?: boolean;
 }
 
