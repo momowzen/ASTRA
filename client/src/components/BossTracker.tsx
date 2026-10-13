@@ -249,9 +249,26 @@ function AttendanceView({
     return [...set].sort((a, b) => a.localeCompare(b));
   }, [roster, attendanceTab]);
 
+  const nickCol = useMemo(() => {
+    const h = roster?.meta.headers[0] || [];
+    return h.findIndex((x) => String(x).trim().toLowerCase() === 'nickname');
+  }, [roster]);
+  const nickByIgn = useMemo(() => {
+    const m = new Map<string, string>();
+    if (!roster || nickCol < 0) return m;
+    for (const r of roster.rows) {
+      const ign = (r.cells[0] || '').trim().toLowerCase();
+      if (ign) m.set(ign, (r.cells[nickCol] || '').trim());
+    }
+    return m;
+  }, [roster, nickCol]);
+
   const bossPoints = pointsFor(bossName);
-  const filtered = filter.trim()
-    ? memberNames.filter((n) => n.toLowerCase().includes(filter.trim().toLowerCase()))
+  const filterQ = filter.trim().toLowerCase();
+  const filtered = filterQ
+    ? memberNames.filter(
+        (n) => n.toLowerCase().includes(filterQ) || (nickByIgn.get(n.toLowerCase()) ?? '').toLowerCase().includes(filterQ),
+      )
     : memberNames;
 
   function toggle(name: string) {
