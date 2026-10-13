@@ -138,6 +138,64 @@ function computeRev(tabs: TabData[]): string {
     .slice(0, 16);
 }
 
+function intPoints(value: string | undefined): number {
+  const n = Number.parseInt(value ?? '', 10);
+  return Number.isFinite(n) && n >= 0 ? n : 0;
+}
+
+/**
+ * When a boss column is deleted directly in the sheet, Sheets shifts the
+ * remaining columns but leaves TOTAL POINTS untouched. Detect the removed
+ * boss columns (by diffing the header row) and subtract their recorded points
+ * from the affected rows' TOTAL POINTS. Mutates `next` and returns the writes.
+ */
+function reconcileAttendance(prev: Snapshot, next: Snapshot): { a1: string; values: string[][] }[] {
+  const prevTab = prev.tabs.find((t) => t.meta.title.toUpperCase() === 'BOSS ATTENDANCE');
+  const nextTab = next.tabs.find((t) => t.meta.title.toUpperCase() === 'BOSS ATTENDANCE');
+  if (!prevTab || !nextTab) return [];
+
+  const prevHeaders = (prevTab.meta.headers[0] || []).map((h) => String(h || '').trim());
+  const nextHeaders = (nextTab.meta.headers[0] || []).map((h) => String(h || '').trim());
+
+  const remaining = new Map<string, number>();
+  for (let i = 2; i < nextHeaders.length; i++) {
+    const key = nextHeaders[i].toLowerCase();
+    if (key) remaining.set(key, (remaining.get(key) ?? 0) + 1);
+  }
+
+  const deletedIdx: number[] = [];
+  for (let i = 2; i < prevHeaders.length; i++) {
+    const key = prevHeaders[i].toLowerCase();
+    if (!key) continue;
+    const c = remaining.get(key) ?? 0;
+    if (c > 0) remaining.set(key, c - 1);
+    else deletedIdx.push(i);
+  }
+  if (deletedIdx.length === 0) return [];
+
+  const deduction = new Map<string, number>();
+  for (const r of prevTab.rows) {
+    const ign = (r.cells[0] || '').trim().toLowerCase();
+    if (!ign) continue;
+    let d = 0;
+    for (const i of deletedIdx) d += intPoints(r.cells[i]);
+    if (d > 0) deduction.set(ign, (deduction.get(ign) ?? 0) + d);
+  }
+  if (deduction.size === 0) return [];
+
+  const writes: { a1: string; values: string[][] }[] = [];
+  for (const r of nextTab.rows) {
+    const ign = (r.cells[0] || '').trim().toLowerCase();
+    const d = deduction.get(ign) ?? 0;
+    if (d === 0) continue;
+    const adjusted = intPoints(r.cells[1]) - d;
+    while (r.cells.length <= 1) r.cells.push('');
+    r.cells[1] = String(adjusted);
+    writes.push({ a1: `B${r.row}`, values: [[String(adjusted)]] });
+  }
+  return writes;
+}
+
 async function load(): Promise<Snapshot> {
   const meta = await getMeta();
   const visible = meta.sheets
@@ -192,6 +250,18 @@ async function doRefresh(): Promise<void> {
   }
   try {
     const next = await load();
+    if (snapshot) {
+      try {
+        const writes = reconcileAttendance(snapshot, next);
+        if (writes.length > 0) {
+          await sheets.batchUpdateValues('BOSS ATTENDANCE', writes);
+          next.rev = computeRev(next.tabs);
+          console.log(`[sync] adjusted TOTAL POINTS after boss column deletion (${writes.length} rows)`);
+        }
+      } catch (err) {
+        console.error('[sync] attendance reconcile failed:', err instanceof Error ? err.message : err);
+      }
+    }
     const changed = !snapshot || snapshot.rev !== next.rev;
     snapshot = next;
     lastError = null;
