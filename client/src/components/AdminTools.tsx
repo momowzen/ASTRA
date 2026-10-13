@@ -88,14 +88,13 @@ export default function AdminTools({ data, toast }: Props) {
     <>
       <div className="boss-view">
         <div className="announce">
-          <div className="announce-head">
-            <h2>{t('tools.distTitle')}</h2>
-            {saved && (
+          {saved && (
+            <div className="announce-head">
               <div className="announce-date">
                 {t('tools.distributedOn')} {saved.date}
               </div>
-            )}
-          </div>
+            </div>
+          )}
 
           <div className="announce-stats">
             <div className="stat-card">

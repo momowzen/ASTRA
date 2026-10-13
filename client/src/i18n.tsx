@@ -339,7 +339,7 @@ const DICT: Record<string, { en: string; ko: string; ja: string; zh: string }> =
   'tools.distributedOn': { en: 'Distributed on', ko: '분배일', ja: "分配日", zh: '分配日期' },
   'tools.points': { en: 'Points', ko: '포인트', ja: "ポイント", zh: '积分' },
   'tools.diamonds': { en: 'Diamonds', ko: '다이아몬드', ja: "ダイヤモンド", zh: '钻石' },
-  'tools.totalBand': { en: 'Total band points', ko: '밴드 총 포인트', ja: "バンド合計ポイント", zh: '区间总积分' },
+  'tools.totalBand': { en: 'Total points', ko: '총 포인트', ja: "合計ポイント", zh: '总积分' },
   'tools.members': { en: 'members', ko: '명', ja: "名", zh: '名' },
   'tools.empty': {
     en: 'No attendance points recorded yet.',
