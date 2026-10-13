@@ -53,8 +53,11 @@ export default function AdminTools({ data, toast }: Props) {
     return members.map((m) => ({ ...m, diamonds: alloc.get(m.ign) ?? 0 }));
   }, [members, band, pool, poolValid]);
 
-  const rows: DistributionBand[] = saved ? saved.rows : preview;
+  const base: DistributionBand[] = saved ? saved.rows : preview;
   const showDiamonds = !!saved || poolValid;
+  const top = base.reduce((m, r) => Math.max(m, r.points), 0);
+  const displayThr = top > 0 ? Math.max(1, Math.round(top * 0.3)) : 0;
+  const displayRows = displayThr > 0 ? base.filter((r) => r.points >= displayThr) : [];
 
   async function save() {
     if (!poolValid) return;
@@ -122,30 +125,33 @@ export default function AdminTools({ data, toast }: Props) {
                 </tr>
               </thead>
               <tbody>
-                {rows.map((m, i) => {
-                  const on = threshold > 0 && m.points >= threshold;
-                  const cellCls = on ? 'cell top-cell' : 'cell';
-                  return (
-                    <tr key={m.ign}>
-                      <td className="rownum">{i + 1}</td>
-                      <td className="ign-col">
-                        <div className={cellCls} title={on ? t('boss.top30') : undefined}>
-                          {m.ign}
-                        </div>
-                      </td>
-                      <td>
-                        <div className={cellCls} title={on ? t('boss.top30') : undefined}>
-                          {m.points > 0 ? m.points : '—'}
-                        </div>
-                      </td>
-                      <td>
-                        <div className={`cell ${showDiamonds ? 'dist-diamond' : ''}`}>
-                          {showDiamonds ? m.diamonds : '—'}
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })}
+                {displayRows.map((m, i) => (
+                  <tr key={m.ign}>
+                    <td className="rownum">{i + 1}</td>
+                    <td className="ign-col">
+                      <div className="cell top-cell" title={t('boss.top30')}>
+                        {m.ign}
+                      </div>
+                    </td>
+                    <td>
+                      <div className="cell top-cell" title={t('boss.top30')}>
+                        {m.points}
+                      </div>
+                    </td>
+                    <td>
+                      <div className={`cell ${showDiamonds ? 'dist-diamond' : ''}`}>
+                        {showDiamonds ? m.diamonds : '—'}
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+                {displayRows.length === 0 && (
+                  <tr>
+                    <td className="empty" colSpan={4}>
+                      {t('tools.empty')}
+                    </td>
+                  </tr>
+                )}
               </tbody>
             </table>
           </div>
