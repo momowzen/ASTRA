@@ -247,6 +247,13 @@ export async function distribute(pool: number): Promise<DistributionResult> {
   });
 }
 
+export async function recordAttendance(boss: string, points: number, igns: string[]): Promise<void> {
+  await request('/boss/attendance/record', {
+    method: 'POST',
+    body: JSON.stringify({ boss, points, igns }),
+  });
+}
+
 export interface CpItem {
   ign: string;
   cp: string;

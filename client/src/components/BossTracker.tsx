@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type { DataResponse, TabData } from '../types';
 import { BOSSES } from '../bosses';
-import { addRow, ApiError, saveCells, seedBossConfig } from '../api';
+import { addRow, ApiError, recordAttendance, saveCells, seedBossConfig } from '../api';
 import { ocrVariants, scanParty } from '../ocr';
 import { useLang } from '../i18n';
 import { bossLabel } from '../display';
@@ -76,7 +76,6 @@ export default function BossTracker({ view, data, onPatch, toast }: Props) {
         data={data}
         attendanceTab={attendanceTab}
         pointsFor={pointsFor}
-        onPatch={onPatch}
         toast={toast}
       />
     );
@@ -219,13 +218,11 @@ function AttendanceView({
   data,
   attendanceTab,
   pointsFor,
-  onPatch,
   toast,
 }: {
   data: DataResponse;
   attendanceTab: TabData | undefined;
   pointsFor: (name: string) => number;
-  onPatch: (tabTitle: string, updates: { row: number; col: number; value: string }[]) => void;
   toast: (msg: string, kind?: 'ok' | 'err') => void;
 }) {
   const { t, lang } = useLang();
@@ -251,24 +248,6 @@ function AttendanceView({
     }
     return [...set].sort((a, b) => a.localeCompare(b));
   }, [roster, attendanceTab]);
-
-  const rowByIgn = useMemo(() => {
-    const m = new Map<string, number>();
-    for (const r of attendanceTab?.rows ?? []) {
-      const n = (r.cells[0] || '').trim();
-      if (n) m.set(n, r.row);
-    }
-    return m;
-  }, [attendanceTab]);
-
-  const pointsByIgn = useMemo(() => {
-    const m = new Map<string, number>();
-    for (const r of attendanceTab?.rows ?? []) {
-      const n = (r.cells[0] || '').trim();
-      m.set(n, intPoints(r.cells[1]));
-    }
-    return m;
-  }, [attendanceTab]);
 
   const bossPoints = pointsFor(bossName);
   const filtered = filter.trim()
@@ -319,18 +298,8 @@ function AttendanceView({
   async function record() {
     if (selected.size === 0) return;
     setRecording(true);
-    const updates: { row: number; col: number; value: string }[] = [];
-    const adds: string[][] = [];
-    for (const name of selected) {
-      const row = rowByIgn.get(name);
-      const next = (pointsByIgn.get(name) ?? 0) + bossPoints;
-      if (row) updates.push({ row, col: 1, value: String(next) });
-      else adds.push([name, String(next)]);
-    }
     try {
-      if (updates.length) await saveCells('BOSS ATTENDANCE', updates);
-      for (const cells of adds) await addRow('BOSS ATTENDANCE', cells);
-      if (updates.length) onPatch('BOSS ATTENDANCE', updates);
+      await recordAttendance(bossName, bossPoints, [...selected]);
       toast(t('boss.recordedToast', { n: selected.size, pts: bossPoints }), 'ok');
       setSelected(new Set());
     } catch (err) {

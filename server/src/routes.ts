@@ -395,6 +395,68 @@ api.post('/boss/config/seed', requireAuth, requireAdmin, async (_req, res) => {
   }
 });
 
+api.post('/boss/attendance/record', requireAuth, requireAdmin, async (req, res) => {
+  const boss = String(req.body?.boss ?? '').trim();
+  const points = Number(req.body?.points);
+  const raw = Array.isArray(req.body?.igns) ? req.body.igns : [];
+  const seen = new Set<string>();
+  const igns: string[] = [];
+  for (const x of raw) {
+    const name = String(x ?? '').trim();
+    const key = name.toLowerCase();
+    if (!name || seen.has(key)) continue;
+    seen.add(key);
+    igns.push(name);
+  }
+  if (!boss) return bad(res, 400, 'Boss name is required');
+  if (!Number.isFinite(points)) return bad(res, 400, 'Points are required');
+  if (igns.length === 0) return bad(res, 400, 'No members supplied');
+
+  try {
+    const tab = getTab('BOSS ATTENDANCE');
+    if (!tab) return bad(res, 404, 'BOSS ATTENDANCE tab not found');
+
+    const newCol = Math.max(tab.meta.columnCount, 2);
+    const col = sheets.columnLetter(newCol);
+
+    const writes: { a1: string; values: string[][] }[] = [
+      { a1: 'B1', values: [['TOTAL POINTS']] },
+      { a1: `${col}1`, values: [[boss]] },
+    ];
+
+    const existing = new Set<string>();
+    for (const r of tab.rows) {
+      const key = (r.cells[0] || '').trim().toLowerCase();
+      if (!key) continue;
+      existing.add(key);
+      let sum = 0;
+      for (let i = 2; i < r.cells.length; i++) sum += intPoints(r.cells[i]);
+      const hit = seen.has(key);
+      if (hit) sum += points;
+      writes.push({ a1: `${col}${r.row}`, values: [[hit ? String(points) : '']] });
+      writes.push({ a1: `B${r.row}`, values: [[String(sum)]] });
+    }
+
+    const newRows: string[][] = [];
+    for (const ign of igns) {
+      if (existing.has(ign.toLowerCase())) continue;
+      const cells = new Array(newCol + 1).fill('');
+      cells[0] = ign;
+      cells[1] = String(points);
+      cells[newCol] = String(points);
+      newRows.push(cells);
+    }
+
+    await sheets.batchUpdateValues('BOSS ATTENDANCE', writes);
+    for (const cells of newRows) await sheets.appendRow('BOSS ATTENDANCE', cells, newCol + 1);
+    scheduleRefresh();
+    res.json({ ok: true, column: boss });
+  } catch (err) {
+    console.error('[boss] record attendance failed:', err);
+    bad(res, 502, 'Could not record attendance');
+  }
+});
+
 api.post('/boss/distribute', requireAuth, requireAdmin, async (req, res) => {
   const pool = Number(req.body?.pool);
   if (!Number.isFinite(pool) || pool <= 0) {
@@ -474,8 +536,20 @@ api.post('/boss/distribute', requireAuth, requireAdmin, async (req, res) => {
       await sheets.appendRow('DISTRIBUTION HISTORY', cells, rewardCol + 1);
     }
 
-    const reset = attTab.rows.map((r) => ({ a1: `${sheets.columnLetter(1)}${r.row}`, values: [['']] }));
-    await sheets.batchUpdateValues('BOSS ATTENDANCE', reset);
+    const resetWrites: { a1: string; values: string[][] }[] = [];
+    if (attTab.rows.length > 0) {
+      const firstRow = attTab.rows[0].row;
+      resetWrites.push({ a1: `B${firstRow}`, values: attTab.rows.map(() => ['']) });
+      const cc = attTab.meta.columnCount;
+      if (cc > 2) {
+        const lastCol = sheets.columnLetter(cc - 1);
+        const maxRow = attTab.rows[attTab.rows.length - 1].row;
+        const blankRow = new Array(cc - 2).fill('');
+        const matrix = attTab.rows.map(() => [...blankRow]);
+        resetWrites.push({ a1: `C1:${lastCol}${maxRow}`, values: matrix });
+      }
+    }
+    if (resetWrites.length > 0) await sheets.batchUpdateValues('BOSS ATTENDANCE', resetWrites);
     for (const r of attTab.rows) noteWrite('BOSS ATTENDANCE', r.row, 1, '');
 
     scheduleRefresh();
