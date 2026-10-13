@@ -4,6 +4,7 @@ import { config } from './config';
 import { api } from './routes';
 import { initStore } from './store';
 import { ensureCredentialsTab } from './credentials';
+import { ensureSettingsTab } from './settings';
 
 async function main(): Promise<void> {
   const app = express();
@@ -31,6 +32,7 @@ async function main(): Promise<void> {
   });
 
   await ensureCredentialsTab();
+  await ensureSettingsTab();
   await initStore();
 
   const server = app.listen(config.port, () => {

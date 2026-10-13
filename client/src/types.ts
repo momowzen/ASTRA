@@ -27,6 +27,7 @@ export interface DataResponse {
   ign: string;
   tabs: TabData[];
   roster?: RosterMember[];
+  memberEdit?: boolean;
   unchanged?: boolean;
 }
 
@@ -51,6 +52,6 @@ export interface Column {
   group: string;
 }
 
-export const INTERNAL_TABS = ['BOSS ATTENDANCE', 'BOSS CONFIG'];
+export const INTERNAL_TABS = ['BOSS ATTENDANCE', 'BOSS CONFIG', 'SETTINGS'];
 
-export const MEMBER_HIDDEN_TABS = ['BOSS ATTENDANCE', 'BOSS CONFIG', 'DISTRIBUTION HISTORY', 'CP HISTORY'];
+export const MEMBER_HIDDEN_TABS = ['BOSS ATTENDANCE', 'BOSS CONFIG', 'DISTRIBUTION HISTORY', 'CP HISTORY', 'SETTINGS'];

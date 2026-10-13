@@ -267,6 +267,13 @@ export async function changePassword(currentPassword: string, newPassword: strin
   });
 }
 
+export async function setMemberEdit(memberEdit: boolean): Promise<void> {
+  await request('/admin/settings', {
+    method: 'POST',
+    body: JSON.stringify({ memberEdit }),
+  });
+}
+
 export async function changeUsername(currentPassword: string, newUsername: string): Promise<Session> {
   const res = await request<{ token: string; role: Session['role']; username: string; ign: string }>(
     '/auth/username',

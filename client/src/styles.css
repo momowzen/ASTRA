@@ -2653,3 +2653,109 @@ table.grid.roster-grid td.ign-col {
   font-size: 13px;
   color: var(--muted);
 }
+
+.settings-menu {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 8px;
+}
+.settings-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--panel-2);
+  color: var(--text);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  text-align: left;
+  transition: 0.13s ease;
+}
+.settings-item:hover {
+  background: var(--panel-3);
+  border-color: #34406b;
+}
+.settings-item svg {
+  flex: none;
+  color: var(--muted);
+}
+.settings-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin: 4px 0 14px;
+  padding: 4px 6px;
+  border: 0;
+  background: none;
+  color: var(--muted);
+  font-size: 13px;
+  cursor: pointer;
+}
+.settings-back:hover {
+  color: var(--text);
+}
+.settings-toggle-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 6px 2px;
+}
+.settings-toggle-label {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text);
+}
+.settings-toggle-desc {
+  font-size: 12.5px;
+  color: var(--muted);
+  margin-top: 4px;
+}
+.switch {
+  position: relative;
+  display: inline-flex;
+  flex: none;
+  cursor: pointer;
+}
+.switch input {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+.switch-track {
+  position: relative;
+  display: inline-block;
+  width: 44px;
+  height: 24px;
+  border-radius: 999px;
+  background: var(--panel-3);
+  border: 1px solid var(--line);
+  transition: 0.15s ease;
+}
+.switch-thumb {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--muted);
+  transition: 0.15s ease;
+}
+.switch input:checked + .switch-track {
+  background: linear-gradient(135deg, #7b6bff, #6a5bff);
+  border-color: transparent;
+}
+.switch input:checked + .switch-track .switch-thumb {
+  left: 22px;
+  background: #fff;
+}
+.switch input:disabled + .switch-track {
+  opacity: 0.6;
+}

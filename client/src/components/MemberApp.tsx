@@ -177,10 +177,12 @@ function Field({
 function CollectionCell({
   value,
   options,
+  readOnly,
   onCommit,
 }: {
   value: string;
   options?: string[];
+  readOnly?: boolean;
   onCommit: (value: string) => Promise<void>;
 }) {
   const { t, lang } = useLang();
@@ -188,6 +190,14 @@ function CollectionCell({
   const [draft, setDraft] = useState(value);
   const empty = value.trim() === '';
   const mark = isMark(value);
+
+  if (readOnly) {
+    return (
+      <span className="cell-text" style={{ color: optionColor(value) }}>
+        {empty ? '—' : mark ? '✓' : valueLabel(value, t, lang)}
+      </span>
+    );
+  }
 
   if (options) {
     const list = (options.includes(value) ? options : [value, ...options]).filter((o) => o !== '');
@@ -276,6 +286,7 @@ export default function MemberApp({
   const stripRef = useRef<HTMLElement>(null);
 
   const { t, lang } = useLang();
+  const canEdit = data.memberEdit !== false;
   const tabText = (raw: string) => tabLabel(raw, t, lang, prettyTitle);
 
   const guildDuration = (value: string): string => {
@@ -775,7 +786,7 @@ export default function MemberApp({
                             label={colLabel(c.label, t, lang)}
                             value={rosterRow.cells[c.index] ?? ''}
                             options={rosterTab.meta.options?.[c.index]}
-                            readOnly={MEMBER_READONLY.has(c.label.trim().toUpperCase())}
+                            readOnly={!canEdit || MEMBER_READONLY.has(c.label.trim().toUpperCase())}
                       format={isCpLabel(c.label)}
                       isDate={isDateLabel(c.label)}
                       dataTab={rosterTab.meta.title}
@@ -814,7 +825,7 @@ export default function MemberApp({
                             label={colLabel(c.label, t, lang)}
                             value={equipRow.cells[c.index] ?? ''}
                             options={equipTab.meta.options?.[c.index]}
-                            readOnly={MEMBER_READONLY.has(c.label.trim().toUpperCase())}
+                            readOnly={!canEdit || MEMBER_READONLY.has(c.label.trim().toUpperCase())}
                       format={isCpLabel(c.label)}
                       isDate={isDateLabel(c.label)}
                       dataTab={equipTab.meta.title}
@@ -851,7 +862,7 @@ export default function MemberApp({
                       label={colLabel(c.label, t, lang)}
                       value={row.cells[c.index] ?? ''}
                       options={activeTab.meta.options?.[c.index]}
-                      readOnly={MEMBER_READONLY.has(c.label.trim().toUpperCase())}
+                      readOnly={!canEdit || MEMBER_READONLY.has(c.label.trim().toUpperCase())}
                       format={isCpLabel(c.label)}
                       isDate={isDateLabel(c.label)}
                       dataTab={activeTab.meta.title}
@@ -885,6 +896,7 @@ export default function MemberApp({
                               <CollectionCell
                                 value={row.cells[c.index] ?? ''}
                                 options={activeTab.meta.options?.[c.index]}
+                                readOnly={!canEdit}
                                 onCommit={(v) => commit(activeTab, row.row, c.index, v)}
                               />
                             </div>

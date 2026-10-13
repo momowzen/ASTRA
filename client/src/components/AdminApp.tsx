@@ -6,7 +6,7 @@ import { buildColumns, formatCp, isCpLabel, isDateLabel, optionColor, timeInGuil
 import { addRow as apiAddRow, deleteRow as apiDeleteRow, saveCells, ApiError } from '../api';
 import { DatePicker, Select } from './Dropdown';
 import { IconBulb, IconClose, IconGear, IconGrid, IconLogout, IconMenu, IconPlus, IconSearch, IconTrash } from './icons';
-import PasswordModal from './PasswordModal';
+import AdminSettings from './AdminSettings';
 import BossTracker from './BossTracker';
 import GuildRoster from './GuildRoster';
 import AdminTools from './AdminTools';
@@ -776,12 +776,10 @@ export default function AdminApp({
       )}
 
       {settingsOpen && (
-        <PasswordModal
-          title={t('admin.settingsTitle')}
-          description={t('admin.settingsDesc')}
-          currentLabel={t('admin.currentAdminPassword')}
+        <AdminSettings
+          memberEdit={data.memberEdit !== false}
           onClose={() => setSettingsOpen(false)}
-          onDone={() => toast(t('admin.passwordUpdated'), 'ok')}
+          toast={toast}
         />
       )}
 

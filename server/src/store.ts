@@ -141,7 +141,7 @@ function computeRev(tabs: TabData[]): string {
 async function load(): Promise<Snapshot> {
   const meta = await getMeta();
   const visible = meta.sheets
-    .filter((s) => !s.hidden && s.title !== config.credentialsTab)
+    .filter((s) => (!s.hidden || s.title === config.settingsTab) && s.title !== config.credentialsTab)
     .sort((a, b) => a.index - b.index);
   const titles = visible.map((s) => s.title);
   const values = await sheets.batchGetValues(titles);
@@ -265,6 +265,19 @@ export function getSnapshot(): Snapshot {
 
 export function getTab(title: string): TabData | undefined {
   return getSnapshot().tabs.find((t) => t.meta.title === title);
+}
+
+export function memberEditEnabled(): boolean {
+  const tab = snapshot?.tabs.find(
+    (t) => t.meta.title.toUpperCase() === config.settingsTab.toUpperCase(),
+  );
+  if (!tab) return true;
+  for (const r of tab.rows) {
+    if ((r.cells[0] || '').trim().toLowerCase() === 'member_edit') {
+      return (r.cells[1] || '').trim().toLowerCase() !== 'off';
+    }
+  }
+  return true;
 }
 
 export function findIgn(name: string): string | null {

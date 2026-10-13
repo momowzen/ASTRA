@@ -3,7 +3,7 @@ import { config } from './config';
 import * as sheets from './sheets';
 import { findCredential, findCredentialByIgn, renameUsername, deleteCredentialByIgn, setPassword, verifyCredential } from './credentials';
 import { rateLimit, requireAdmin, requireAuth, signToken } from './auth';
-import { applyLocalWrite, findIgn, getSnapshot, getTab, rowBelongsTo, scheduleRefresh, noteWrite, lastError } from './store';
+import { applyLocalWrite, findIgn, getSnapshot, getTab, memberEditEnabled, rowBelongsTo, scheduleRefresh, noteWrite, lastError } from './store';
 import { BOSS_NAMES } from './bosses';
 
 class ForbiddenRow extends Error {
@@ -17,7 +17,7 @@ export const api = Router();
 const MAX_VALUE_LEN = 1000;
 const MAX_UPDATES = 200;
 
-const INTERNAL_TABS = ['BOSS ATTENDANCE', 'BOSS CONFIG', 'DISTRIBUTION HISTORY', 'CP HISTORY'];
+const INTERNAL_TABS = ['BOSS ATTENDANCE', 'BOSS CONFIG', 'DISTRIBUTION HISTORY', 'CP HISTORY', 'SETTINGS'];
 
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
@@ -224,6 +224,7 @@ api.get('/data', requireAuth, (req, res) => {
     ign: s.ign,
     tabs,
     roster,
+    memberEdit: memberEditEnabled(),
   });
 });
 
@@ -355,6 +356,26 @@ api.post('/admin/reset-member', requireAuth, requireAdmin, async (req, res) => {
   } catch (err) {
     console.error('[admin] reset member failed:', err);
     bad(res, 502, 'Could not reset the member password');
+  }
+});
+
+api.post('/admin/settings', requireAuth, requireAdmin, async (req, res) => {
+  const memberEdit = !!req.body?.memberEdit;
+  try {
+    const tab = getTab(config.settingsTab);
+    const row = tab?.rows.find((r) => (r.cells[0] || '').trim().toLowerCase() === 'member_edit');
+    const value = memberEdit ? 'on' : 'off';
+    if (row) {
+      await sheets.updateValues(config.settingsTab, `B${row.row}`, [[value]]);
+      noteWrite(config.settingsTab, row.row, 1, value);
+    } else {
+      await sheets.updateValues(config.settingsTab, 'A2:B2', [['member_edit', value]]);
+    }
+    scheduleRefresh();
+    res.json({ ok: true, memberEdit });
+  } catch (err) {
+    console.error('[admin] settings failed:', err);
+    bad(res, 502, 'Could not save settings');
   }
 });
 
