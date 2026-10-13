@@ -218,7 +218,7 @@ api.get('/data', requireAuth, (req, res) => {
   const attTab = snap.tabs.find((t) => t.meta.title.toUpperCase() === 'BOSS ATTENDANCE');
   const leaderboard = (attTab?.rows ?? [])
     .map((r) => ({ ign: (r.cells[0] || '').trim(), points: intPoints(r.cells[1]) }))
-    .filter((m) => m.ign && m.points > 0)
+    .filter((m) => m.ign)
     .sort((a, b) => b.points - a.points || a.ign.localeCompare(b.ign));
 
   res.json({

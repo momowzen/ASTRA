@@ -413,8 +413,8 @@ function DashboardView({ attendanceTab }: { attendanceTab: TabData | undefined }
   const leaderboard = useMemo(() => {
     return (attendanceTab?.rows ?? [])
       .map((r) => ({ ign: (r.cells[0] || '').trim(), points: intPoints(r.cells[1]) }))
-      .filter((x) => x.ign && x.points > 0)
-      .sort((a, b) => b.points - a.points);
+      .filter((x) => x.ign)
+      .sort((a, b) => b.points - a.points || a.ign.localeCompare(b.ign));
   }, [attendanceTab]);
 
   const totalPoints = leaderboard.reduce((s, x) => s + x.points, 0);
