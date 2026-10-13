@@ -30,8 +30,6 @@ const DICT: Record<string, { en: string; ko: string; ja: string; zh: string }> =
   'common.failed': { en: 'Failed', ko: '실패', ja: "失敗", zh: '失败' },
   'common.menu': { en: 'Menu', ko: '메뉴', ja: "メニュー", zh: '菜单' },
   'common.close': { en: 'Close', ko: '닫기', ja: "閉じる", zh: '关闭' },
-  'common.collapse': { en: 'Collapse sidebar', ko: '사이드바 접기', ja: "サイドバーを折りたたむ", zh: '折叠侧边栏' },
-  'common.expand': { en: 'Expand sidebar', ko: '사이드바 펼치기', ja: "サイドバーを展開", zh: '展开侧边栏' },
 
   'login.tag': { en: 'Guild Manager', ko: '길드 관리자', ja: "ギルドマネージャー", zh: '公会管理' },
   'login.welcome': { en: 'Welcome back', ko: '다시 오신 것을 환영합니다', ja: "おかえりなさい", zh: '欢迎回来' },
