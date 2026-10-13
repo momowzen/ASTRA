@@ -5,7 +5,7 @@ import type { Column, DataResponse, Session } from '../types';
 import { buildColumns, formatCp, isCpLabel, isDateLabel, optionColor, timeInGuildParts, toIsoDate } from '../utils';
 import { addRow as apiAddRow, deleteRow as apiDeleteRow, saveCells, ApiError } from '../api';
 import { DatePicker, Select } from './Dropdown';
-import { IconBulb, IconClose, IconGear, IconGrid, IconLogout, IconMenu, IconPlus, IconSearch, IconTrash } from './icons';
+import { IconBulb, IconClose, IconGear, IconGrid, IconLogout, IconMenu, IconPanel, IconPlus, IconSearch, IconTrash } from './icons';
 import PasswordModal from './PasswordModal';
 import BossTracker from './BossTracker';
 import GuildRoster from './GuildRoster';
@@ -139,9 +139,18 @@ export default function AdminApp({
   const [tipOpen, setTipOpen] = useState(false);
   const [busy, setBusy] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [collapsed, setCollapsed] = useState(() => localStorage.getItem('astra.sidebar') === 'collapsed');
   const stripRef = useRef<HTMLElement>(null);
 
   const { t, lang } = useLang();
+
+  function toggleSidebar() {
+    setCollapsed((c) => {
+      const next = !c;
+      localStorage.setItem('astra.sidebar', next ? 'collapsed' : 'open');
+      return next;
+    });
+  }
 
   const guildDuration = (value: string): string => {
     const p = timeInGuildParts(value);
@@ -303,7 +312,7 @@ export default function AdminApp({
   }
 
   return (
-    <div className="shell">
+    <div className={`shell ${collapsed ? 'collapsed' : ''}`}>
       <aside
         className={menuOpen ? 'sidebar open' : 'sidebar'}
         onClick={(e) => {
@@ -328,6 +337,7 @@ export default function AdminApp({
         <div className="section-label">{t('admin.rosterSection')}</div>
         <button
           className={`nav-item nav-caps ${rosterView ? 'active' : ''}`}
+          title={t('admin.rosterOverview')}
           onClick={() => {
             setRosterView(true);
             setBossView(null);
@@ -344,6 +354,7 @@ export default function AdminApp({
         </button>
         <button
           className={`nav-item nav-caps ${toolView === 'profile-completion' ? 'active' : ''}`}
+          title={t('tools.profileCompletion')}
           onClick={() => {
             setToolView('profile-completion');
             setBossView(null);
@@ -362,6 +373,7 @@ export default function AdminApp({
         <div className="section-label">{t('admin.trackerSection')}</div>
         <button
           className={`nav-item nav-caps ${bossView === 'dashboard' ? 'active' : ''}`}
+          title={t('admin.dashboard')}
           onClick={() => {
             setBossView('dashboard');
             setToolView(null);
@@ -375,6 +387,7 @@ export default function AdminApp({
         </button>
         <button
           className={`nav-item nav-caps ${bossView === 'attendance' ? 'active' : ''}`}
+          title={t('admin.attendance')}
           onClick={() => {
             setBossView('attendance');
             setToolView(null);
@@ -388,6 +401,7 @@ export default function AdminApp({
         </button>
         <button
           className={`nav-item nav-caps ${bossView === 'config' ? 'active' : ''}`}
+          title={t('admin.bossConfig')}
           onClick={() => {
             setBossView('config');
             setToolView(null);
@@ -403,6 +417,7 @@ export default function AdminApp({
         <div className="section-label">{t('tools.section')}</div>
         <button
           className={`nav-item nav-caps ${toolView === 'distribution' ? 'active' : ''}`}
+          title={t('tools.distribution')}
           onClick={() => {
             setToolView('distribution');
             setBossView(null);
@@ -419,6 +434,7 @@ export default function AdminApp({
         </button>
         <button
           className={`nav-item nav-caps ${toolView === 'cp-update' ? 'active' : ''}`}
+          title={t('tools.cpUpdate')}
           onClick={() => {
             setToolView('cp-update');
             setBossView(null);
@@ -442,6 +458,7 @@ export default function AdminApp({
               <button
                 key={tb.meta.title}
                 className={`nav-item ${!bossView && !toolView && !rosterView && tb.meta.title === tab?.meta.title ? 'active' : ''}`}
+                title={tabLabel(tb.meta.title, t, lang)}
                 onClick={() => {
                   setActiveTitle(tb.meta.title);
                   setBossView(null);
@@ -464,13 +481,13 @@ export default function AdminApp({
           <div className="section-label" style={{ paddingTop: 0 }}>
             {t('admin.signedInAs', { user: session.username })}
           </div>
-          <button className="nav-item" onClick={() => setSettingsOpen(true)}>
+          <button className="nav-item" title={t('common.settings')} onClick={() => setSettingsOpen(true)}>
             <span className="ico">
               <IconGear />
             </span>
             {t('common.settings')}
           </button>
-          <button className="nav-item" onClick={onLogout}>
+          <button className="nav-item" title={t('common.signOut')} onClick={onLogout}>
             <span className="ico">
               <IconLogout />
             </span>
@@ -483,6 +500,14 @@ export default function AdminApp({
 
       <main className="main">
         <header className="topbar">
+          <button
+            className={`collapse-btn ${collapsed ? 'collapsed' : ''}`}
+            aria-label={t(collapsed ? 'common.expand' : 'common.collapse')}
+            title={t(collapsed ? 'common.expand' : 'common.collapse')}
+            onClick={toggleSidebar}
+          >
+            <IconPanel />
+          </button>
           <button className="menu-btn" aria-label={t('common.menu')} onClick={() => setMenuOpen(true)}>
             <IconMenu />
           </button>

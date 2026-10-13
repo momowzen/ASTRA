@@ -3,7 +3,7 @@ import { MEMBER_HIDDEN_TABS } from '../types';
 import type { Column, DataResponse, Session, TabData } from '../types';
 import { buildColumns, formatCp, initials, isCpLabel, isDateLabel, isMark, MEMBER_READONLY, optionColor, timeInGuildParts, toIsoDate } from '../utils';
 import { ApiError, apiBase, saveCells } from '../api';
-import { IconClose, IconGear, IconGem, IconGrid, IconLogout, IconMenu, IconSheet, IconSparkles, IconTimer, IconUser, IconUsers } from './icons';
+import { IconClose, IconGear, IconGem, IconGrid, IconLogout, IconMenu, IconPanel, IconSheet, IconSparkles, IconTimer, IconUser, IconUsers } from './icons';
 import MemberSettingsModal from './MemberSettingsModal';
 import ProfileProgress from './ProfileProgress';
 import { DatePicker, Select } from './Dropdown';
@@ -265,6 +265,7 @@ export default function MemberApp({
   const [activeTitle, setActiveTitle] = useState('');
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [collapsed, setCollapsed] = useState(() => localStorage.getItem('astra.sidebar') === 'collapsed');
   const [jump, setJump] = useState<{ tab: string; col: number } | null>(null);
   const [rosterView, setRosterView] = useState(false);
   const [rosterCol, setRosterCol] = useState(-1);
@@ -277,6 +278,14 @@ export default function MemberApp({
 
   const { t, lang } = useLang();
   const tabText = (raw: string) => tabLabel(raw, t, lang, prettyTitle);
+
+  function toggleSidebar() {
+    setCollapsed((c) => {
+      const next = !c;
+      localStorage.setItem('astra.sidebar', next ? 'collapsed' : 'open');
+      return next;
+    });
+  }
 
   const guildDuration = (value: string): string => {
     const p = timeInGuildParts(value);
@@ -450,7 +459,7 @@ export default function MemberApp({
   const liveText = toolsView ? (toolsOnline ? t('app.live') : t('app.offline')) : liveNote;
 
   return (
-    <div className="shell shell-member">
+    <div className={`shell shell-member ${collapsed ? 'collapsed' : ''}`}>
       <aside
         className={menuOpen ? 'sidebar open' : 'sidebar'}
         onClick={(e) => {
@@ -475,6 +484,7 @@ export default function MemberApp({
         <div className="section-label">{t('member.myProfile')}</div>
         <button
           className={`nav-item ${isDashboard ? 'active' : ''}`}
+          title={t('member.profile')}
           onClick={() => selectTab('')}
         >
           <span className="ico">
@@ -486,6 +496,7 @@ export default function MemberApp({
           <button
             key={t.meta.title}
             className={`nav-item ${t.meta.title === activeTitle ? 'active' : ''}`}
+            title={tabText(t.meta.title)}
             onClick={() => selectTab(t.meta.title)}
           >
             <span className="ico">
@@ -496,7 +507,7 @@ export default function MemberApp({
         ))}
 
         <div className="section-label">{t('member.tools')}</div>
-        <button className={`nav-item ${rosterView ? 'active' : ''}`} onClick={showRoster}>
+        <button className={`nav-item ${rosterView ? 'active' : ''}`} title={t('member.roster')} onClick={showRoster}>
           <span className="ico">
             <IconUsers />
           </span>
@@ -504,6 +515,7 @@ export default function MemberApp({
         </button>
         <button
           className={`nav-item ${toolsView === 'tracker' ? 'active' : ''}`}
+          title={t('member.toolBossTracker')}
           onClick={() => showTool('tracker')}
         >
           <span className="ico">
@@ -513,6 +525,7 @@ export default function MemberApp({
         </button>
         <button
           className={`nav-item ${toolsView === 'hidden' ? 'active' : ''}`}
+          title={t('member.toolHiddenClass')}
           onClick={() => showTool('hidden')}
         >
           <span className="ico">
@@ -522,6 +535,7 @@ export default function MemberApp({
         </button>
         <button
           className={`nav-item ${toolsView === 'relic' ? 'active' : ''}`}
+          title={t('member.toolRelic')}
           onClick={() => showTool('relic')}
         >
           <span className="ico">
@@ -532,13 +546,13 @@ export default function MemberApp({
 
         <div className="spacer" />
         <div className="userbox">
-          <button className="nav-item" onClick={() => setSettingsOpen(true)}>
+          <button className="nav-item" title={t('common.settings')} onClick={() => setSettingsOpen(true)}>
             <span className="ico">
               <IconGear />
             </span>
             {t('common.settings')}
           </button>
-          <button className="nav-item" onClick={onLogout}>
+          <button className="nav-item" title={t('common.signOut')} onClick={onLogout}>
             <span className="ico">
               <IconLogout />
             </span>
@@ -551,6 +565,14 @@ export default function MemberApp({
 
       <main className="main">
         <header className="topbar">
+          <button
+            className={`collapse-btn ${collapsed ? 'collapsed' : ''}`}
+            aria-label={t(collapsed ? 'common.expand' : 'common.collapse')}
+            title={t(collapsed ? 'common.expand' : 'common.collapse')}
+            onClick={toggleSidebar}
+          >
+            <IconPanel />
+          </button>
           <button className="menu-btn" aria-label={t('common.menu')} onClick={() => setMenuOpen(true)}>
             <IconMenu />
           </button>

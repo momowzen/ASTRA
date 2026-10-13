@@ -1400,6 +1400,59 @@ table.coll td.ign-col {
 .drawer-close:hover {
   background: var(--panel-3);
 }
+.collapse-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  flex: none;
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--panel-2);
+  color: var(--text);
+  cursor: pointer;
+  transition: 0.13s ease;
+}
+.collapse-btn:hover {
+  background: var(--panel-3);
+}
+.collapse-btn svg {
+  transition: transform 0.2s ease;
+}
+.collapse-btn.collapsed svg {
+  transform: rotate(180deg);
+}
+
+.shell {
+  transition: grid-template-columns 0.2s ease;
+}
+@media (min-width: 901px) {
+  .shell.collapsed {
+    grid-template-columns: 64px 1fr;
+  }
+  .shell.collapsed .sidebar {
+    padding: 16px 8px;
+  }
+  .shell.collapsed .sidebar .brand {
+    justify-content: center;
+    padding: 4px 0 14px;
+  }
+  .shell.collapsed .sidebar .brand .name,
+  .shell.collapsed .sidebar .brand .tag {
+    display: none;
+  }
+  .shell.collapsed .sidebar .section-label {
+    display: none;
+  }
+  .shell.collapsed .nav-item {
+    font-size: 0;
+    justify-content: center;
+    gap: 0;
+    padding: 10px 0;
+  }
+}
 .main-tabs {
   display: none;
 }
@@ -1428,6 +1481,9 @@ table.coll td.ign-col {
   }
   .menu-btn {
     display: inline-flex;
+  }
+  .collapse-btn {
+    display: none;
   }
   .topbar h2 {
     order: 2;
