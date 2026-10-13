@@ -27,6 +27,7 @@ export interface DataResponse {
   ign: string;
   tabs: TabData[];
   roster?: RosterMember[];
+  leaderboard?: { ign: string; points: number }[];
   memberEdit?: boolean;
   unchanged?: boolean;
 }

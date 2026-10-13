@@ -3,7 +3,7 @@ import { MEMBER_HIDDEN_TABS } from '../types';
 import type { Column, DataResponse, Session, TabData } from '../types';
 import { buildColumns, formatCp, initials, isCpLabel, isDateLabel, isMark, MEMBER_READONLY, optionColor, timeInGuildParts, toIsoDate } from '../utils';
 import { ApiError, apiBase, saveCells } from '../api';
-import { IconClose, IconGear, IconGem, IconGrid, IconLogout, IconMenu, IconSheet, IconSparkles, IconTimer, IconUser, IconUsers } from './icons';
+import { IconClose, IconGear, IconGem, IconGrid, IconLogout, IconMenu, IconSheet, IconSparkles, IconTimer, IconTrophy, IconUser, IconUsers } from './icons';
 import MemberSettingsModal from './MemberSettingsModal';
 import ProfileProgress from './ProfileProgress';
 import { DatePicker, Select } from './Dropdown';
@@ -39,7 +39,7 @@ const ROSTER_COLS = [
 
 const ROSTER_FILTER_COLS = ROSTER_COLS.filter((c) => c.key !== 'ign');
 
-type ToolView = 'tracker' | 'hidden' | 'relic';
+type ToolView = 'attendance' | 'tracker' | 'hidden' | 'relic';
 
 interface AstraToolsApi {
   onStatusChange: ((on: boolean) => void) | null;
@@ -363,6 +363,7 @@ export default function MemberApp({
   }, [activeTitle]);
 
   const mapLang = (l: string) => (l === 'ko' || l === 'ja' || l === 'zh' ? l : 'en');
+  const viewerTool = toolsView === 'tracker' || toolsView === 'hidden' || toolsView === 'relic';
   const toolsApi = () =>
     (toolsFrameRef.current?.contentWindow as (Window & { ASTRA_TOOLS?: AstraToolsApi }) | null)
       ?.ASTRA_TOOLS;
@@ -375,11 +376,12 @@ export default function MemberApp({
     api.apiBase = apiBase();
     setToolsAlarm(!!api.alarmOn());
     api.setLang(mapLang(lang));
-    if (toolsView) api.setPage(toolsView);
+    if (viewerTool && toolsView) api.setPage(toolsView);
   }
 
   useEffect(() => {
-    if (toolsView) toolsApi()?.setPage(toolsView);
+    if (viewerTool && toolsView) toolsApi()?.setPage(toolsView);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [toolsView]);
 
   useEffect(() => {
@@ -457,8 +459,13 @@ export default function MemberApp({
     return rosterMembers.filter((m) => (m[key] || '').trim() === rosterVal);
   }, [rosterMembers, rosterCol, rosterVal]);
 
-  const liveState = toolsView ? (toolsOnline ? 'live' : 'error') : live;
-  const liveText = toolsView ? (toolsOnline ? t('app.live') : t('app.offline')) : liveNote;
+  const leaderboard = data.leaderboard ?? [];
+  const lbTop = leaderboard[0]?.points ?? 0;
+  const lbThreshold = lbTop > 0 ? Math.max(1, Math.round(lbTop * 0.3)) : 0;
+  const inBand = (p: number) => lbThreshold > 0 && p >= lbThreshold;
+
+  const liveState = viewerTool ? (toolsOnline ? 'live' : 'error') : live;
+  const liveText = viewerTool ? (toolsOnline ? t('app.live') : t('app.offline')) : liveNote;
 
   return (
     <div className="shell shell-member">
@@ -512,6 +519,15 @@ export default function MemberApp({
             <IconUsers />
           </span>
           {t('member.roster')}
+        </button>
+        <button
+          className={`nav-item ${toolsView === 'attendance' ? 'active' : ''}`}
+          onClick={() => showTool('attendance')}
+        >
+          <span className="ico">
+            <IconTrophy />
+          </span>
+          {t('member.toolAttendance')}
         </button>
         <button
           className={`nav-item ${toolsView === 'tracker' ? 'active' : ''}`}
@@ -568,11 +584,13 @@ export default function MemberApp({
           <h2>
             <span className="topbar-tab-title">
               {toolsView
-                ? toolsView === 'tracker'
-                  ? t('member.toolBossTracker')
-                  : toolsView === 'hidden'
-                    ? t('member.toolHiddenClass')
-                    : t('member.toolRelic')
+                ? toolsView === 'attendance'
+                  ? t('member.toolAttendance')
+                  : toolsView === 'tracker'
+                    ? t('member.toolBossTracker')
+                    : toolsView === 'hidden'
+                      ? t('member.toolHiddenClass')
+                      : t('member.toolRelic')
                 : rosterView
                   ? t('member.roster')
                   : isDashboard
@@ -628,6 +646,12 @@ export default function MemberApp({
               {t('member.roster')}
             </button>
             <button
+              className={`main-tab ${toolsView === 'attendance' ? 'active' : ''}`}
+              onClick={() => showTool('attendance')}
+            >
+              {t('member.toolAttendance')}
+            </button>
+            <button
               className={`main-tab ${toolsView === 'tracker' ? 'active' : ''}`}
               onClick={() => showTool('tracker')}
             >
@@ -671,7 +695,7 @@ export default function MemberApp({
           </div>
           )}
 
-          {toolsView && (
+          {viewerTool && (
             <iframe
               ref={toolsFrameRef}
               className="tools-frame"
@@ -680,6 +704,49 @@ export default function MemberApp({
               allow="autoplay"
               onLoad={onToolsLoad}
             />
+          )}
+
+          {toolsView === 'attendance' && (
+            <div className="panel-card">
+              <h3>{t('member.topContributors')}</h3>
+              <div className="table-scroll">
+                <table className="grid">
+                  <thead>
+                    <tr className="labels single">
+                      <th className="rownum">#</th>
+                      <th className="ign-col">IGN</th>
+                      <th>{t('boss.points')}</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {leaderboard.map((x, i) => {
+                      const mark = inBand(x.points);
+                      const cellCls = mark ? 'cell top-cell' : 'cell';
+                      return (
+                        <tr key={x.ign}>
+                          <td className="rownum">{i + 1}</td>
+                          <td className="ign-col">
+                            <div className={cellCls} title={mark ? t('boss.top30') : undefined}>
+                              {x.ign}
+                            </div>
+                          </td>
+                          <td>
+                            <div className={cellCls}>{x.points}</div>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                    {leaderboard.length === 0 && (
+                      <tr>
+                        <td colSpan={3}>
+                          <div className="empty">{t('boss.noAttendance')}</div>
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
           )}
 
           {rosterView && (
