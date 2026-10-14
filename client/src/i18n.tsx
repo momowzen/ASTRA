@@ -278,6 +278,8 @@ const DICT: Record<string, { en: string; ko: string; ja: string; zh: string }> =
   },
   'boss.changesInstant': { en: 'Changes save to the sheet instantly', ko: '변경 사항이 시트에 즉시 저장됩니다', ja: "変更はシートに即時保存されます", zh: '更改会立即保存到表格' },
   'boss.boss': { en: 'Boss', ko: '보스', ja: "ボス", zh: '首领' },
+  'boss.custom': { en: 'Custom', ko: '커스텀', ja: "カスタム", zh: '自定义' },
+  'boss.customPoints': { en: 'Custom points', ko: '커스텀 포인트', ja: "カスタムポイント", zh: '自定义积分' },
   'boss.level': { en: 'Level', ko: '레벨', ja: "レベル", zh: '等级' },
   'boss.respawn': { en: 'Respawn', ko: '리젠', ja: "リスポーン", zh: '重生' },
   'boss.points': { en: 'Points', ko: '포인트', ja: "ポイント", zh: '积分' },

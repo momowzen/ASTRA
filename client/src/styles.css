@@ -1853,6 +1853,16 @@ table.coll td.ign-col {
   gap: 16px;
   flex-wrap: wrap;
 }
+.att-custom {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding-bottom: 10px;
+  color: var(--muted);
+  font-size: 13px;
+  cursor: pointer;
+  user-select: none;
+}
 .att-summary {
   color: var(--muted);
   font-size: 13px;

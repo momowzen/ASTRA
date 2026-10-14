@@ -229,6 +229,8 @@ function AttendanceView({
   const [bossName, setBossName] = useState(BOSSES[0].name);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [filter, setFilter] = useState('');
+  const [custom, setCustom] = useState(false);
+  const [customPoints, setCustomPoints] = useState('1');
   const [recording, setRecording] = useState(false);
   const [scanning, setScanning] = useState(false);
   const [unmatched, setUnmatched] = useState<string[]>([]);
@@ -264,6 +266,8 @@ function AttendanceView({
   }, [roster, nickCol]);
 
   const bossPoints = pointsFor(bossName);
+  const customPts = intPoints(customPoints);
+  const effPoints = custom ? customPts : bossPoints;
   const filterQ = filter.trim().toLowerCase();
   const filtered = filterQ
     ? memberNames.filter(
@@ -314,10 +318,11 @@ function AttendanceView({
 
   async function record() {
     if (selected.size === 0) return;
+    if (custom && customPts < 1) return;
     setRecording(true);
     try {
-      await recordAttendance(bossName, bossPoints, [...selected]);
-      toast(t('boss.recordedToast', { n: selected.size, pts: bossPoints }), 'ok');
+      await recordAttendance(custom ? 'Custom' : bossName, effPoints, [...selected]);
+      toast(t('boss.recordedToast', { n: selected.size, pts: effPoints }), 'ok');
       setSelected(new Set());
     } catch (err) {
       toast(err instanceof ApiError ? err.message : t('boss.couldNotRecord'), 'err');
@@ -332,22 +337,45 @@ function AttendanceView({
         <h3>{t('boss.recordTitle')}</h3>
         <div className="att-toolbar">
           <div className="field" style={{ minWidth: 220 }}>
-            <label>{t('boss.boss')}</label>
-            <Select
-              value={bossName}
-              onChange={(v) => setBossName(v)}
-              clearable={false}
-              searchable
-              searchPlaceholder={t('boss.searchBoss')}
-              options={BOSSES.map((b) => ({
-                value: b.name,
-                label: `${bossLabel(b.name, t, lang)} — ${pointsFor(b.name)} ${pointsFor(b.name) === 1 ? t('boss.pt') : t('boss.pts')}`,
-              }))}
-            />
+            <label>{custom ? t('boss.customPoints') : t('boss.boss')}</label>
+            {custom ? (
+              <input
+                className="input"
+                type="number"
+                min="1"
+                value={customPoints}
+                onChange={(e) => setCustomPoints(e.target.value)}
+              />
+            ) : (
+              <Select
+                value={bossName}
+                onChange={(v) => setBossName(v)}
+                clearable={false}
+                searchable
+                searchPlaceholder={t('boss.searchBoss')}
+                options={BOSSES.map((b) => ({
+                  value: b.name,
+                  label: `${bossLabel(b.name, t, lang)} — ${pointsFor(b.name)} ${pointsFor(b.name) === 1 ? t('boss.pt') : t('boss.pts')}`,
+                }))}
+              />
+            )}
           </div>
+          <label className="att-custom">
+            <span className="switch">
+              <input
+                type="checkbox"
+                checked={custom}
+                onChange={(e) => setCustom(e.target.checked)}
+              />
+              <span className="switch-track">
+                <span className="switch-thumb" />
+              </span>
+            </span>
+            {t('boss.custom')}
+          </label>
           <div className="att-summary">
             <strong>{selected.size}</strong> {t('boss.selected')} ·{' '}
-            <strong>+{bossPoints * selected.size}</strong> {t('boss.ptsTotal')}
+            <strong>+{effPoints * selected.size}</strong> {t('boss.ptsTotal')}
           </div>
         </div>
 
@@ -382,7 +410,7 @@ function AttendanceView({
             {scanning ? t('boss.scanning') : t('boss.scan')}
           </button>
           <div className="grow" />
-          <button className="btn btn-primary" disabled={recording || selected.size === 0} onClick={() => void record()}>
+          <button className="btn btn-primary" disabled={recording || selected.size === 0 || (custom && customPts < 1)} onClick={() => void record()}>
             {recording ? <span className="spinner" /> : t('boss.record')}
           </button>
         </div>
