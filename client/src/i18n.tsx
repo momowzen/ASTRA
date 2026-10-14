@@ -303,7 +303,7 @@ const DICT: Record<string, { en: string; ko: string; ja: string; zh: string }> =
     ja: "スキャンで一致しなかった名前 ({n})",
     zh: '扫描未匹配的名字（{n}）',
   },
-  'boss.record': { en: 'Record attendance', ko: '출석 기록하기', ja: "出席を記録", zh: '记录出勤' },
+  'boss.record': { en: 'Record', ko: '기록', ja: "記録", zh: '记录' },
   'boss.recordedToast': {
     en: 'Recorded {n} members (+{pts} pts each)',
     ko: '{n}명의 출석을 기록했습니다 (+{pts}점씩)', ja: "{n}名の出席を記録しました（各 +{pts}pt）",

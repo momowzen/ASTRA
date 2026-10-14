@@ -409,10 +409,6 @@ function AttendanceView({
             {scanning && <span className="spinner" />}
             {scanning ? t('boss.scanning') : t('boss.scan')}
           </button>
-          <div className="grow" />
-          <button className="btn btn-primary" disabled={recording || selected.size === 0 || (custom && customPts < 1)} onClick={() => void record()}>
-            {recording ? <span className="spinner" /> : t('boss.record')}
-          </button>
         </div>
 
         {unmatched.length > 0 && (
@@ -447,6 +443,12 @@ function AttendanceView({
               {t('boss.noMembersMatch')}
             </div>
           )}
+        </div>
+
+        <div className="att-footer">
+          <button className="btn btn-primary" disabled={recording || selected.size === 0 || (custom && customPts < 1)} onClick={() => void record()}>
+            {recording ? <span className="spinner" /> : t('boss.record')}
+          </button>
         </div>
       </div>
     </div>

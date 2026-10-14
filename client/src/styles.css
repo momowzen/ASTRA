@@ -629,7 +629,8 @@ select option {
   .content-fit .boss-view > .stat-row,
   .content-fit .boss-view h3,
   .content-fit .boss-view .att-toolbar,
-  .content-fit .boss-view .att-actions {
+  .content-fit .boss-view .att-actions,
+  .content-fit .boss-view .att-footer {
     flex: none;
   }
   .content-fit .boss-view .att-picker {
@@ -1873,6 +1874,11 @@ table.coll td.ign-col {
   align-items: center;
   gap: 8px;
   flex-wrap: wrap;
+  margin-top: 14px;
+}
+.att-footer {
+  display: flex;
+  justify-content: flex-end;
   margin-top: 14px;
 }
 .att-unmatched {
