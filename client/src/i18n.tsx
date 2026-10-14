@@ -545,6 +545,7 @@ const DICT: Record<string, { en: string; ko: string; ja: string; zh: string }> =
   'boss.nevaeh': { en: 'Nevaeh', ko: '네바', ja: "ネバ", zh: '内瓦' },
   'boss.tumier': { en: 'Tumier', ko: '투미어', ja: "トゥミエル", zh: '图米尔' },
   'boss.lucus': { en: 'Lucus', ko: '루크스', ja: "ルクス", zh: '卢克斯' },
+  'boss.nerucas': { en: 'Nerucas', ko: '네루카스', ja: "ネルカス", zh: '涅鲁卡斯' },
   'boss.azzamHissan': { en: 'Azzam Hissan', ko: '아잠 히산', ja: "アザム・ヒサン", zh: '阿扎姆·希桑' },
   'boss.serad': { en: 'Serad', ko: '세라드', ja: "セラド", zh: '塞拉德' },
   'boss.serbis': { en: 'Serbis', ko: '세르비스', ja: "セルビス", zh: '塞尔比斯' },

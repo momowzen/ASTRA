@@ -102,6 +102,7 @@ export const BOSS_KEYS: Record<string, string> = {
   NEVAEH: 'boss.nevaeh',
   TUMIER: 'boss.tumier',
   LUCUS: 'boss.lucus',
+  NERUCAS: 'boss.nerucas',
   'AZZAM HISSAN': 'boss.azzamHissan',
   SERAD: 'boss.serad',
   SERBIS: 'boss.serbis',
