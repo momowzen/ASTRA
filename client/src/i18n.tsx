@@ -54,7 +54,7 @@ const DICT: Record<string, { en: string; ko: string; ja: string; zh: string }> =
   'admin.rosterSection': { en: 'Guild Roster', ko: '길드 로스터', ja: "ギルドロスター", zh: '公会名单' },
   'admin.rosterOverview': { en: 'Overview', ko: '개요', ja: "概要", zh: '概览' },
   'admin.tag': { en: 'Admin', ko: '관리자', ja: "管理者", zh: '管理员' },
-  'admin.dashboard': { en: 'Dashboard', ko: '대시보드', ja: "ダッシュボード", zh: '仪表板' },
+  'admin.dashboard': { en: 'Ranking', ko: '순위', ja: "ランキング", zh: '排名' },
   'admin.attendance': { en: 'Attendance', ko: '출석', ja: "出席", zh: '出勤' },
   'admin.bossConfig': { en: 'Boss Config', ko: '보스 설정', ja: "ボス設定", zh: '首领配置' },
   'admin.sheetTabs': { en: 'Sheet tabs', ko: '시트 탭', ja: "シートタブ", zh: '表格标签页' },
