@@ -38,6 +38,6 @@ export const BOSS_NAMES: string[] = [
   'Camalia',
   'Nevaeh',
   'Tumier',
-  'Lucus',
   'Nerucas',
+  'Lucus',
 ];

@@ -51,8 +51,8 @@
   {id:"Camalia",name:"Camalia",lvl:135,wr:[{d:4,h:22,m:0}]},
   {id:"Nevaeh",name:"Nevaeh",lvl:140,wr:[{d:0,h:23,m:0}]},
   {id:"Tumier",name:"Tumier",lvl:140,wr:[{d:0,h:20,m:0}]},
-  {id:"Lucus",name:"Lucus",lvl:145,wr:[{d:6,h:23,m:0}]},
-  {id:"Nerucas",name:"Nerucas",lvl:140,wr:[{d:0,h:17,m:0}]}
+  {id:"Nerucas",name:"Nerucas",lvl:140,wr:[{d:0,h:17,m:0}]},
+  {id:"Lucus",name:"Lucus",lvl:145,wr:[{d:6,h:23,m:0}]}
 ];
 
     const LOCS={
