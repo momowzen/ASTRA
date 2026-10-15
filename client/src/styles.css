@@ -28,15 +28,15 @@
   --success: #35d39a;
   --danger: #e35d6a;
 
-  /* Glass tiers (depth, not uniform) */
-  --glass-1: rgba(11, 15, 30, 0.66);
-  --glass-2: rgba(15, 20, 40, 0.55);
-  --glass-3: rgba(26, 32, 58, 0.4);
-  --glass-hover: rgba(28, 34, 62, 0.62);
-  --glass-border: rgba(255, 255, 255, 0.1);
-  --glass-border-strong: rgba(255, 255, 255, 0.16);
-  --glass-blur: 18px;
-  --glass-blur-strong: 26px;
+  /* Glass tiers (depth, not uniform) — dark, see-through */
+  --glass-1: rgba(11, 15, 30, 0.42);
+  --glass-2: rgba(15, 20, 40, 0.3);
+  --glass-3: rgba(26, 32, 58, 0.28);
+  --glass-hover: rgba(28, 34, 62, 0.42);
+  --glass-border: rgba(255, 255, 255, 0.12);
+  --glass-border-strong: rgba(255, 255, 255, 0.18);
+  --glass-blur: 8px;
+  --glass-blur-strong: 12px;
   --glass-shadow: 0 20px 60px rgba(0, 0, 0, 0.35);
   --glass-highlight: inset 0 1px 0 rgba(255, 255, 255, 0.06);
   --glow-purple: 0 0 0 1px rgba(139, 111, 247, 0.35), 0 0 26px rgba(139, 111, 247, 0.18);
@@ -2837,14 +2837,14 @@ body {
     radial-gradient(760px 520px at -8% 112%, rgba(102, 119, 255, 0.07), transparent 62%);
 }
 #root .sidebar {
-  background: linear-gradient(180deg, rgba(12, 16, 32, 0.74), rgba(9, 13, 24, 0.62));
+  background: linear-gradient(180deg, rgba(11, 15, 30, 0.46), rgba(8, 11, 22, 0.34));
   backdrop-filter: blur(var(--glass-blur-strong)) saturate(1.25);
   -webkit-backdrop-filter: blur(var(--glass-blur-strong)) saturate(1.25);
   border-right: 1px solid var(--glass-border);
   box-shadow: 26px 0 70px -46px rgba(0, 0, 0, 0.9);
 }
 #root .topbar {
-  background: rgba(9, 13, 25, 0.62);
+  background: rgba(9, 13, 24, 0.38);
   backdrop-filter: blur(var(--glass-blur-strong)) saturate(1.2);
   -webkit-backdrop-filter: blur(var(--glass-blur-strong)) saturate(1.2);
   border-bottom: 1px solid var(--glass-border);
