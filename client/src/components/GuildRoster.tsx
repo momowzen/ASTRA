@@ -138,8 +138,8 @@ export default function GuildRoster({ data }: Props) {
     }));
   }, [withCp, t]);
 
-  const top10 = useMemo(
-    () => [...withCp].sort((a, b) => b.cp - a.cp || a.ign.localeCompare(b.ign)).slice(0, 10),
+  const cpRank = useMemo(
+    () => [...withCp].sort((a, b) => b.cp - a.cp || a.ign.localeCompare(b.ign)),
     [withCp],
   );
 
@@ -227,7 +227,7 @@ export default function GuildRoster({ data }: Props) {
 
       <div className="table-card roster-top">
         <div className="table-meta">
-          <span>{t('roster.topMeta')}</span>
+          <span>{t('roster.cpRank')}</span>
         </div>
         <div className="table-scroll">
           <table className="grid">
@@ -239,7 +239,7 @@ export default function GuildRoster({ data }: Props) {
               </tr>
             </thead>
             <tbody>
-              {top10.map((m, i) => (
+              {cpRank.map((m, i) => (
                 <tr key={m.ign}>
                   <td className="rownum">{i + 1}</td>
                   <td className="ign-col">
@@ -250,7 +250,7 @@ export default function GuildRoster({ data }: Props) {
                   </td>
                 </tr>
               ))}
-              {top10.length === 0 && (
+              {cpRank.length === 0 && (
                 <tr>
                   <td colSpan={3}>
                     <div className="empty">{t('roster.noCp')}</div>

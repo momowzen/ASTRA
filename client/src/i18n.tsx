@@ -242,7 +242,7 @@ const DICT: Record<string, { en: string; ko: string; ja: string; zh: string }> =
   'roster.bracket3': { en: '150K – 175K', ko: '150K – 175K', ja: "150K – 175K", zh: '150K – 175K' },
   'roster.bracket4': { en: '175K – 200K', ko: '175K – 200K', ja: "175K – 200K", zh: '175K – 200K' },
   'roster.bracket5': { en: '≥ 200K', ko: '≥ 200K', ja: "≥ 200K", zh: '≥ 200K' },
-  'roster.topMeta': { en: 'TOP 10 CP', ko: 'TOP 10 CP', ja: "TOP 10 CP", zh: 'TOP 10 CP' },
+  'roster.cpRank': { en: 'CP Rankings', ko: 'CP 순위', ja: "CPランキング", zh: 'CP 排名' },
   'roster.cp': { en: 'CP', ko: 'CP', ja: "CP", zh: 'CP' },
   'roster.mainWeapon': { en: 'Main Weapon', ko: '메인 무기', ja: "メイン武器", zh: '主武器' },
   'roster.role': { en: 'Role', ko: '역할', ja: "役割", zh: '角色' },

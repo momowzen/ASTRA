@@ -1805,27 +1805,42 @@ table.coll td.ign-col {
 .roster-top {
   min-width: 0;
 }
+.roster-top .table-scroll {
+  max-height: calc(100vh - 220px);
+  overflow-y: auto;
+}
 
-@media (max-width: 900px) {
+@media (min-width: 901px) and (max-width: 1439px) {
+  .roster-view .stat-row .stat-card {
+    min-width: 120px;
+  }
+}
+
+@media (max-width: 1439px) {
   .roster-summaries > .panel-card:last-child:nth-child(odd) {
     grid-column: 1 / -1;
   }
 }
 
-@media (min-width: 901px) {
-  .content-fit .roster-view {
+@media (min-width: 1440px) {
+  .content-roster {
+    flex: none;
+    height: calc(100vh - var(--topbar-h, 66px));
+    overflow: hidden;
+  }
+  .content-roster > .roster-view {
     flex: 1;
     min-height: 0;
     overflow: hidden;
   }
-  .content-fit .roster-view .stat-row {
+  .content-roster .roster-view .stat-row {
     flex: none;
     margin: 0;
     padding: 0;
   }
   .roster-main {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) 360px;
+    grid-template-columns: minmax(0, 1fr) 320px;
     flex: 1;
     min-height: 0;
   }
