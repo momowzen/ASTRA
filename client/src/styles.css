@@ -2341,6 +2341,9 @@ button.completion-ign:hover {
   border-bottom: 1px solid var(--line-soft);
   gap: 12px;
 }
+.roster-panel .roster-filter h3 {
+  margin: 0;
+}
 .roster-panel .table-scroll {
   flex: 1;
   min-height: 0;

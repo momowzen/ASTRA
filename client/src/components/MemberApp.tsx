@@ -751,9 +751,8 @@ export default function MemberApp({
 
           {rosterView && (
             <div className="panel-card roster-panel">
-              <h3>{t('member.roster')}</h3>
               <div className="table-meta roster-filter">
-                <span>{t('member.membersCount', { a: rosterRows.length })}</span>
+                <h3>{t('member.roster')}</h3>
                 <div className="table-meta-right">
                   <Select
                     value={String(rosterCol)}
