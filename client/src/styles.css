@@ -28,17 +28,17 @@
   --success: #35d39a;
   --danger: #e35d6a;
 
-  /* Glass tiers (depth, not uniform) — dark, see-through */
-  --glass-1: rgba(11, 15, 30, 0.42);
-  --glass-2: rgba(15, 20, 40, 0.3);
-  --glass-3: rgba(26, 32, 58, 0.28);
-  --glass-hover: rgba(28, 34, 62, 0.42);
-  --glass-border: rgba(255, 255, 255, 0.12);
-  --glass-border-strong: rgba(255, 255, 255, 0.18);
-  --glass-blur: 8px;
-  --glass-blur-strong: 12px;
-  --glass-shadow: 0 20px 60px rgba(0, 0, 0, 0.35);
-  --glass-highlight: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  /* Glass tiers — same technique as the ASTRA Web Viewer: plain transparency, no blur */
+  --glass-1: rgba(15, 23, 42, 0.5);
+  --glass-2: rgba(15, 23, 42, 0.4);
+  --glass-3: rgba(20, 28, 48, 0.35);
+  --glass-hover: rgba(30, 40, 64, 0.5);
+  --glass-border: rgba(148, 163, 184, 0.1);
+  --glass-border-strong: rgba(148, 163, 184, 0.16);
+  --glass-blur: 0px;
+  --glass-blur-strong: 0px;
+  --glass-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+  --glass-highlight: inset 0 1px 0 rgba(255, 255, 255, 0.04);
   --glow-purple: 0 0 0 1px rgba(139, 111, 247, 0.35), 0 0 26px rgba(139, 111, 247, 0.18);
   --glow-gold: 0 0 0 1px rgba(214, 168, 92, 0.38), 0 0 24px rgba(214, 168, 92, 0.16);
   --ease: cubic-bezier(0.2, 0.7, 0.2, 1);
@@ -329,7 +329,7 @@ select option {
   border-radius: 20px;
   padding: 36px 32px;
   box-shadow: var(--shadow);
-  backdrop-filter: blur(18px);
+  backdrop-filter: blur(0px);
   position: relative;
   z-index: 1;
 }
@@ -501,7 +501,7 @@ select option {
   padding: 16px 22px;
   border-bottom: 1px solid var(--line-soft);
   background: rgba(10, 14, 26, 0.75);
-  backdrop-filter: blur(10px);
+  backdrop-filter: blur(0px);
   position: sticky;
   top: 0;
   z-index: 30;
@@ -1268,7 +1268,7 @@ table.coll td.ign-col {
   position: fixed;
   inset: 0;
   background: rgba(4, 6, 12, 0.7);
-  backdrop-filter: blur(4px);
+  backdrop-filter: blur(0px);
   display: grid;
   place-items: center;
   z-index: 100;
@@ -1520,7 +1520,7 @@ table.coll td.ign-col {
     inset: 0;
     z-index: 70;
     background: rgba(4, 6, 12, 0.55);
-    backdrop-filter: blur(2px);
+    backdrop-filter: blur(0px);
     animation: fade 0.15s ease;
   }
 
@@ -2833,20 +2833,21 @@ body {
 }
 #root .main {
   background:
-    radial-gradient(1000px 460px at 82% -12%, rgba(139, 111, 247, 0.1), transparent 60%),
-    radial-gradient(760px 520px at -8% 112%, rgba(102, 119, 255, 0.07), transparent 62%);
+    radial-gradient(ellipse 80% 50% at 50% -10%, rgba(139, 111, 247, 0.2), transparent 60%),
+    radial-gradient(ellipse 60% 45% at 15% 88%, rgba(34, 211, 238, 0.08), transparent 60%),
+    radial-gradient(ellipse 55% 55% at 88% 62%, rgba(214, 168, 92, 0.07), transparent 62%);
 }
 #root .sidebar {
-  background: linear-gradient(180deg, rgba(11, 15, 30, 0.46), rgba(8, 11, 22, 0.34));
-  backdrop-filter: blur(var(--glass-blur-strong)) saturate(1.25);
-  -webkit-backdrop-filter: blur(var(--glass-blur-strong)) saturate(1.25);
+  background: linear-gradient(180deg, rgba(15, 23, 42, 0.55), rgba(10, 15, 28, 0.45));
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
   border-right: 1px solid var(--glass-border);
   box-shadow: 26px 0 70px -46px rgba(0, 0, 0, 0.9);
 }
 #root .topbar {
-  background: rgba(9, 13, 24, 0.38);
-  backdrop-filter: blur(var(--glass-blur-strong)) saturate(1.2);
-  -webkit-backdrop-filter: blur(var(--glass-blur-strong)) saturate(1.2);
+  background: rgba(15, 23, 42, 0.5);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
   border-bottom: 1px solid var(--glass-border);
   box-shadow: 0 18px 40px -32px rgba(0, 0, 0, 0.85);
 }
@@ -2892,14 +2893,14 @@ body {
 #root .toolbar .input {
   background: var(--glass-3);
   border-color: var(--glass-border);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(0px);
+  -webkit-backdrop-filter: blur(0px);
 }
 #root .live {
   background: rgba(12, 16, 32, 0.72);
   border: 1px solid var(--glass-border);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(0px);
+  -webkit-backdrop-filter: blur(0px);
 }
 #root .main-tabs {
   background: transparent;
@@ -2924,8 +2925,8 @@ body {
 #root .btn {
   background: var(--glass-3);
   border: 1px solid var(--glass-border);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(0px);
+  -webkit-backdrop-filter: blur(0px);
   transition: background-color 0.15s var(--ease), border-color 0.15s var(--ease),
     transform 0.15s var(--ease), box-shadow 0.15s var(--ease);
 }
@@ -2962,8 +2963,8 @@ body {
 #root .dd-trigger {
   background: var(--glass-3);
   border: 1px solid var(--glass-border);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(0px);
+  -webkit-backdrop-filter: blur(0px);
   transition: border-color 0.15s var(--ease), box-shadow 0.15s var(--ease), background-color 0.15s var(--ease);
 }
 #root .input:focus,
@@ -2994,8 +2995,8 @@ body {
 }
 #root thead th {
   background: rgba(10, 14, 26, 0.92);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(0px);
+  -webkit-backdrop-filter: blur(0px);
   color: #b9c1de;
   border-bottom: 1px solid var(--glass-border);
 }
@@ -3068,8 +3069,8 @@ body {
 /* ---- Modals / overlays / toasts / settings ---- */
 #root .overlay {
   background: rgba(3, 5, 11, 0.66);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(0px);
+  -webkit-backdrop-filter: blur(0px);
 }
 #root .modal {
   background: linear-gradient(180deg, rgba(20, 26, 48, 0.82), rgba(13, 17, 32, 0.86));
@@ -3088,8 +3089,8 @@ body {
 #root .settings-item {
   background: var(--glass-3);
   border: 1px solid var(--glass-border);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(0px);
+  -webkit-backdrop-filter: blur(0px);
 }
 #root .settings-item:hover {
   background: var(--glass-hover);
@@ -3144,8 +3145,8 @@ body {
 #root .badge {
   background: var(--glass-3);
   border: 1px solid var(--glass-border);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(0px);
+  -webkit-backdrop-filter: blur(0px);
 }
 #root .badge.gold {
   border-color: rgba(214, 168, 92, 0.5);
@@ -3168,8 +3169,8 @@ body {
 #root .att-row {
   background: var(--glass-3);
   border: 1px solid var(--glass-border);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(0px);
+  -webkit-backdrop-filter: blur(0px);
 }
 #root .att-row:hover {
   background: var(--glass-hover);
