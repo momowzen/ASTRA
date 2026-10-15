@@ -1769,8 +1769,7 @@ table.coll td.ign-col {
   z-index: 20;
   margin: -22px -12px -12px;
   padding: 12px;
-  background: rgba(7, 10, 18, 0.85);
-  backdrop-filter: blur(10px);
+  background: transparent;
   border-radius: var(--radius);
 }
 
