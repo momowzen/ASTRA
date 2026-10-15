@@ -673,7 +673,7 @@ export default function MemberApp({
         </header>
 
         <div className="content">
-          {!toolsView && (
+          {!toolsView && !rosterView && (
           <div className="profile-hero">
             <div className="avatar">{initials(session.ign)}</div>
             <div className="id">
