@@ -168,7 +168,7 @@ export default function AdminApp({
     el?.scrollIntoView({ inline: 'center', block: 'nearest' });
   }, [activeTitle, rosterView, bossView, toolView]);
 
-  const fit = toolView === 'distribution' || toolView === 'cp-update' || toolView === 'profile-completion' || bossView !== null || (!rosterView && !bossView && !toolView);
+  const fit = rosterView || toolView === 'distribution' || toolView === 'cp-update' || toolView === 'profile-completion' || bossView !== null || (!rosterView && !bossView && !toolView);
 
   useLayoutEffect(() => {
     const el = document.querySelector<HTMLElement>('.topbar');

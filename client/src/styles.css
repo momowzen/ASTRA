@@ -1789,6 +1789,90 @@ table.coll td.ign-col {
 .roster-split .panel-card + .panel-card {
   margin-top: 0;
 }
+
+.roster-main {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0;
+}
+.roster-left {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0;
+}
+.roster-top {
+  min-width: 0;
+}
+
+@media (max-width: 900px) {
+  .roster-summaries > .panel-card:last-child:nth-child(odd) {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (min-width: 901px) {
+  .content-fit .roster-view {
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
+  }
+  .content-fit .roster-view .stat-row {
+    flex: none;
+    margin: 0;
+    padding: 0;
+  }
+  .roster-main {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 360px;
+    flex: 1;
+    min-height: 0;
+  }
+  .roster-left {
+    display: grid;
+    grid-template-rows: minmax(0, 1fr) minmax(0, 1fr);
+    min-height: 0;
+  }
+  .roster-summaries {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    min-height: 0;
+  }
+  .roster-split {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    min-height: 0;
+  }
+  .roster-summaries > .panel-card,
+  .roster-split > .panel-card {
+    min-height: 0;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+  .roster-summaries .dist-list,
+  .roster-split .dist-list {
+    overflow-y: auto;
+    min-height: 0;
+  }
+  .roster-summaries .dist-row {
+    grid-template-columns: minmax(0, 116px) minmax(24px, 1fr) 40px;
+    gap: 8px;
+  }
+  .roster-top {
+    min-height: 0;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+  .roster-top .table-meta {
+    flex: none;
+  }
+  .roster-top .table-scroll {
+    flex: 1;
+    min-height: 0;
+    max-height: none;
+  }
+}
 .roster-summary-meta {
   font-size: 13px;
 }

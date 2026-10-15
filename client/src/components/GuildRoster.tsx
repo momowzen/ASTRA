@@ -196,6 +196,8 @@ export default function GuildRoster({ data }: Props) {
         </div>
       </div>
 
+      <div className="roster-main">
+      <div className="roster-left">
       <div className="roster-summaries">
         <SummaryPanel titleKey="roster.mainWeapon" data={weaponSummary} />
         <SummaryPanel titleKey="roster.role" data={roleSummary} />
@@ -221,8 +223,9 @@ export default function GuildRoster({ data }: Props) {
           )}
         </div>
       </div>
+      </div>
 
-      <div className="table-card">
+      <div className="table-card roster-top">
         <div className="table-meta">
           <span>{t('roster.topMeta')}</span>
         </div>
@@ -257,6 +260,7 @@ export default function GuildRoster({ data }: Props) {
             </tbody>
           </table>
         </div>
+      </div>
       </div>
     </div>
   );
