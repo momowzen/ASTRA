@@ -3,6 +3,8 @@ import type { DataResponse, TabData } from '../types';
 import { buildColumns, formatCp } from '../utils';
 import { useLang } from '../i18n';
 import { valueLabel } from '../display';
+import AnimatedNumber from './AnimatedNumber';
+import { IconGem, IconSparkles, IconTrophy, IconUsers } from './icons';
 
 interface Props {
   data: DataResponse;
@@ -167,20 +169,30 @@ export default function GuildRoster({ data }: Props) {
     <div className="roster-view">
       <div className="stat-row" style={{ top: topOffset }}>
         <div className="stat-card">
+          <span className="stat-ico"><IconUsers /></span>
           <div className="stat-label">{t('roster.members')}</div>
-          <div className="stat-value">{members.length}</div>
+          <div className="stat-value"><AnimatedNumber value={members.length} /></div>
         </div>
         <div className="stat-card">
+          <span className="stat-ico"><IconGem /></span>
           <div className="stat-label">{t('roster.totalCp')}</div>
-          <div className="stat-value">{withCp.length ? formatCp(String(stats.total)) : '—'}</div>
+          <div className="stat-value">
+            {withCp.length ? <AnimatedNumber value={stats.total} format={(n) => formatCp(String(n))} /> : '—'}
+          </div>
         </div>
         <div className="stat-card">
+          <span className="stat-ico"><IconSparkles /></span>
           <div className="stat-label">{t('roster.avgCp')}</div>
-          <div className="stat-value">{withCp.length ? formatCp(String(stats.avg)) : '—'}</div>
+          <div className="stat-value">
+            {withCp.length ? <AnimatedNumber value={stats.avg} format={(n) => formatCp(String(n))} /> : '—'}
+          </div>
         </div>
         <div className="stat-card">
+          <span className="stat-ico"><IconTrophy /></span>
           <div className="stat-label">{t('roster.topCp')}</div>
-          <div className="stat-value">{withCp.length ? formatCp(String(stats.top)) : '—'}</div>
+          <div className="stat-value">
+            {withCp.length ? <AnimatedNumber value={stats.top} format={(n) => formatCp(String(n))} /> : '—'}
+          </div>
         </div>
       </div>
 

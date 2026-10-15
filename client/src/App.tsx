@@ -7,6 +7,7 @@ import type { Lang } from './i18n';
 import Login from './components/Login';
 import AdminApp from './components/AdminApp';
 import MemberApp from './components/MemberApp';
+import Background from './components/Background';
 
 const POLL_MS = 4000;
 const WRITE_QUIET_MS = 12000;
@@ -228,6 +229,7 @@ export default function App() {
 
   return (
     <LangProvider lang={lang} setLang={setLangPersist}>
+      <Background />
       {body}
       <Toasts items={toasts} />
     </LangProvider>

@@ -1,25 +1,47 @@
 :root {
   color-scheme: dark;
-  --bg: #070a12;
-  --bg-2: #0a0e1a;
-  --panel: #10162a;
-  --panel-2: #151d33;
+  --bg: #080b14;
+  --bg-2: #0c1020;
+  --panel: #0f1424;
+  --panel-2: #141b2f;
   --panel-3: #1a2340;
   --line: #232c4a;
   --line-soft: #1b2340;
   --text: #e9edfb;
-  --muted: #8d97b8;
+  --muted: #94a2c0;
   --faint: #5d6787;
-  --accent: #8b7cff;
-  --accent-2: #f5b942;
-  --green: #3ddc97;
-  --red: #ff6b7a;
-  --blue: #58a6ff;
+  --accent: #8b6ff7;
+  --accent-2: #d6a85c;
+  --green: #35d39a;
+  --red: #e35d6a;
+  --blue: #6677ff;
   --shadow: 0 24px 60px rgba(0, 0, 0, 0.45);
   --radius: 14px;
   --radius-sm: 9px;
   --font: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
   --display: 'Sora', 'Inter', system-ui, sans-serif;
+
+  /* ASTRA identity */
+  --astra-purple: #8b6ff7;
+  --astra-blue: #6677ff;
+  --astra-gold: #d6a85c;
+  --success: #35d39a;
+  --danger: #e35d6a;
+
+  /* Glass tiers (depth, not uniform) */
+  --glass-1: rgba(11, 15, 30, 0.66);
+  --glass-2: rgba(15, 20, 40, 0.55);
+  --glass-3: rgba(26, 32, 58, 0.4);
+  --glass-hover: rgba(28, 34, 62, 0.62);
+  --glass-border: rgba(255, 255, 255, 0.1);
+  --glass-border-strong: rgba(255, 255, 255, 0.16);
+  --glass-blur: 18px;
+  --glass-blur-strong: 26px;
+  --glass-shadow: 0 20px 60px rgba(0, 0, 0, 0.35);
+  --glass-highlight: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  --glow-purple: 0 0 0 1px rgba(139, 111, 247, 0.35), 0 0 26px rgba(139, 111, 247, 0.18);
+  --glow-gold: 0 0 0 1px rgba(214, 168, 92, 0.38), 0 0 24px rgba(214, 168, 92, 0.16);
+  --ease: cubic-bezier(0.2, 0.7, 0.2, 1);
 }
 
 * {
@@ -2774,4 +2796,559 @@ table.grid.roster-grid td.ign-col {
 }
 .switch input:disabled + .switch-track {
   opacity: 0.6;
+}
+
+/* ============================================================
+   ASTRA COMMAND CENTER — celestial WORLD + glass COMMAND INTERFACE
+   (additive layer; only visual properties, so layout/responsive stay intact)
+   ============================================================ */
+
+/* ---- World: star canvas + vignette behind everything ---- */
+#bg-canvas {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  pointer-events: none;
+  z-index: -1;
+}
+.vignette {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background: radial-gradient(ellipse 82% 78% at 50% 44%, rgba(4, 6, 12, 0) 58%, rgba(2, 3, 7, 0.62) 100%);
+}
+#root {
+  position: relative;
+}
+html {
+  background: #080b14;
+}
+body {
+  background: transparent;
+}
+
+/* ---- Surfaces become glass so the world reads through ---- */
+#root .shell {
+  background: transparent;
+}
+#root .main {
+  background:
+    radial-gradient(1000px 460px at 82% -12%, rgba(139, 111, 247, 0.1), transparent 60%),
+    radial-gradient(760px 520px at -8% 112%, rgba(102, 119, 255, 0.07), transparent 62%);
+}
+#root .sidebar {
+  background: linear-gradient(180deg, rgba(12, 16, 32, 0.74), rgba(9, 13, 24, 0.62));
+  backdrop-filter: blur(var(--glass-blur-strong)) saturate(1.25);
+  -webkit-backdrop-filter: blur(var(--glass-blur-strong)) saturate(1.25);
+  border-right: 1px solid var(--glass-border);
+  box-shadow: 26px 0 70px -46px rgba(0, 0, 0, 0.9);
+}
+#root .topbar {
+  background: rgba(9, 13, 25, 0.62);
+  backdrop-filter: blur(var(--glass-blur-strong)) saturate(1.2);
+  -webkit-backdrop-filter: blur(var(--glass-blur-strong)) saturate(1.2);
+  border-bottom: 1px solid var(--glass-border);
+  box-shadow: 0 18px 40px -32px rgba(0, 0, 0, 0.85);
+}
+
+/* ---- Sidebar: brand + navigation ---- */
+#root .brand .name {
+  letter-spacing: 0.02em;
+  text-shadow: 0 0 24px rgba(139, 111, 247, 0.45);
+}
+#root .sidebar .section-label {
+  color: rgba(148, 162, 192, 0.62);
+  letter-spacing: 0.2em;
+}
+#root .nav-item {
+  border-radius: 11px;
+  color: var(--muted);
+  border-color: transparent;
+  transition: background-color 0.18s var(--ease), color 0.18s var(--ease),
+    border-color 0.18s var(--ease), box-shadow 0.18s var(--ease);
+}
+#root .nav-item:hover {
+  background: var(--glass-3);
+  border-color: var(--glass-border);
+  color: var(--text);
+}
+#root .nav-item.active {
+  background: linear-gradient(135deg, rgba(139, 111, 247, 0.24), rgba(139, 111, 247, 0.05));
+  border-color: rgba(139, 111, 247, 0.5);
+  color: #fff;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.07), 0 0 26px rgba(139, 111, 247, 0.2);
+}
+#root .nav-item.active .ico {
+  color: var(--accent);
+  filter: drop-shadow(0 0 8px rgba(139, 111, 247, 0.6));
+}
+#root .sidebar .userbox {
+  border-top-color: var(--glass-border);
+}
+
+/* ---- Topbar controls ---- */
+#root .search .input,
+#root .col-filter .select,
+#root .toolbar .input {
+  background: var(--glass-3);
+  border-color: var(--glass-border);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+#root .live {
+  background: rgba(12, 16, 32, 0.72);
+  border: 1px solid var(--glass-border);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+#root .main-tabs {
+  background: transparent;
+  border: 0;
+}
+#root .main-tab {
+  border-radius: 999px;
+  border: 1px solid transparent;
+}
+#root .main-tab:hover {
+  background: var(--glass-3);
+  color: var(--text);
+}
+#root .main-tab.active {
+  background: linear-gradient(135deg, rgba(139, 111, 247, 0.26), rgba(139, 111, 247, 0.08));
+  border-color: rgba(139, 111, 247, 0.5);
+  color: #fff;
+  box-shadow: 0 0 22px rgba(139, 111, 247, 0.2);
+}
+
+/* ---- Buttons ---- */
+#root .btn {
+  background: var(--glass-3);
+  border: 1px solid var(--glass-border);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  transition: background-color 0.15s var(--ease), border-color 0.15s var(--ease),
+    transform 0.15s var(--ease), box-shadow 0.15s var(--ease);
+}
+#root .btn:hover {
+  background: var(--glass-hover);
+  border-color: var(--glass-border-strong);
+  box-shadow: 0 10px 26px -16px rgba(0, 0, 0, 0.9);
+}
+#root .btn-primary {
+  background: linear-gradient(135deg, #9078ff, #6f5bf0);
+  border-color: rgba(255, 255, 255, 0.14);
+  box-shadow: 0 10px 28px -12px rgba(139, 111, 247, 0.75), inset 0 1px 0 rgba(255, 255, 255, 0.22);
+}
+#root .btn-primary:hover {
+  background: linear-gradient(135deg, #9c86ff, #7a66ff);
+  box-shadow: 0 14px 34px -12px rgba(139, 111, 247, 0.9), inset 0 1px 0 rgba(255, 255, 255, 0.26);
+}
+#root .btn-gold {
+  background: linear-gradient(135deg, #e0b86c, #c99a3f);
+  color: #1a1405;
+  box-shadow: 0 10px 26px -14px rgba(214, 168, 92, 0.8);
+}
+#root .btn-danger {
+  border-color: rgba(227, 93, 106, 0.45);
+  background: rgba(227, 93, 106, 0.14);
+}
+#root .btn-danger:hover {
+  background: rgba(227, 93, 106, 0.22);
+}
+
+/* ---- Inputs / selects / fields ---- */
+#root .input,
+#root .select,
+#root .dd-trigger {
+  background: var(--glass-3);
+  border: 1px solid var(--glass-border);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  transition: border-color 0.15s var(--ease), box-shadow 0.15s var(--ease), background-color 0.15s var(--ease);
+}
+#root .input:focus,
+#root .select:focus,
+#root .dd-trigger:focus-visible,
+#root .dd-trigger.open {
+  border-color: rgba(139, 111, 247, 0.6);
+  box-shadow: 0 0 0 3px rgba(139, 111, 247, 0.18);
+  outline: none;
+}
+
+/* ---- Glass panels / cards / tables ---- */
+#root .panel-card,
+#root .table-card,
+#root .completion-panel,
+#root .announce,
+#root .profile-panel {
+  background: var(--glass-2);
+  backdrop-filter: blur(var(--glass-blur)) saturate(1.15);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(1.15);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-shadow), var(--glass-highlight);
+}
+#root .panel-card h3,
+#root .table-card h3 {
+  color: #eef1ff;
+  letter-spacing: -0.01em;
+}
+#root thead th {
+  background: rgba(10, 14, 26, 0.92);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  color: #b9c1de;
+  border-bottom: 1px solid var(--glass-border);
+}
+#root .grid tbody tr:hover td,
+#root table.grid tbody tr:hover td {
+  background: rgba(139, 111, 247, 0.07);
+}
+#root .empty {
+  color: var(--muted);
+}
+
+/* ---- KPI / stat cards ---- */
+#root .stat-card {
+  position: relative;
+  background: var(--glass-2);
+  backdrop-filter: blur(var(--glass-blur)) saturate(1.15);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(1.15);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-shadow), var(--glass-highlight);
+  overflow: hidden;
+  transition: transform 0.18s var(--ease), border-color 0.18s var(--ease), box-shadow 0.18s var(--ease);
+}
+#root .stat-card::before {
+  content: '';
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 3px;
+  background: linear-gradient(180deg, var(--astra-purple), transparent);
+  opacity: 0.7;
+}
+#root .stat-card:hover {
+  transform: translateY(-2px);
+  border-color: var(--glass-border-strong);
+  box-shadow: var(--glass-shadow), 0 0 30px -12px rgba(139, 111, 247, 0.5);
+}
+#root .stat-label {
+  color: rgba(148, 162, 192, 0.8);
+  letter-spacing: 0.14em;
+}
+#root .stat-value {
+  font-family: var(--display);
+  font-weight: 700;
+  color: #fff;
+  text-shadow: 0 0 30px rgba(139, 111, 247, 0.25);
+}
+#root .stat-ico {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  color: var(--accent);
+  opacity: 0.55;
+  filter: drop-shadow(0 0 8px rgba(139, 111, 247, 0.4));
+}
+
+/* ---- Distribution bars ---- */
+#root .dist-track {
+  background: rgba(8, 11, 20, 0.66);
+  border: 1px solid var(--glass-border);
+  overflow: hidden;
+}
+#root .dist-fill {
+  background: linear-gradient(90deg, var(--astra-purple), var(--astra-blue));
+  box-shadow: 0 0 16px -4px rgba(139, 111, 247, 0.8);
+}
+#root .dist-count {
+  color: #eef1ff;
+  font-weight: 700;
+}
+
+/* ---- Modals / overlays / toasts / settings ---- */
+#root .overlay {
+  background: rgba(3, 5, 11, 0.66);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+#root .modal {
+  background: linear-gradient(180deg, rgba(20, 26, 48, 0.82), rgba(13, 17, 32, 0.86));
+  backdrop-filter: blur(var(--glass-blur-strong)) saturate(1.2);
+  -webkit-backdrop-filter: blur(var(--glass-blur-strong)) saturate(1.2);
+  border: 1px solid var(--glass-border-strong);
+  box-shadow: 0 30px 80px -30px rgba(0, 0, 0, 0.9), var(--glass-highlight);
+}
+#root .toast {
+  background: var(--glass-1);
+  backdrop-filter: blur(var(--glass-blur)) saturate(1.2);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(1.2);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-shadow);
+}
+#root .settings-item {
+  background: var(--glass-3);
+  border: 1px solid var(--glass-border);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+#root .settings-item:hover {
+  background: var(--glass-hover);
+  border-color: var(--glass-border-strong);
+}
+#root .tip-section {
+  background: var(--glass-3);
+  border: 1px solid var(--glass-border);
+}
+
+/* ---- Dropdown + datepicker ---- */
+#root .dd-menu,
+#root .cal-menu {
+  background: linear-gradient(180deg, rgba(20, 26, 48, 0.86), rgba(13, 17, 32, 0.9));
+  backdrop-filter: blur(var(--glass-blur-strong)) saturate(1.2);
+  -webkit-backdrop-filter: blur(var(--glass-blur-strong)) saturate(1.2);
+  border: 1px solid var(--glass-border-strong);
+  box-shadow: 0 30px 70px -30px rgba(0, 0, 0, 0.9);
+}
+#root .dd-item.active {
+  background: rgba(139, 111, 247, 0.22);
+  color: #fff;
+}
+#root .cal-day.sel {
+  background: linear-gradient(135deg, #9078ff, #6f5bf0);
+  box-shadow: 0 0 18px -6px rgba(139, 111, 247, 0.9);
+}
+
+/* ---- Authentication (login) ---- */
+#root .auth {
+  background: transparent;
+}
+#root .auth-card {
+  background: linear-gradient(180deg, rgba(20, 26, 48, 0.78), rgba(13, 17, 32, 0.82));
+  backdrop-filter: blur(var(--glass-blur-strong)) saturate(1.2);
+  -webkit-backdrop-filter: blur(var(--glass-blur-strong)) saturate(1.2);
+  border: 1px solid var(--glass-border-strong);
+  box-shadow: var(--glass-shadow), var(--glass-highlight);
+}
+
+/* ---- Member: character hero + badges + progress ---- */
+#root .profile-hero {
+  background: var(--glass-2);
+  backdrop-filter: blur(var(--glass-blur)) saturate(1.15);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(1.15);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-shadow), var(--glass-highlight);
+}
+#root .profile-hero .avatar {
+  box-shadow: 0 12px 34px -14px rgba(139, 111, 247, 0.8), var(--glass-highlight);
+}
+#root .badge {
+  background: var(--glass-3);
+  border: 1px solid var(--glass-border);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+#root .badge.gold {
+  border-color: rgba(214, 168, 92, 0.5);
+  color: #f0d7a6;
+}
+#root .badge.violet {
+  border-color: rgba(139, 111, 247, 0.5);
+  color: #cbbdff;
+}
+#root .progress-track {
+  background: rgba(8, 11, 20, 0.66);
+  border: 1px solid var(--glass-border);
+}
+
+/* ---- Tools (admin anuncio panels, attendance pickers) ---- */
+#root .announce-head h2 {
+  color: var(--accent-2);
+  text-shadow: 0 0 26px rgba(214, 168, 92, 0.25);
+}
+#root .att-row {
+  background: var(--glass-3);
+  border: 1px solid var(--glass-border);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+#root .att-row:hover {
+  background: var(--glass-hover);
+}
+#root .att-row.on {
+  border-color: rgba(139, 111, 247, 0.5);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06), 0 0 22px -10px rgba(139, 111, 247, 0.8);
+}
+#root .tools-frame {
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius);
+  box-shadow: var(--glass-shadow);
+  background: var(--glass-2);
+}
+
+/* ---- Ranking podium (Top 3) ---- */
+.podium {
+  display: grid;
+  grid-template-columns: 1fr 1.12fr 1fr;
+  align-items: end;
+  gap: 12px;
+  margin: 4px 0 18px;
+}
+.podium-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 16px 12px;
+  border-radius: var(--radius);
+  border: 1px solid var(--glass-border);
+  background: var(--glass-2);
+  backdrop-filter: blur(var(--glass-blur)) saturate(1.15);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(1.15);
+  box-shadow: var(--glass-shadow);
+  text-align: center;
+  min-width: 0;
+  animation: glass-rise 0.5s var(--ease) both;
+}
+.podium-card .podium-medal {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  font-family: var(--display);
+  font-weight: 800;
+  font-size: 15px;
+  color: #10131f;
+  margin-bottom: 2px;
+}
+.podium-card .podium-rank {
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--faint);
+}
+.podium-card .podium-name {
+  font-family: var(--display);
+  font-weight: 700;
+  font-size: 15px;
+  color: #fff;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.podium-card .podium-points {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--accent-2);
+  font-variant-numeric: tabular-nums;
+}
+.podium-card.p1 {
+  padding-top: 24px;
+  border-color: rgba(214, 168, 92, 0.5);
+  background: linear-gradient(180deg, rgba(214, 168, 92, 0.14), var(--glass-2) 70%);
+  box-shadow: var(--glass-shadow), 0 0 40px -20px rgba(214, 168, 92, 0.9);
+}
+.podium-card.p1 .podium-medal {
+  background: linear-gradient(135deg, #f2d089, #c99a3f);
+}
+.podium-card.p2 .podium-medal {
+  background: linear-gradient(135deg, #e3e8f5, #9aa7c4);
+}
+.podium-card.p3 .podium-medal {
+  background: linear-gradient(135deg, #e0aa79, #b3764a);
+}
+@media (max-width: 640px) {
+  .podium {
+    grid-template-columns: 1fr;
+    align-items: stretch;
+  }
+  .podium-card.p1 {
+    padding-top: 16px;
+  }
+}
+
+/* ---- Motion ---- */
+@keyframes glass-rise {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes bar-grow {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+@keyframes float-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+#root .panel-card,
+#root .table-card,
+#root .stat-card,
+#root .profile-hero {
+  animation: glass-rise 0.44s var(--ease) both;
+}
+#root .roster-view .stat-card:nth-child(1) {
+  animation-delay: 0.02s;
+}
+#root .roster-view .stat-card:nth-child(2) {
+  animation-delay: 0.06s;
+}
+#root .roster-view .stat-card:nth-child(3) {
+  animation-delay: 0.1s;
+}
+#root .roster-view .stat-card:nth-child(4) {
+  animation-delay: 0.14s;
+}
+#root .dist-fill {
+  transform-origin: left center;
+  animation: bar-grow 0.72s var(--ease) both;
+}
+
+/* ---- Scrollbars ---- */
+#root ::-webkit-scrollbar-thumb,
+body ::-webkit-scrollbar-thumb {
+  background: rgba(139, 111, 247, 0.32);
+  background-clip: padding-box;
+}
+#root ::-webkit-scrollbar-thumb:hover,
+body ::-webkit-scrollbar-thumb:hover {
+  background: rgba(139, 111, 247, 0.5);
+  background-clip: padding-box;
+}
+
+/* ---- Reduced motion ---- */
+@media (prefers-reduced-motion: reduce) {
+  #root .panel-card,
+  #root .table-card,
+  #root .stat-card,
+  #root .profile-hero,
+  #root .dist-fill,
+  .podium-card {
+    animation: none !important;
+  }
+  #root .dist-fill {
+    transform: none !important;
+  }
+  #root .stat-card:hover,
+  #root .btn:hover {
+    transform: none !important;
+  }
 }
