@@ -135,11 +135,11 @@ export default function Background() {
     function drawNebula(ox: number, oy: number): void {
       const M = Math.max(W, H);
       const blobs = [
-        { x: 0.2 + Math.sin(time * 0.045) * 0.06, y: 0.28 + Math.cos(time * 0.037) * 0.05, r: 0.82, c: '139,111,247', a: 0.3 },
-        { x: 0.84 + Math.cos(time * 0.05) * 0.05, y: 0.74 + Math.sin(time * 0.041) * 0.06, r: 0.76, c: '47,94,171', a: 0.28 },
-        { x: 0.52 + Math.sin(time * 0.03 + 1) * 0.08, y: 0.48 + Math.cos(time * 0.028) * 0.07, r: 0.72, c: '102,119,255', a: 0.18 },
-        { x: 0.72 + Math.sin(time * 0.02 + 2) * 0.05, y: 0.2 + Math.cos(time * 0.024) * 0.05, r: 0.5, c: '214,168,92', a: 0.09 },
-        { x: 0.5 + Math.cos(time * 0.026) * 0.04, y: 0.42 + Math.sin(time * 0.03) * 0.04, r: 1.05, c: '70,60,150', a: 0.16 },
+        { x: 0.2 + Math.sin(time * 0.045) * 0.06, y: 0.28 + Math.cos(time * 0.037) * 0.05, r: 0.62, c: '139,111,247', a: 0.24 },
+        { x: 0.84 + Math.cos(time * 0.05) * 0.05, y: 0.74 + Math.sin(time * 0.041) * 0.06, r: 0.55, c: '47,94,171', a: 0.24 },
+        { x: 0.52 + Math.sin(time * 0.03 + 1) * 0.08, y: 0.48 + Math.cos(time * 0.028) * 0.07, r: 0.5, c: '102,119,255', a: 0.12 },
+        { x: 0.72 + Math.sin(time * 0.02 + 2) * 0.05, y: 0.2 + Math.cos(time * 0.024) * 0.05, r: 0.38, c: '214,168,92', a: 0.07 },
+        { x: 0.5 + Math.cos(time * 0.026) * 0.04, y: 0.42 + Math.sin(time * 0.03) * 0.04, r: 0.75, c: '70,60,150', a: 0.1 },
       ];
       ctx!.fillStyle = '#070a12';
       ctx!.fillRect(0, 0, W, H);
