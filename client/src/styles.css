@@ -3051,6 +3051,25 @@ body {
   opacity: 0.55;
   filter: drop-shadow(0 0 8px rgba(139, 111, 247, 0.4));
 }
+#root .roster-view .stat-row {
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scroll-snap-type: x proximity;
+  -webkit-overflow-scrolling: touch;
+}
+#root .roster-view .stat-row .stat-card {
+  flex: 1 1 0;
+  min-width: 180px;
+  max-width: none;
+  scroll-snap-align: start;
+}
+#root .roster-view .stat-row::-webkit-scrollbar {
+  height: 8px;
+}
+#root .roster-view .stat-row::-webkit-scrollbar-thumb {
+  border-radius: 8px;
+}
 
 /* ---- Distribution bars ---- */
 #root .dist-track {
