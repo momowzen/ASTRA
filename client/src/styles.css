@@ -3186,90 +3186,6 @@ body {
   background: var(--glass-2);
 }
 
-/* ---- Ranking podium (Top 3) ---- */
-.podium {
-  display: grid;
-  grid-template-columns: 1fr 1.12fr 1fr;
-  align-items: end;
-  gap: 12px;
-  margin: 4px 0 18px;
-}
-.podium-card {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 4px;
-  padding: 16px 12px;
-  border-radius: var(--radius);
-  border: 1px solid var(--glass-border);
-  background: var(--glass-2);
-  backdrop-filter: blur(var(--glass-blur)) saturate(1.15);
-  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(1.15);
-  box-shadow: var(--glass-shadow);
-  text-align: center;
-  min-width: 0;
-  animation: glass-rise 0.5s var(--ease) both;
-}
-.podium-card .podium-medal {
-  display: grid;
-  place-items: center;
-  width: 34px;
-  height: 34px;
-  border-radius: 50%;
-  font-family: var(--display);
-  font-weight: 800;
-  font-size: 15px;
-  color: #10131f;
-  margin-bottom: 2px;
-}
-.podium-card .podium-rank {
-  font-size: 10px;
-  letter-spacing: 0.2em;
-  text-transform: uppercase;
-  color: var(--faint);
-}
-.podium-card .podium-name {
-  font-family: var(--display);
-  font-weight: 700;
-  font-size: 15px;
-  color: #fff;
-  max-width: 100%;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.podium-card .podium-points {
-  font-size: 13px;
-  font-weight: 700;
-  color: var(--accent-2);
-  font-variant-numeric: tabular-nums;
-}
-.podium-card.p1 {
-  padding-top: 24px;
-  border-color: rgba(214, 168, 92, 0.5);
-  background: linear-gradient(180deg, rgba(214, 168, 92, 0.14), var(--glass-2) 70%);
-  box-shadow: var(--glass-shadow), 0 0 40px -20px rgba(214, 168, 92, 0.9);
-}
-.podium-card.p1 .podium-medal {
-  background: linear-gradient(135deg, #f2d089, #c99a3f);
-}
-.podium-card.p2 .podium-medal {
-  background: linear-gradient(135deg, #e3e8f5, #9aa7c4);
-}
-.podium-card.p3 .podium-medal {
-  background: linear-gradient(135deg, #e0aa79, #b3764a);
-}
-@media (max-width: 640px) {
-  .podium {
-    grid-template-columns: 1fr;
-    align-items: stretch;
-  }
-  .podium-card.p1 {
-    padding-top: 16px;
-  }
-}
-
 /* ---- Motion ---- */
 @keyframes glass-rise {
   from {
@@ -3338,8 +3254,7 @@ body ::-webkit-scrollbar-thumb:hover {
   #root .table-card,
   #root .stat-card,
   #root .profile-hero,
-  #root .dist-fill,
-  .podium-card {
+  #root .dist-fill {
     animation: none !important;
   }
   #root .dist-fill {

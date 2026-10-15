@@ -488,29 +488,6 @@ function DashboardView({ attendanceTab }: { attendanceTab: TabData | undefined }
         </div>
       </div>
 
-      {leaderboard.length > 0 && (
-        <div className="podium">
-          {[1, 0, 2].map((idx) => {
-            const m = leaderboard[idx];
-            const place = idx + 1;
-            if (!m) {
-              return (
-                <div key={`podium-empty-${idx}`} className="podium-card" aria-hidden="true" style={{ visibility: 'hidden' }} />
-              );
-            }
-            return (
-              <div key={m.ign} className={`podium-card p${place}`}>
-                <span className="podium-medal">{place}</span>
-                <span className="podium-name" title={m.ign}>{m.ign}</span>
-                <span className="podium-points">
-                  {m.points} {m.points === 1 ? t('boss.pt') : t('boss.pts')}
-                </span>
-              </div>
-            );
-          })}
-        </div>
-      )}
-
       <div className="table-card">
         <div className="table-meta">
           <span>
