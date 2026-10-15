@@ -1765,8 +1765,6 @@ table.coll td.ign-col {
 }
 
 .roster-view .stat-row {
-  position: sticky;
-  z-index: 20;
   margin: -22px -12px -12px;
   padding: 12px;
   background: transparent;
