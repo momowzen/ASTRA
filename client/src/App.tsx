@@ -8,6 +8,7 @@ import Login from './components/Login';
 import AdminApp from './components/AdminApp';
 import MemberApp from './components/MemberApp';
 import Background from './components/Background';
+import LoadingScreen from './components/LoadingScreen';
 
 const POLL_MS = 4000;
 const WRITE_QUIET_MS = 12000;
@@ -20,6 +21,8 @@ interface Toast {
 
 export default function App() {
   const [session, setSession] = useState<Session | null>(() => getSession());
+  const [intro, setIntro] = useState(() => !getSession());
+  const finishIntro = useCallback(() => setIntro(false), []);
   const [data, setData] = useState<DataResponse | null>(null);
   const [error, setError] = useState('');
   const [toasts, setToasts] = useState<Toast[]>([]);
@@ -232,6 +235,7 @@ export default function App() {
       <Background />
       {body}
       <Toasts items={toasts} />
+      {intro && <LoadingScreen onDone={finishIntro} />}
     </LangProvider>
   );
 }
