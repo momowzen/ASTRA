@@ -97,20 +97,8 @@ function ConfigView({
   toast: (msg: string, kind?: 'ok' | 'err') => void;
 }) {
   const { t, lang } = useLang();
-  const seeded = useRef(false);
   const [seeding, setSeeding] = useState(false);
   const empty = !configTab || configTab.rows.length === 0;
-
-  useEffect(() => {
-    if (empty && !seeded.current) {
-      seeded.current = true;
-      setSeeding(true);
-      seedBossConfig()
-        .catch((err) => toast(err instanceof ApiError ? err.message : t('boss.seedErr'), 'err'))
-        .finally(() => setSeeding(false));
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [empty]);
 
   if (empty) {
     return (
@@ -128,7 +116,6 @@ function ConfigView({
               <button
                 className="btn btn-primary"
                 onClick={() => {
-                  seeded.current = false;
                   setSeeding(true);
                   seedBossConfig()
                     .catch((err) => toast(err instanceof ApiError ? err.message : t('boss.seedErr'), 'err'))

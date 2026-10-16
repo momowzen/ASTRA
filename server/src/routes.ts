@@ -392,13 +392,25 @@ api.post('/admin/settings', requireAuth, requireAdmin, async (req, res) => {
 api.post('/boss/config/seed', requireAuth, requireAdmin, async (_req, res) => {
   try {
     const tab = getTab('BOSS CONFIG');
-    if (tab && tab.rows.length > 0) {
-      return res.json({ ok: true, seeded: false });
+    const have = new Set(
+      (tab?.rows ?? []).map((r) => (r.cells[0] || '').trim()).filter(Boolean),
+    );
+    const missing = BOSS_NAMES.filter((name) => !have.has(name));
+    const writes: { a1: string; values: string[][] }[] = [];
+    if ((tab?.rows.length ?? 0) === 0) {
+      writes.push({ a1: 'A1', values: [['Boss', 'Points']] });
     }
-    const rows: string[][] = [['Boss', 'Points'], ...BOSS_NAMES.map((name) => [name, '1'])];
-    await sheets.batchUpdateValues('BOSS CONFIG', [{ a1: 'A1', values: rows }]);
+    let last = tab && tab.rows.length > 0 ? tab.rows[tab.rows.length - 1].row : 1;
+    for (const name of missing) {
+      last += 1;
+      writes.push({ a1: `A${last}`, values: [[name, '1']] });
+    }
+    if (writes.length === 0) {
+      return res.json({ ok: true, seeded: false, count: 0 });
+    }
+    await sheets.batchUpdateValues('BOSS CONFIG', writes);
     scheduleRefresh();
-    res.json({ ok: true, seeded: true, count: BOSS_NAMES.length });
+    res.json({ ok: true, seeded: true, count: missing.length });
   } catch (err) {
     console.error('[boss] seed config failed:', err);
     bad(res, 502, 'Could not seed boss config');

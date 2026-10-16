@@ -1,7 +1,6 @@
 import { createHash } from 'node:crypto';
 import * as sheets from './sheets';
 import { config } from './config';
-import { BOSS_NAMES } from './bosses';
 
 export interface TabMeta {
   title: string;
@@ -165,25 +164,6 @@ function recomputeAttendance(next: Snapshot): { a1: string; values: string[][] }
   return writes;
 }
 
-async function ensureBossConfig(next: Snapshot): Promise<void> {
-  const tab = next.tabs.find((t) => t.meta.title.toUpperCase() === 'BOSS CONFIG');
-  if (!tab) return;
-  const have = new Set(tab.rows.map((r) => (r.cells[0] || '').trim()).filter(Boolean));
-  const missing = BOSS_NAMES.filter((name) => !have.has(name));
-  if (missing.length === 0) return;
-  const writes: { a1: string; values: string[][] }[] = [];
-  let last = tab.rows.length > 0 ? tab.rows[tab.rows.length - 1].row : 1;
-  if (tab.rows.length === 0) writes.push({ a1: 'A1', values: [['Boss', 'Points']] });
-  for (const name of missing) {
-    last += 1;
-    writes.push({ a1: `A${last}`, values: [[name, '1']] });
-    tab.rows.push({ row: last, cells: [name, '1'] });
-  }
-  await sheets.batchUpdateValues('BOSS CONFIG', writes);
-  next.rev = computeRev(next.tabs);
-  console.log(`[sync] ensured BOSS CONFIG rows (${missing.length} added)`);
-}
-
 async function load(): Promise<Snapshot> {
   const meta = await getMeta();
   const visible = meta.sheets
@@ -247,11 +227,6 @@ async function doRefresh(): Promise<void> {
       }
     } catch (err) {
       console.error('[sync] attendance recompute failed:', err instanceof Error ? err.message : err);
-    }
-    try {
-      await ensureBossConfig(next);
-    } catch (err) {
-      console.error('[sync] boss config ensure failed:', err instanceof Error ? err.message : err);
     }
     const changed = !snapshot || snapshot.rev !== next.rev;
     snapshot = next;
