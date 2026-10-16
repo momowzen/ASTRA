@@ -3380,7 +3380,91 @@ body ::-webkit-scrollbar-thumb:hover {
   background: #000;
   animation: intro-bg-out 0.5s ease 3.7s both;
 }
+.intro-stars {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background-repeat: repeat;
+  pointer-events: none;
+  will-change: background-position, opacity;
+}
+.intro-stars--far {
+  opacity: 0.6;
+  background-size: 320px 320px;
+  animation: star-drift-a 190s linear infinite, star-shine-a 5.5s ease-in-out -2s infinite;
+  background-image:
+    radial-gradient(1px 1px at 30px 40px, rgba(255, 255, 255, 0.9), transparent),
+    radial-gradient(1px 1px at 150px 90px, rgba(255, 255, 255, 0.7), transparent),
+    radial-gradient(1px 1px at 260px 30px, rgba(255, 255, 255, 0.6), transparent),
+    radial-gradient(1px 1px at 80px 200px, rgba(255, 255, 255, 0.8), transparent),
+    radial-gradient(1px 1px at 220px 250px, rgba(255, 255, 255, 0.65), transparent),
+    radial-gradient(1px 1px at 290px 170px, rgba(255, 255, 255, 0.55), transparent),
+    radial-gradient(1px 1px at 40px 290px, rgba(255, 255, 255, 0.7), transparent),
+    radial-gradient(1px 1px at 180px 310px, rgba(255, 255, 255, 0.6), transparent),
+    radial-gradient(1px 1px at 300px 300px, rgba(255, 255, 255, 0.75), transparent);
+}
+.intro-stars--mid {
+  opacity: 0.8;
+  background-size: 520px 520px;
+  animation: star-drift-b 140s linear infinite, star-shine-b 7s ease-in-out -4s infinite;
+  background-image:
+    radial-gradient(1px 1px at 70px 60px, rgba(255, 255, 255, 0.85), transparent),
+    radial-gradient(1.3px 1.3px at 210px 120px, #fff, transparent),
+    radial-gradient(1px 1px at 380px 70px, rgba(255, 255, 255, 0.7), transparent),
+    radial-gradient(1px 1px at 470px 220px, rgba(255, 255, 255, 0.75), transparent),
+    radial-gradient(1.2px 1.2px at 120px 300px, rgba(255, 255, 255, 0.9), transparent),
+    radial-gradient(1px 1px at 320px 340px, rgba(255, 255, 255, 0.6), transparent),
+    radial-gradient(1px 1px at 440px 420px, rgba(255, 255, 255, 0.8), transparent),
+    radial-gradient(1.4px 1.4px at 200px 470px, #fff, transparent),
+    radial-gradient(1px 1px at 360px 520px, rgba(255, 255, 255, 0.65), transparent),
+    radial-gradient(1px 1px at 60px 500px, rgba(255, 255, 255, 0.7), transparent);
+}
+.intro-stars--near {
+  opacity: 1;
+  background-size: 780px 780px;
+  animation: star-drift-c 110s linear infinite, star-shine-c 4.5s ease-in-out infinite;
+  background-image:
+    radial-gradient(1px 1px at 60px 80px, rgba(255, 255, 255, 0.95), transparent),
+    radial-gradient(1.6px 1.6px at 240px 130px, #fff, transparent),
+    radial-gradient(1px 1px at 420px 60px, rgba(255, 255, 255, 0.8), transparent),
+    radial-gradient(1px 1px at 640px 210px, rgba(255, 255, 255, 0.7), transparent),
+    radial-gradient(1.9px 1.9px at 120px 340px, #fff, transparent),
+    radial-gradient(1px 1px at 360px 300px, rgba(255, 255, 255, 0.85), transparent),
+    radial-gradient(1.4px 1.4px at 560px 400px, rgba(255, 255, 255, 0.9), transparent),
+    radial-gradient(1px 1px at 720px 340px, rgba(255, 255, 255, 0.6), transparent),
+    radial-gradient(1px 1px at 220px 560px, rgba(255, 255, 255, 0.75), transparent),
+    radial-gradient(1.7px 1.7px at 440px 600px, #fff, transparent),
+    radial-gradient(1px 1px at 680px 560px, rgba(255, 255, 255, 0.7), transparent),
+    radial-gradient(1px 1px at 60px 700px, rgba(255, 255, 255, 0.8), transparent),
+    radial-gradient(1.5px 1.5px at 340px 720px, #fff, transparent);
+}
+@keyframes star-drift-a {
+  from { background-position: 0 0; }
+  to { background-position: -320px -320px; }
+}
+@keyframes star-drift-b {
+  from { background-position: 0 0; }
+  to { background-position: -520px -520px; }
+}
+@keyframes star-drift-c {
+  from { background-position: 0 0; }
+  to { background-position: -780px -780px; }
+}
+@keyframes star-shine-a {
+  0%, 100% { opacity: 0.35; }
+  50% { opacity: 0.85; }
+}
+@keyframes star-shine-b {
+  0%, 100% { opacity: 0.6; }
+  50% { opacity: 1; }
+}
+@keyframes star-shine-c {
+  0%, 100% { opacity: 0.3; }
+  50% { opacity: 1; }
+}
 .intro-word {
+  position: relative;
+  z-index: 1;
   display: block;
   width: min(82vw, 760px);
   height: auto;
@@ -3455,6 +3539,9 @@ body ::-webkit-scrollbar-thumb:hover {
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .intro-stars {
+    animation: none !important;
+  }
   .intro .stroke {
     opacity: 1 !important;
     animation: none !important;

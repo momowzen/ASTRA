@@ -48,6 +48,9 @@ export default function LoadingScreen({ onDone }: { onDone: () => void }) {
 
   return (
     <div className={`intro${timing ? ' armed' : ''}`} aria-hidden="true">
+      <div className="intro-stars intro-stars--far" />
+      <div className="intro-stars intro-stars--mid" />
+      <div className="intro-stars intro-stars--near" />
       <svg ref={svgRef} className="intro-word" viewBox="0 0 576 200" preserveAspectRatio="xMidYMid meet">
         {STROKES.map((d, i) => {
           const s = timing?.[i];
