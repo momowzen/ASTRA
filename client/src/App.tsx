@@ -233,7 +233,10 @@ export default function App() {
   return (
     <LangProvider lang={lang} setLang={setLangPersist}>
       <Background />
-      {body}
+      {/* inert while the intro plays so the login form can't be focused (which would trigger the browser's password autofill popup); it stays mounted underneath so the fade reveals it with no flash */}
+      <div className="app-body" {...({ inert: intro ? '' : undefined } as Record<string, unknown>)}>
+        {body}
+      </div>
       <Toasts items={toasts} />
       {intro && <LoadingScreen onDone={finishIntro} />}
     </LangProvider>
