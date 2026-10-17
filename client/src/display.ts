@@ -25,6 +25,8 @@ export const COL_KEYS: Record<string, string> = {
   NICKNAME: 'col.nickname',
   NOTES: 'col.notes',
   'DATE JOINED': 'col.dateJoined',
+  'LEGENDARY ACCE DISTRIBUTION': 'col.legendaryAccDistribution',
+  'LEGENDARY ACCESSORY DISTRIBUTION': 'col.legendaryAccDistribution',
   'LEGENDARY CLOAK DISTRIBUTION': 'col.legendaryCloakDistribution',
   '5 PEICES SET ENCHANTMENT +15': 'col.fivePiece15',
   'GOLDBLOOD CLOAK+3': 'col.goldBloodCloak3',

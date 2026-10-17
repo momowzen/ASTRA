@@ -423,6 +423,7 @@ const DICT: Record<string, { en: string; ko: string; ja: string; zh: string }> =
   'col.timeInGuild': { en: 'TIME IN GUILD', ko: '가입 기간', ja: "所属期間", zh: '入会时长' },
   'col.dateJoined': { en: 'Date Joined', ko: '가입일', ja: "加入日", zh: '加入日期' },
   'col.legendaryCloakDistribution': { en: 'Legendary Cloak Distribution', ko: '레전더리 망토 분배', ja: "レジェンダリー・マント配分", zh: '传说披风分配' },
+  'col.legendaryAccDistribution': { en: 'Legendary Accessory Distribution', ko: '레전더리 액세서리 분배', ja: "レジェンダリー・アクセサリー配分", zh: '传说饰品分配' },
   'col.fivePiece15': { en: '5 Pieces Set Enchantment +15', ko: '5세트 인챈트 +15', ja: "5セット エンチャント +15", zh: '5件套附魔 +15' },
   'time.today': { en: 'Today', ko: '오늘', ja: "今日", zh: '今天' },
   'time.day': { en: '{n} day', ko: '{n}일', ja: "{n}日", zh: '{n}天' },
