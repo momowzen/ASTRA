@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { MEMBER_HIDDEN_TABS } from '../types';
 import type { Column, DataResponse, Session, TabData } from '../types';
-import { buildColumns, formatCp, initials, isCpLabel, isDateLabel, isMark, MEMBER_READONLY, optionColor, timeInGuildParts, toIsoDate } from '../utils';
+import { buildColumns, formatCp, initials, isCpLabel, isDateLabel, isMark, MEMBER_ALWAYS_EDITABLE, MEMBER_READONLY, optionColor, timeInGuildParts, toIsoDate } from '../utils';
 import { ApiError, apiBase, saveCells } from '../api';
 import { IconClose, IconGear, IconGem, IconGrid, IconLogout, IconMenu, IconSheet, IconSparkles, IconTimer, IconTrophy, IconUser, IconUsers } from './icons';
 import MemberSettingsModal from './MemberSettingsModal';
@@ -852,7 +852,10 @@ export default function MemberApp({
                             label={colLabel(c.label, t, lang)}
                             value={rosterRow.cells[c.index] ?? ''}
                             options={rosterTab.meta.options?.[c.index]}
-                            readOnly={!canEdit || MEMBER_READONLY.has(c.label.trim().toUpperCase())}
+                            readOnly={
+                              (!canEdit && !MEMBER_ALWAYS_EDITABLE.has(c.label.trim().toUpperCase())) ||
+                              MEMBER_READONLY.has(c.label.trim().toUpperCase())
+                            }
                       format={isCpLabel(c.label)}
                       isDate={isDateLabel(c.label)}
                       dataTab={rosterTab.meta.title}

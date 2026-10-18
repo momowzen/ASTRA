@@ -68,6 +68,8 @@ export function isCpLabel(label: string): boolean {
 
 export const MEMBER_READONLY = new Set(['CP', 'ROLE', 'STATUS']);
 
+export const MEMBER_ALWAYS_EDITABLE = new Set(['COUNTRY', 'NATION', 'NICKNAME', 'NOTES']);
+
 export const COMPLETION_EXCLUDED = new Set(['CP', 'ROLE', 'STATUS', 'NICKNAME', 'NOTES']);
 
 export interface ProfileColumn {
