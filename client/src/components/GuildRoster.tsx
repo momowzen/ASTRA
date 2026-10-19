@@ -103,7 +103,7 @@ function AttendancePanel({ stats }: { stats: AttendanceStats | null }) {
       ? t('roster.attendanceAria', {
           pct: stats.pct.toFixed(1),
           attended: stats.attended,
-          slots: stats.slots,
+          missed: stats.missed,
         })
       : stats
         ? t('roster.attendanceEmpty')
@@ -144,9 +144,6 @@ function AttendancePanel({ stats }: { stats: AttendanceStats | null }) {
               '—'
             )}
           </strong>
-          {stats && stats.slots > 0 && (
-            <span>{t('roster.attendanceSlots', { n: stats.slots })}</span>
-          )}
         </div>
       </div>
 

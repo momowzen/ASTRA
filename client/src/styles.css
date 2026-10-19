@@ -2013,12 +2013,6 @@ table.coll td.ign-col {
   font-variant-numeric: tabular-nums;
   text-shadow: 0 0 24px rgba(139, 111, 247, 0.28);
 }
-.attendance-center span {
-  font-size: 9px;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: var(--muted);
-}
 .attendance-legend {
   list-style: none;
   width: 100%;
