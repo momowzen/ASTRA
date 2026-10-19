@@ -564,11 +564,24 @@ api.post('/boss/distribute', requireAuth, requireAdmin, async (req, res) => {
       resetWrites.push({ a1: `B${firstRow}`, values: attTab.rows.map(() => ['']) });
       const cc = attTab.meta.columnCount;
       if (cc > 2) {
+        const firstBossCol = sheets.columnLetter(2);
         const lastCol = sheets.columnLetter(cc - 1);
         const maxRow = attTab.rows[attTab.rows.length - 1].row;
-        const blankRow = new Array(cc - 2).fill('');
-        const matrix = attTab.rows.map(() => [...blankRow]);
-        resetWrites.push({ a1: `C1:${lastCol}${maxRow}`, values: matrix });
+        const blank = (rows: number) => Array.from({ length: rows }, () => new Array(cc - 2).fill(''));
+        // Clear the boss-name header row(s) and every data row in the range.
+        // Starting at row 1 with only rows.length values left the last data row
+        // (and therefore its points) behind after a distribution.
+        resetWrites.push({
+          a1: `${firstBossCol}1:${lastCol}${attTab.meta.headerRows}`,
+          values: blank(attTab.meta.headerRows),
+        });
+        const dataRows = maxRow - firstRow + 1;
+        if (dataRows > 0) {
+          resetWrites.push({
+            a1: `${firstBossCol}${firstRow}:${lastCol}${maxRow}`,
+            values: blank(dataRows),
+          });
+        }
       }
     }
     if (resetWrites.length > 0) await sheets.batchUpdateValues('BOSS ATTENDANCE', resetWrites);
