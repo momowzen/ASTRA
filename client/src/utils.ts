@@ -1,4 +1,4 @@
-import type { Column, TabData, TabMeta } from './types';
+import type { Column, RowData, TabData, TabMeta } from './types';
 
 export function expandedGroups(meta: TabMeta): string[] {
   const row = meta.headers[0] || [];
@@ -111,6 +111,86 @@ export function memberCompletion(tabs: TabData[], ign: string): number {
     }
   }
   return total > 0 ? Math.round((filled / total) * 100) : 0;
+}
+
+export interface AttendanceStats {
+  /** Filled member × boss slots (a member attending 5 kills counts 5). */
+  attended: number;
+  /** Unfilled slots (capacity - attended). */
+  missed: number;
+  /** Roster members × recorded boss kills. */
+  slots: number;
+  /** Number of boss columns recorded in the current cycle. */
+  kills: number;
+  /** Unique, non-empty IGNs on the roster. */
+  members: number;
+  /** attended / slots * 100, or 0 when there are no slots. */
+  pct: number;
+}
+
+/**
+ * Current-cycle boss attendance:
+ *   (attendee slots) / (roster members × boss kills) × 100
+ *
+ * BOSS ATTENDANCE stores one column per recorded kill from column C onward;
+ * a non-empty cell means that member attended that kill. Only names that
+ * exist on BASIC INFORMATION count, so the ratio cannot exceed 100%.
+ */
+export function attendanceStats(
+  basic: TabData | undefined,
+  attendance: TabData | undefined,
+): AttendanceStats | null {
+  if (!basic) return null;
+
+  const members = new Set<string>();
+  for (const row of basic.rows) {
+    const ign = (row.cells[0] ?? '').trim().toLowerCase();
+    if (ign) members.add(ign);
+  }
+  if (members.size === 0) return null;
+
+  const empty: AttendanceStats = {
+    attended: 0,
+    missed: 0,
+    slots: 0,
+    kills: 0,
+    members: members.size,
+    pct: 0,
+  };
+  if (!attendance) return empty;
+
+  const headers = attendance.meta.headers;
+  const width = Math.max(attendance.meta.columnCount, ...headers.map((h) => h.length));
+  const bossCols: number[] = [];
+  for (let i = 2; i < width; i++) {
+    if (headers.some((h) => String(h[i] ?? '').trim() !== '')) bossCols.push(i);
+  }
+  if (bossCols.length === 0) return empty;
+
+  // Keep one row per roster IGN in case the sheet has duplicate attendance rows.
+  const rowsByIgn = new Map<string, RowData>();
+  for (const row of attendance.rows) {
+    const ign = (row.cells[0] ?? '').trim().toLowerCase();
+    if (!ign || !members.has(ign) || rowsByIgn.has(ign)) continue;
+    rowsByIgn.set(ign, row);
+  }
+
+  let attended = 0;
+  for (const row of rowsByIgn.values()) {
+    for (const col of bossCols) {
+      if ((row.cells[col] ?? '').trim() !== '') attended += 1;
+    }
+  }
+
+  const slots = members.size * bossCols.length;
+  return {
+    attended,
+    missed: Math.max(0, slots - attended),
+    slots,
+    kills: bossCols.length,
+    members: members.size,
+    pct: slots > 0 ? (attended / slots) * 100 : 0,
+  };
 }
 
 export function formatCp(value: string): string {

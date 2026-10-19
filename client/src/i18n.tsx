@@ -248,6 +248,35 @@ const DICT: Record<string, { en: string; ko: string; ja: string; zh: string }> =
   'roster.role': { en: 'Role', ko: '역할', ja: "役割", zh: '角色' },
   'roster.status': { en: 'Status', ko: '상태', ja: "ステータス", zh: '状态' },
   'roster.guilds': { en: 'Guilds', ko: '길드', ja: "ギルド", zh: '公会' },
+  'roster.attendanceTitle': { en: 'Attendance Ratio', ko: '출석률', ja: "出席率", zh: '出勤率' },
+  'roster.attendanceCycle': { en: 'This cycle', ko: '이번 주기', ja: "今回のサイクル", zh: '本周期' },
+  'roster.attended': { en: 'Total Attendance', ko: '총 참여', ja: "総参加", zh: '总参与' },
+  'roster.attendanceSlots': {
+    en: '{n} chances',
+    ko: '{n}번의 기회', ja: "{n}回の機会", zh: '{n} 次机会',
+  },
+  'roster.missed': { en: 'Total Absence', ko: '총 불참', ja: "総不参加", zh: '总缺席' },
+  'roster.attendanceFooter': {
+    en: '{kills} boss fights · {members} members',
+    ko: '보스 {kills}회 · 멤버 {members}명', ja: "ボス討伐 {kills}回 · メンバー {members}人",
+    zh: '首领战 {kills} 次 · 成员 {members} 人',
+  },
+  'roster.attendanceAria': {
+    en: 'Attendance {pct} percent: total attendance {attended} out of {slots} chances',
+    ko: '출석률 {pct}%: {slots}번의 기회 중 총 참여 {attended}회',
+    ja: "出席率 {pct}パーセント: {slots}回の機会中 総参加 {attended}回",
+    zh: '出勤率 {pct}%：{slots} 次机会中总参与 {attended} 次',
+  },
+  'roster.attendanceEmpty': {
+    en: 'No boss fights recorded yet.',
+    ko: '아직 기록된 보스전이 없습니다.', ja: "まだボス戦の記録がありません。",
+    zh: '尚未记录首领战。',
+  },
+  'roster.attendanceNoRoster': {
+    en: 'No member list yet.',
+    ko: '아직 멤버 목록이 없습니다.', ja: "メンバーリストがありません。",
+    zh: '暂无成员名单。',
+  },
   'roster.summaryMeta': {
     en: '{n} of {m} filled',
     ko: '{m}행 중 {n}행 기입', ja: "{m}行中 {n}行入力済み",

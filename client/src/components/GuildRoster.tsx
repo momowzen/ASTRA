@@ -1,6 +1,7 @@
 import { useLayoutEffect, useMemo, useState } from 'react';
 import type { DataResponse, TabData } from '../types';
-import { buildColumns, formatCp } from '../utils';
+import { attendanceStats, buildColumns, formatCp } from '../utils';
+import type { AttendanceStats } from '../utils';
 import { useLang } from '../i18n';
 import { valueLabel } from '../display';
 import AnimatedNumber from './AnimatedNumber';
@@ -37,7 +38,9 @@ function DistList({
     <div className="dist-list">
       {rows.map((r) => (
         <div className="dist-row" key={r.label}>
-          <span className="dist-label">{r.label}</span>
+          <span className="dist-label" title={r.label}>
+            {r.label}
+          </span>
           <span className="dist-track">
             <span className="dist-fill" style={{ width: `${(r.value / max) * 100}%` }} />
           </span>
@@ -92,11 +95,103 @@ function SummaryPanel({ titleKey, data }: { titleKey: string; data: ColumnSummar
   );
 }
 
+function AttendancePanel({ stats }: { stats: AttendanceStats | null }) {
+  const { t } = useLang();
+  const arc = stats && stats.slots > 0 ? Math.min(100, Math.max(0, stats.pct)) : 0;
+  const aria =
+    stats && stats.slots > 0
+      ? t('roster.attendanceAria', {
+          pct: stats.pct.toFixed(1),
+          attended: stats.attended,
+          slots: stats.slots,
+        })
+      : stats
+        ? t('roster.attendanceEmpty')
+        : t('roster.attendanceNoRoster');
+
+  return (
+    <div className="panel-card attendance-panel">
+      <h3>{t('roster.attendanceTitle')}</h3>
+      <div className="attendance-caption">{t('roster.attendanceCycle')}</div>
+
+      <div className="attendance-ring" role="img" aria-label={aria} title={aria}>
+        <svg className="attendance-donut" viewBox="0 0 120 120" aria-hidden="true" focusable="false">
+          <defs>
+            <linearGradient id="attendance-arc-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="var(--astra-purple)" />
+              <stop offset="100%" stopColor="var(--astra-blue)" />
+            </linearGradient>
+          </defs>
+          <circle className="attendance-track" cx="60" cy="60" r="50" />
+          {arc > 0 && (
+            <circle
+              className="attendance-arc"
+              cx="60"
+              cy="60"
+              r="50"
+              pathLength={100}
+              strokeDasharray="100 100"
+              strokeDashoffset={100 - arc}
+              transform="rotate(-90 60 60)"
+            />
+          )}
+        </svg>
+        <div className="attendance-center">
+          <strong>
+            {stats && stats.slots > 0 ? (
+              <AnimatedNumber value={Math.round(stats.pct * 10)} format={(n) => `${n / 10}%`} />
+            ) : (
+              '—'
+            )}
+          </strong>
+          {stats && stats.slots > 0 && (
+            <span>{t('roster.attendanceSlots', { n: stats.slots })}</span>
+          )}
+        </div>
+      </div>
+
+      {stats && stats.slots > 0 ? (
+        <ul className="attendance-legend">
+          <li>
+            <span className="att-dot attended" aria-hidden="true" />
+            <span>{t('roster.attended')}</span>
+            <strong>
+              <AnimatedNumber value={stats.attended} />
+            </strong>
+          </li>
+          <li>
+            <span className="att-dot missed" aria-hidden="true" />
+            <span>{t('roster.missed')}</span>
+            <strong>
+              <AnimatedNumber value={stats.missed} />
+            </strong>
+          </li>
+        </ul>
+      ) : (
+        <div className="attendance-empty">
+          {stats ? t('roster.attendanceEmpty') : t('roster.attendanceNoRoster')}
+        </div>
+      )}
+
+      {stats && (
+        <div className="attendance-footer">
+          {t('roster.attendanceFooter', { kills: stats.kills, members: stats.members })}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function GuildRoster({ data }: Props) {
   const { t } = useLang();
 
   const basic = data.tabs.find((tb) => tb.meta.title.toUpperCase() === 'BASIC INFORMATION');
   const equipment = data.tabs.find((tb) => tb.meta.title.toUpperCase() === 'EQUIPMENT');
+  const attendanceTab = data.tabs.find((tb) => tb.meta.title.toUpperCase() === 'BOSS ATTENDANCE');
+  const attendance = useMemo(
+    () => attendanceStats(basic, attendanceTab),
+    [basic, attendanceTab],
+  );
 
   const [topOffset, setTopOffset] = useState(58);
   useLayoutEffect(() => {
@@ -222,6 +317,8 @@ export default function GuildRoster({ data }: Props) {
             <div className="empty">{t('roster.noData')}</div>
           )}
         </div>
+
+        <AttendancePanel stats={attendance} />
       </div>
       </div>
 
