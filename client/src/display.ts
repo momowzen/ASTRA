@@ -132,6 +132,42 @@ export function colLabel(raw: string, t: T, lang: Lang): string {
   return raw;
 }
 
+/**
+ * Member-facing display overrides. These only change what the member profile
+ * shows; the sheet headers and stored values stay untouched.
+ */
+const MEMBER_COL_OVERRIDES: Record<string, { label: string; values?: Record<string, string> }> = {
+  'LEGENDARY CLOAK DISTRIBUTION': {
+    label: 'col.legendaryCloakReceived',
+    values: { O: 'opt.receivedCloak.o', X: 'opt.receivedCloak.x' },
+  },
+  'RECEIVE LEG ACCE': {
+    label: 'col.wantLegendaryAccessory',
+    values: { O: 'opt.wantAccessory.o', X: 'opt.wantAccessory.x' },
+  },
+  'RECEIVE LEGENDARY ACCESSORY': {
+    label: 'col.wantLegendaryAccessory',
+    values: { O: 'opt.wantAccessory.o', X: 'opt.wantAccessory.x' },
+  },
+};
+
+export function memberColLabel(raw: string, t: T, lang: Lang): string {
+  const override = MEMBER_COL_OVERRIDES[norm(raw)];
+  if (override) return t(override.label);
+  return colLabel(raw, t, lang);
+}
+
+export function memberColValueLabel(rawValue: string, colRaw: string, t: T, lang: Lang): string {
+  const override = MEMBER_COL_OVERRIDES[norm(colRaw)];
+  const key = override?.values?.[norm(rawValue)];
+  if (key) return t(key);
+  return valueLabel(rawValue, t, lang);
+}
+
+export function memberColIsLong(raw: string): boolean {
+  return norm(raw) in MEMBER_COL_OVERRIDES;
+}
+
 export function bossLabel(raw: string, t: T, lang: Lang): string {
   if (lang !== 'en') {
     const key = BOSS_KEYS[norm(raw)];

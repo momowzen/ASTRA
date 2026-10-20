@@ -1,14 +1,14 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { MEMBER_HIDDEN_TABS } from '../types';
 import type { Column, DataResponse, Session, TabData } from '../types';
 import { buildColumns, formatCp, initials, isCpLabel, isDateLabel, isMark, MEMBER_ALWAYS_EDITABLE, MEMBER_READONLY, optionColor, timeInGuildParts, toIsoDate } from '../utils';
 import { ApiError, apiBase, saveCells } from '../api';
-import { IconClose, IconGear, IconGem, IconGrid, IconLogout, IconMenu, IconSheet, IconSparkles, IconTimer, IconTrophy, IconUser, IconUsers } from './icons';
+import { IconBulb, IconClose, IconGear, IconGem, IconGrid, IconLogout, IconMenu, IconSheet, IconSparkles, IconTimer, IconTrophy, IconUser, IconUsers } from './icons';
 import MemberSettingsModal from './MemberSettingsModal';
 import ProfileProgress from './ProfileProgress';
 import { DatePicker, Select } from './Dropdown';
 import { LangToggle, useLang } from '../i18n';
-import { colLabel, tabLabel, valueLabel } from '../display';
+import { colLabel, memberColIsLong, memberColLabel, memberColValueLabel, tabLabel, valueLabel } from '../display';
 
 interface Props {
   data: DataResponse;
@@ -39,6 +39,13 @@ const ROSTER_COLS = [
 
 const ROSTER_FILTER_COLS = ROSTER_COLS.filter((c) => c.key !== 'ign');
 
+const COLLECTION_TABS = new Set([
+  'BOSS COLLECTION',
+  'SUCCESSOR COLLECTION',
+  'EPIC +12 ACCESSORY COLLECTION',
+  'CLOAK COLLECTION',
+]);
+
 type ToolView = 'attendance' | 'tracker' | 'hidden' | 'relic';
 
 interface AstraToolsApi {
@@ -51,8 +58,51 @@ interface AstraToolsApi {
   alarmOn: () => boolean;
 }
 
+/**
+ * Shrinks its font size until the text fits the available width on one line.
+ * Used for long member-facing column labels such as the equipment questions.
+ */
+function FitLabel({ text }: { text: string }) {
+  const ref = useRef<HTMLSpanElement>(null);
+
+  useLayoutEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const ctx = document.createElement('canvas').getContext('2d');
+
+    const fit = () => {
+      el.style.fontSize = '';
+      if (!ctx) return;
+      const style = getComputedStyle(el);
+      const base = parseFloat(style.fontSize) || 12;
+      const available = el.clientWidth;
+      if (available <= 0) return;
+      ctx.font = `${style.fontStyle} ${style.fontWeight} ${base}px ${style.fontFamily}`;
+      const sample = style.textTransform === 'uppercase' ? text.toUpperCase() : text;
+      const spacing = (parseFloat(style.letterSpacing) || 0) * sample.length;
+      const width = ctx.measureText(sample).width + spacing;
+      if (width > available) {
+        const next = Math.max(7, Math.floor((base * available) / width * 10) / 10);
+        el.style.fontSize = `${next}px`;
+      }
+    };
+
+    fit();
+    const observer = new ResizeObserver(fit);
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [text]);
+
+  return (
+    <span ref={ref} className="fit-label" title={text}>
+      {text}
+    </span>
+  );
+}
+
 function Field({
   label,
+  rawLabel,
   value,
   options,
   readOnly,
@@ -63,6 +113,7 @@ function Field({
   dataCol,
 }: {
   label: string;
+  rawLabel?: string;
   value: string;
   options?: string[];
   readOnly?: boolean;
@@ -77,6 +128,7 @@ function Field({
   const [status, setStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
   const inputRef = useRef<HTMLInputElement>(null);
   const focused = useRef(false);
+  const fieldCls = memberColIsLong(rawLabel ?? '') ? 'field field-long' : 'field';
 
   useEffect(() => {
     if (!focused.current) setVal(format ? formatCp(value) : value);
@@ -112,10 +164,16 @@ function Field({
   }
 
   if (readOnly) {
-    const shown = format ? formatCp(value) : options ? valueLabel(value, t, lang) : value;
+    const shown = format
+      ? formatCp(value)
+      : options
+        ? memberColValueLabel(value, rawLabel ?? '', t, lang)
+        : value;
     return (
-      <div className="field" data-tab={dataTab} data-col={dataCol}>
-        <label>{label}</label>
+      <div className={fieldCls} data-tab={dataTab} data-col={dataCol}>
+        <label>
+          <FitLabel text={label} />
+        </label>
         <div className="field-ro" title={t('member.adminManaged')}>
           {shown.trim() || '—'}
         </div>
@@ -128,9 +186,9 @@ function Field({
     : [];
 
   return (
-    <div className="field" data-tab={dataTab} data-col={dataCol}>
+    <div className={fieldCls} data-tab={dataTab} data-col={dataCol}>
       <label style={{ display: 'flex', justifyContent: 'space-between', gap: 8 }}>
-        <span>{label}</span>
+        <FitLabel text={label} />
         <span
           className={`save-note ${status === 'saved' ? 'ok' : status === 'error' ? 'err' : ''}`}
           style={{ textTransform: 'none', letterSpacing: 0 }}
@@ -152,7 +210,11 @@ function Field({
             setVal(next);
             void commitValue(next);
           }}
-          options={optionList.map((o) => ({ value: o, label: valueLabel(o, t, lang), color: optionColor(o) }))}
+          options={optionList.map((o) => ({
+            value: o,
+            label: memberColValueLabel(o, rawLabel ?? '', t, lang),
+            color: optionColor(o),
+          }))}
         />
       ) : (
         <input
@@ -429,6 +491,7 @@ export default function MemberApp({
 
   const cols = activeTab ? buildColumns(activeTab.meta) : [];
   const row = activeTab ? myRow(activeTab) : undefined;
+  const showCollectionTip = !!activeTab && COLLECTION_TABS.has(activeTab.meta.title.trim().toUpperCase());
   const collectionGroups: { label: string; cols: Column[] }[] = [];
   if (activeTab && activeTab.meta.headerRows === 2) {
     for (const c of cols.slice(1)) {
@@ -849,7 +912,8 @@ export default function MemberApp({
                         {rosterCols.slice(1).map((c) => (
                           <Field
                             key={c.index}
-                            label={colLabel(c.label, t, lang)}
+                            label={memberColLabel(c.label, t, lang)}
+                            rawLabel={c.label}
                             value={rosterRow.cells[c.index] ?? ''}
                             options={rosterTab.meta.options?.[c.index]}
                             readOnly={
@@ -891,7 +955,8 @@ export default function MemberApp({
                         {equipCols.slice(1).map((c) => (
                           <Field
                             key={c.index}
-                            label={colLabel(c.label, t, lang)}
+                            label={memberColLabel(c.label, t, lang)}
+                            rawLabel={c.label}
                             value={equipRow.cells[c.index] ?? ''}
                             options={equipTab.meta.options?.[c.index]}
                             readOnly={!canEdit || MEMBER_READONLY.has(c.label.trim().toUpperCase())}
@@ -912,7 +977,15 @@ export default function MemberApp({
 
           {!isDashboard && activeTab && (
             <div className="panel-card">
-              <h3>{tabText(activeTab.meta.title)}</h3>
+              <div className="panel-head">
+                <h3>{tabText(activeTab.meta.title)}</h3>
+                {showCollectionTip && (
+                  <div className="panel-tip">
+                    <IconBulb />
+                    <span>{t('member.collectionTip')}</span>
+                  </div>
+                )}
+              </div>
 
               {!row && (
                 <div className="empty">
@@ -928,7 +1001,8 @@ export default function MemberApp({
                   {cols.slice(1).map((c) => (
                     <Field
                       key={c.index}
-                      label={colLabel(c.label, t, lang)}
+                      label={memberColLabel(c.label, t, lang)}
+                      rawLabel={c.label}
                       value={row.cells[c.index] ?? ''}
                       options={activeTab.meta.options?.[c.index]}
                       readOnly={!canEdit || MEMBER_READONLY.has(c.label.trim().toUpperCase())}
