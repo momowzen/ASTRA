@@ -5,7 +5,7 @@ import type { Column, DataResponse, Session } from '../types';
 import { buildColumns, formatCp, isCpLabel, isDateLabel, optionColor, timeInGuildParts, toIsoDate } from '../utils';
 import { addRow as apiAddRow, deleteRow as apiDeleteRow, saveCells, ApiError } from '../api';
 import { DatePicker, Select } from './Dropdown';
-import { IconBulb, IconClose, IconGear, IconGrid, IconLogout, IconMenu, IconPlus, IconSearch, IconTrash } from './icons';
+import { IconBulb, IconClose, IconGear, IconGrid, IconLogout, IconMenu, IconOverview, IconPlus, IconSearch, IconTrash, IconTrendingUp, IconTrophy, IconUserCheck } from './icons';
 import AdminSettings from './AdminSettings';
 import BossTracker from './BossTracker';
 import GuildRoster from './GuildRoster';
@@ -303,7 +303,7 @@ export default function AdminApp({
   }
 
   return (
-    <div className="shell">
+    <div className={`shell${toolView === 'profile-completion' ? ' shell-free' : ''}`}>
       <aside
         className={menuOpen ? 'sidebar open' : 'sidebar'}
         onClick={(e) => {
@@ -338,7 +338,7 @@ export default function AdminApp({
           }}
         >
           <span className="ico">
-            <IconGrid />
+            <IconOverview />
           </span>
           {t('admin.rosterOverview')}
         </button>
@@ -354,7 +354,7 @@ export default function AdminApp({
           }}
         >
           <span className="ico">
-            <IconGrid />
+            <IconUserCheck />
           </span>
           {t('tools.profileCompletion')}
         </button>
@@ -369,7 +369,7 @@ export default function AdminApp({
           }}
         >
           <span className="ico">
-            <IconGrid />
+            <IconTrophy />
           </span>
           {t('admin.dashboard')}
         </button>
@@ -429,7 +429,7 @@ export default function AdminApp({
           }}
         >
           <span className="ico">
-            <IconGrid />
+            <IconTrendingUp />
           </span>
           {t('tools.cpUpdate')}
         </button>

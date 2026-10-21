@@ -1,12 +1,12 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import type { DataResponse, TabData } from '../types';
 import { BOSSES } from '../bosses';
+import type { Boss } from '../bosses';
 import { addRow, ApiError, recordAttendance, saveCells, seedBossConfig } from '../api';
 import { ocrVariants, scanParty } from '../ocr';
 import { useLang } from '../i18n';
 import { bossLabel } from '../display';
 import { Select } from './Dropdown';
-import AnimatedNumber from './AnimatedNumber';
 
 interface Props {
   view: 'dashboard' | 'attendance' | 'config';
@@ -27,6 +27,20 @@ function fileToDataUrl(file: File): Promise<string> {
     fr.onerror = () => reject(new Error('Could not read the file'));
     fr.readAsDataURL(file);
   });
+}
+
+function useWideScreen(): boolean {
+  const [wide, setWide] = useState(
+    () => typeof window !== 'undefined' && window.matchMedia('(min-width: 901px)').matches,
+  );
+  useEffect(() => {
+    const mq = window.matchMedia('(min-width: 901px)');
+    const onChange = () => setWide(mq.matches);
+    onChange();
+    mq.addEventListener('change', onChange);
+    return () => mq.removeEventListener('change', onChange);
+  }, []);
+  return wide;
 }
 
 export default function BossTracker({ view, data, onPatch, toast }: Props) {
@@ -100,6 +114,43 @@ function ConfigView({
   const [seeding, setSeeding] = useState(false);
   const empty = !configTab || configTab.rows.length === 0;
 
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const headRef = useRef<HTMLTableCellElement>(null);
+  const rowRef = useRef<HTMLTableRowElement>(null);
+  const [boxH, setBoxH] = useState(0);
+  const [headH, setHeadH] = useState(34);
+  const [rowH, setRowH] = useState(36);
+  const wide = useWideScreen();
+
+  useLayoutEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    const sync = () => {
+      setBoxH(el.clientHeight);
+      const h = headRef.current?.offsetHeight;
+      const r = rowRef.current?.offsetHeight;
+      if (h) setHeadH(h);
+      if (r) setRowH(r);
+    };
+    sync();
+    const ro = new ResizeObserver(sync);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [wide]);
+
+  // Fill the visible height of the panel, then continue in the next set of columns.
+  const rowCap =
+    !wide || boxH <= 0
+      ? Math.max(BOSSES.length, 1)
+      : Math.max(1, Math.floor((boxH - headH - 2) / Math.max(rowH, 1)));
+  const colCount = Math.max(1, Math.ceil(BOSSES.length / rowCap));
+  const perCol = Math.max(1, Math.ceil(BOSSES.length / colCount));
+  const chunks = useMemo(() => {
+    const out: Boss[][] = [];
+    for (let i = 0; i < BOSSES.length; i += perCol) out.push(BOSSES.slice(i, i + perCol));
+    return out;
+  }, [perCol]);
+
   if (empty) {
     return (
       <div className="boss-view">
@@ -132,7 +183,7 @@ function ConfigView({
   }
 
   return (
-    <div className="boss-view">
+    <div className="boss-view config-view">
       <div className="table-card">
         <div className="table-meta">
           <span>
@@ -140,30 +191,39 @@ function ConfigView({
           </span>
           <span className="muted">{t('boss.changesInstant')}</span>
         </div>
-        <div className="table-scroll">
-          <table className="grid boss-config">
-            <thead>
-              <tr className="labels single">
-                <th className="ign-col">{t('boss.boss')}</th>
-                <th>{t('boss.points')}</th>
-              </tr>
-            </thead>
-            <tbody>
-              {BOSSES.map((b) => (
-                <tr key={b.id}>
-                  <td className="ign-col">
-                    <div className="cell">{bossLabel(b.name, t, lang)}</div>
-                  </td>
-                  <td onClick={(e) => e.stopPropagation()}>
-                    <PointsCell
-                      value={configRows.get(b.name)?.points ?? 1}
-                      onSave={(n) => onSave(b.name, n)}
-                    />
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+        <div className="table-scroll config-scroll" ref={scrollRef}>
+          <div
+            className="config-grid"
+            style={{ gridTemplateColumns: `repeat(${colCount}, minmax(0, 1fr))` }}
+          >
+            {chunks.map((chunk, ci) => (
+              <table className="grid boss-config config-table" key={ci}>
+                <thead>
+                  <tr className="labels single">
+                    <th className="ign-col" ref={ci === 0 ? headRef : undefined}>
+                      {t('boss.boss')}
+                    </th>
+                    <th>{t('boss.points')}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {chunk.map((b, i) => (
+                    <tr key={b.id} ref={ci === 0 && i === 0 ? rowRef : undefined}>
+                      <td className="ign-col">
+                        <div className="cell">{bossLabel(b.name, t, lang)}</div>
+                      </td>
+                      <td onClick={(e) => e.stopPropagation()}>
+                        <PointsCell
+                          value={configRows.get(b.name)?.points ?? 1}
+                          onSave={(n) => onSave(b.name, n)}
+                        />
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            ))}
+          </div>
         </div>
       </div>
     </div>
@@ -452,7 +512,6 @@ function DashboardView({ attendanceTab }: { attendanceTab: TabData | undefined }
       .sort((a, b) => b.points - a.points || a.ign.localeCompare(b.ign));
   }, [attendanceTab]);
 
-  const totalPoints = leaderboard.reduce((s, x) => s + x.points, 0);
   const topPoints = leaderboard[0]?.points ?? 0;
   const threshold = topPoints > 0 ? Math.max(1, Math.round(topPoints * 0.3)) : 0;
   const inBand = (points: number) => threshold > 0 && points >= threshold;
@@ -460,21 +519,6 @@ function DashboardView({ attendanceTab }: { attendanceTab: TabData | undefined }
 
   return (
     <div className="boss-view">
-      <div className="stat-row">
-        <div className="stat-card">
-          <div className="stat-label">{t('boss.totalAwarded')}</div>
-          <div className="stat-value"><AnimatedNumber value={totalPoints} /></div>
-        </div>
-        <div className="stat-card">
-          <div className="stat-label">{t('boss.membersWithPoints')}</div>
-          <div className="stat-value"><AnimatedNumber value={leaderboard.length} /></div>
-        </div>
-        <div className="stat-card">
-          <div className="stat-label">{t('boss.bossesTracked')}</div>
-          <div className="stat-value"><AnimatedNumber value={BOSSES.length} /></div>
-        </div>
-      </div>
-
       <div className="table-card">
         <div className="table-meta">
           <span>

@@ -23,24 +23,26 @@ export function IconTrash() {
 
 export function IconPlus() {
   return (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
-      <path d="M12 5v14M5 12h14" strokeLinecap="round" />
+    <svg className="nav-ico nav-ico-plus" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round">
+      <path className="plus-v" d="M12 5v14" />
+      <path className="plus-h" d="M5 12h14" />
     </svg>
   );
 }
 
 export function IconGrid(): ReactNode {
   return (
-    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
-      <rect x="3" y="3" width="18" height="18" rx="2" />
-      <path d="M3 9h18M9 3v18" />
+    <svg className="nav-ico nav-ico-grid" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+      <rect className="grid-frame" x="3" y="3" width="18" height="18" rx="2" />
+      <path className="grid-h" d="M3 9h18" />
+      <path className="grid-v" d="M9 3v18" />
     </svg>
   );
 }
 
 export function IconGear() {
   return (
-    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+    <svg className="nav-ico nav-ico-gear" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
       <circle cx="12" cy="12" r="3" />
       <path d="M19.4 15a1.7 1.7 0 00.34 1.87l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.7 1.7 0 00-1.87-.34 1.7 1.7 0 00-1 1.55V21a2 2 0 11-4 0v-.09a1.7 1.7 0 00-1-1.55 1.7 1.7 0 00-1.87.34l-.06.06a2 2 0 11-2.83-2.83l.06-.06a1.7 1.7 0 00.34-1.87 1.7 1.7 0 00-1.55-1H3a2 2 0 110-4h.09a1.7 1.7 0 001.55-1 1.7 1.7 0 00-.34-1.87l-.06-.06a2 2 0 112.83-2.83l.06.06a1.7 1.7 0 001.87.34h.09a1.7 1.7 0 001-1.55V3a2 2 0 114 0v.09a1.7 1.7 0 001 1.55 1.7 1.7 0 001.87-.34l.06-.06a2 2 0 112.83 2.83l-.06.06a1.7 1.7 0 00-.34 1.87v.09a1.7 1.7 0 001.55 1H21a2 2 0 110 4h-.09a1.7 1.7 0 00-1.55 1z" />
     </svg>
@@ -49,8 +51,10 @@ export function IconGear() {
 
 export function IconLogout() {
   return (
-    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
-      <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9" strokeLinecap="round" strokeLinejoin="round" />
+    <svg className="nav-ico nav-ico-logout" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+      <path className="logout-door" d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4" strokeLinecap="round" strokeLinejoin="round" />
+      <path className="logout-arrow" d="M16 17l5-5-5-5" strokeLinecap="round" strokeLinejoin="round" />
+      <path className="logout-shaft" d="M21 12H9" strokeLinecap="round" />
     </svg>
   );
 }
@@ -146,13 +150,43 @@ export function IconSheet() {
 
 export function IconTrophy() {
   return (
-    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M10 14.66V17a1 1 0 0 1-1 1 2 2 0 0 0-2 2v2" />
-      <path d="M14 14.66V17a1 1 0 0 0 1 1 2 2 0 0 1 2 2v2" />
-      <path d="M17.916 10H19.5A2.5 2.5 0 0 0 22 7.5V5a1 1 0 0 0-1-1h-3" />
-      <path d="M4 22h16" />
-      <path d="M6 9a6 6 0 0 0 12 0V3a1 1 0 0 0-1-1H7a1 1 0 0 0-1 1z" />
-      <path d="M6.084 10H4.5A2.5 2.5 0 0 1 2 7.5V5a1 1 0 0 1 1-1h3" />
+    <svg className="nav-ico nav-ico-trophy" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <path className="trophy-stem" d="M10 14.66V17a1 1 0 0 1-1 1 2 2 0 0 0-2 2v2" />
+      <path className="trophy-stem" d="M14 14.66V17a1 1 0 0 0 1 1 2 2 0 0 1 2 2v2" />
+      <path className="trophy-handle trophy-handle-r" d="M17.916 10H19.5A2.5 2.5 0 0 0 22 7.5V5a1 1 0 0 0-1-1h-3" />
+      <path className="trophy-base" d="M4 22h16" />
+      <path className="trophy-cup" d="M6 9a6 6 0 0 0 12 0V3a1 1 0 0 0-1-1H7a1 1 0 0 0-1 1z" />
+      <path className="trophy-handle trophy-handle-l" d="M6.084 10H4.5A2.5 2.5 0 0 1 2 7.5V5a1 1 0 0 1 1-1h3" />
+    </svg>
+  );
+}
+
+export function IconOverview() {
+  return (
+    <svg className="nav-ico nav-ico-overview" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <rect className="ov-tile" width="7" height="9" x="3" y="3" rx="1" />
+      <rect className="ov-tile" width="7" height="5" x="14" y="3" rx="1" />
+      <rect className="ov-tile" width="7" height="9" x="14" y="12" rx="1" />
+      <rect className="ov-tile" width="7" height="5" x="3" y="16" rx="1" />
+    </svg>
+  );
+}
+
+export function IconUserCheck() {
+  return (
+    <svg className="nav-ico nav-ico-profile" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <path className="pc-body" d="M2 21a8 8 0 0 1 13.292-6" />
+      <circle className="pc-head" cx="10" cy="8" r="5" />
+      <path className="pc-check" d="m16 19 2 2 4-4" />
+    </svg>
+  );
+}
+
+export function IconTrendingUp() {
+  return (
+    <svg className="nav-ico nav-ico-cp" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <path className="cp-arrow" d="M16 7h6v6" />
+      <path className="cp-line" d="m22 7-8.5 8.5-5-5L2 17" />
     </svg>
   );
 }

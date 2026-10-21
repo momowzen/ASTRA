@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import type { DataResponse } from '../types';
 import { ApiError, distribute } from '../api';
 import type { DistributionBand, DistributionResult } from '../api';
@@ -21,6 +21,20 @@ function membersFromData(data: DataResponse): { ign: string; points: number }[] 
     .map((r) => ({ ign: (r.cells[0] || '').trim(), points: intPoints(r.cells[1]) }))
     .filter((m) => m.ign)
     .sort((a, b) => b.points - a.points || a.ign.localeCompare(b.ign));
+}
+
+function useWideScreen(): boolean {
+  const [wide, setWide] = useState(
+    () => typeof window !== 'undefined' && window.matchMedia('(min-width: 901px)').matches,
+  );
+  useEffect(() => {
+    const mq = window.matchMedia('(min-width: 901px)');
+    const onChange = () => setWide(mq.matches);
+    onChange();
+    mq.addEventListener('change', onChange);
+    return () => mq.removeEventListener('change', onChange);
+  }, []);
+  return wide;
 }
 
 export default function AdminTools({ data, toast }: Props) {
@@ -59,6 +73,44 @@ export default function AdminTools({ data, toast }: Props) {
   const displayThr = top > 0 ? Math.max(1, Math.round(top * 0.3)) : 0;
   const displayRows = displayThr > 0 ? base.filter((r) => r.points >= displayThr) : [];
 
+  const tableBoxRef = useRef<HTMLDivElement>(null);
+  const headRowRef = useRef<HTMLTableCellElement>(null);
+  const bodyRowRef = useRef<HTMLTableRowElement>(null);
+  const [boxH, setBoxH] = useState(0);
+  const [headH, setHeadH] = useState(34);
+  const [rowH, setRowH] = useState(36);
+  const wide = useWideScreen();
+
+  useLayoutEffect(() => {
+    const el = tableBoxRef.current;
+    if (!el) return;
+    const sync = () => {
+      setBoxH(el.clientHeight);
+      const h = headRowRef.current?.offsetHeight;
+      const r = bodyRowRef.current?.offsetHeight;
+      if (h) setHeadH(h);
+      if (r) setRowH(r);
+    };
+    sync();
+    const ro = new ResizeObserver(sync);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [displayRows.length, wide]);
+
+  // Fill the visible height of the panel before flowing into the next set of columns.
+  const rowCap =
+    !wide || boxH <= 0
+      ? Math.max(displayRows.length, 1)
+      : Math.max(1, Math.floor((boxH - headH - 2) / Math.max(rowH, 1)));
+  const colCount = Math.max(1, Math.ceil(displayRows.length / rowCap));
+  const perCol = Math.max(1, Math.ceil(displayRows.length / colCount));
+  const chunks = useMemo(() => {
+    if (displayRows.length === 0) return [[]] as DistributionBand[][];
+    const out: DistributionBand[][] = [];
+    for (let i = 0; i < displayRows.length; i += perCol) out.push(displayRows.slice(i, i + perCol));
+    return out;
+  }, [displayRows, perCol]);
+
   async function save() {
     if (!poolValid) return;
     setSaving(true);
@@ -86,7 +138,7 @@ export default function AdminTools({ data, toast }: Props) {
 
   return (
     <>
-      <div className="boss-view">
+      <div className="boss-view dist-view">
         <div className="announce">
           {saved && (
             <div className="announce-head">
@@ -113,46 +165,56 @@ export default function AdminTools({ data, toast }: Props) {
             </div>
           </div>
 
-          <div className="announce-table">
-            <table className="grid">
-              <thead>
-                <tr className="labels single">
-                  <th className="rownum">#</th>
-                  <th className="ign-col">IGN</th>
-                  <th>{t('tools.points')}</th>
-                  <th>{t('tools.diamonds')}</th>
-                </tr>
-              </thead>
-              <tbody>
-                {displayRows.map((m, i) => (
-                  <tr key={m.ign}>
-                    <td className="rownum">{i + 1}</td>
-                    <td className="ign-col">
-                      <div className="cell top-cell" title={t('boss.top30')}>
-                        {m.ign}
-                      </div>
-                    </td>
-                    <td>
-                      <div className="cell top-cell" title={t('boss.top30')}>
-                        {m.points}
-                      </div>
-                    </td>
-                    <td>
-                      <div className={`cell ${showDiamonds ? 'dist-diamond' : ''}`}>
-                        {showDiamonds ? m.diamonds : '—'}
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-                {displayRows.length === 0 && (
-                  <tr>
-                    <td className="empty" colSpan={4}>
-                      {t('tools.empty')}
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
+          <div className="announce-table dist-split" ref={tableBoxRef}>
+            <div
+              className="dist-grid"
+              style={{ gridTemplateColumns: `repeat(${colCount}, minmax(0, 1fr))` }}
+            >
+              {chunks.map((chunk, ci) => (
+                <table className="grid dist-table" key={ci}>
+                  <thead>
+                    <tr className="labels single">
+                      <th className="rownum">#</th>
+                      <th className="ign-col" ref={ci === 0 ? headRowRef : undefined}>IGN</th>
+                      <th>{t('tools.points')}</th>
+                      <th>{t('tools.diamonds')}</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {chunk.map((m, i) => (
+                      <tr
+                        key={m.ign}
+                        ref={ci === 0 && i === 0 ? bodyRowRef : undefined}
+                      >
+                        <td className="rownum">{ci * perCol + i + 1}</td>
+                        <td className="ign-col">
+                          <div className="cell top-cell" title={t('boss.top30')}>
+                            {m.ign}
+                          </div>
+                        </td>
+                        <td>
+                          <div className="cell top-cell" title={t('boss.top30')}>
+                            {m.points}
+                          </div>
+                        </td>
+                        <td>
+                          <div className={`cell ${showDiamonds ? 'dist-diamond' : ''}`}>
+                            {showDiamonds ? m.diamonds : '—'}
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                    {displayRows.length === 0 && (
+                      <tr>
+                        <td className="empty" colSpan={4}>
+                          {t('tools.empty')}
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              ))}
+            </div>
           </div>
 
           {!saved ? (

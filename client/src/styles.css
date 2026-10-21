@@ -1735,6 +1735,18 @@ table.coll td.ign-col {
   .roster-view .stat-row {
     margin: -14px -14px 0;
   }
+
+  /* Admin mobile: the drawer replaces the top tab strip. */
+  .shell:not(.shell-member) .main-tabs {
+    display: none;
+  }
+
+  /* Solid drawer background so page content doesn't show through. */
+  #root .sidebar.open {
+    background: linear-gradient(180deg, var(--bg-2), var(--panel));
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
 }
 
 @media (hover: none) {
@@ -2317,6 +2329,167 @@ table.grid.boss-config th:not(.ign-col) {
 }
 .announce-table {
   margin-bottom: 16px;
+}
+.announce-table.dist-split {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.dist-grid,
+.config-grid {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  gap: 14px;
+  align-items: start;
+}
+table.grid.dist-table {
+  width: 100%;
+  table-layout: fixed;
+}
+table.grid.dist-table th,
+table.grid.dist-table td {
+  white-space: nowrap;
+}
+table.grid.dist-table th:nth-child(1) {
+  width: 34px;
+}
+table.grid.dist-table th:nth-child(3) {
+  width: 68px;
+}
+table.grid.dist-table th:nth-child(4) {
+  width: 86px;
+}
+table.grid.dist-table td.rownum,
+table.grid.dist-table td.ign-col {
+  position: static;
+  left: auto;
+  min-width: 0;
+}
+table.grid.dist-table thead .rownum,
+table.grid.dist-table thead th.ign-col {
+  left: auto;
+  min-width: 0;
+}
+table.grid.dist-table thead .rownum {
+  width: 34px;
+  padding: 9px 6px;
+}
+table.grid.dist-table td.rownum {
+  width: 34px;
+  padding: 8px 6px;
+}
+table.grid.dist-table td .cell {
+  max-width: none;
+  min-width: 0;
+}
+table.grid.config-table {
+  width: 100%;
+  table-layout: fixed;
+}
+table.grid.config-table th.ign-col {
+  width: 68%;
+  left: auto;
+  min-width: 0;
+}
+table.grid.config-table th:nth-child(2) {
+  width: 32%;
+}
+table.grid.config-table td.ign-col {
+  position: static;
+  left: auto;
+  min-width: 0;
+}
+table.grid.config-table td .cell {
+  max-width: none;
+  min-width: 0;
+}
+.content-fit .announce-table.dist-split {
+  overflow: hidden;
+}
+.content-fit .config-scroll {
+  overflow: hidden;
+}
+
+@media (max-width: 900px) {
+  .boss-view.dist-view {
+    height: calc(100vh - var(--topbar-h, 66px) - 28px);
+    height: calc(100dvh - var(--topbar-h, 66px) - 28px);
+    min-height: 0;
+    overflow: hidden;
+  }
+  .boss-view.dist-view > .announce {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    padding: 16px;
+  }
+  .boss-view.dist-view > .announce > .announce-head,
+  .boss-view.dist-view > .announce > .announce-stats,
+  .boss-view.dist-view > .announce > .announce-actions,
+  .boss-view.dist-view > .announce > .announce-saved {
+    flex: none;
+  }
+  .boss-view.dist-view .announce-stats {
+    flex-wrap: nowrap;
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+  .boss-view.dist-view .announce-stats .stat-card {
+    flex: 1 1 0;
+    min-width: 0;
+    padding: 8px 9px;
+  }
+  .boss-view.dist-view .announce-stats .stat-label {
+    font-size: 9px;
+    letter-spacing: 0.05em;
+  }
+  .boss-view.dist-view .announce-stats .stat-value {
+    margin-top: 1px;
+    font-size: 16px;
+  }
+  .boss-view.dist-view .dist-grid {
+    flex: none;
+  }
+  .boss-view.dist-view .announce-table.dist-split {
+    flex: 1;
+    min-height: 0;
+    overflow-x: hidden;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+  }
+}
+
+@media (max-width: 900px) {
+  .boss-view.config-view {
+    height: calc(100vh - var(--topbar-h, 66px) - 28px);
+    height: calc(100dvh - var(--topbar-h, 66px) - 28px);
+    min-height: 0;
+    overflow: hidden;
+  }
+  .boss-view.config-view > .table-card {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+  }
+  .boss-view.config-view .table-meta {
+    flex: none;
+  }
+  .boss-view.config-view .config-grid {
+    flex: none;
+  }
+  .boss-view.config-view .config-scroll {
+    flex: 1;
+    min-height: 0;
+    max-height: none;
+    overflow-x: hidden;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+  }
 }
 .dist-diamond {
   color: #f5b942;
@@ -3797,5 +3970,602 @@ body ::-webkit-scrollbar-thumb:hover {
   }
   .intro {
     animation: intro-bg-out 0.5s ease 0.8s both;
+  }
+}
+
+/* ============================================================
+   Mobile: solid top bar + fixed section frames.
+   Admin views fill the viewport; only panel content scrolls.
+   Profile completion (.shell-free) keeps normal page flow.
+   ============================================================ */
+@media (max-width: 900px) {
+  #root .topbar {
+    background: var(--bg-2);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+
+  .shell:not(.shell-member):not(.shell-free) {
+    height: 100vh;
+    height: 100dvh;
+    min-height: 0;
+    overflow: hidden;
+  }
+  .shell:not(.shell-member):not(.shell-free) .main {
+    height: 100vh;
+    height: 100dvh;
+    min-height: 0;
+    overflow: hidden;
+  }
+  .shell:not(.shell-member):not(.shell-free) .content {
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  /* Sheet tabs and CP history tables */
+  .shell:not(.shell-member):not(.shell-free) .content > .table-card {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+  }
+  .shell:not(.shell-member):not(.shell-free) .content > .table-card > .table-meta {
+    flex: none;
+  }
+  .shell:not(.shell-member):not(.shell-free) .content > .table-card > .table-scroll {
+    flex: 1;
+    min-height: 0;
+    max-height: none;
+    overflow: auto;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+  }
+
+  /* Ranking, attendance, config and distribution views */
+  .shell:not(.shell-member):not(.shell-free) .content > .boss-view {
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
+  }
+  .shell:not(.shell-member):not(.shell-free) .boss-view > .table-card {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+  }
+  .shell:not(.shell-member):not(.shell-free) .boss-view > .table-card > .table-meta {
+    flex: none;
+  }
+  .shell:not(.shell-member):not(.shell-free) .boss-view > .table-card > .table-scroll {
+    flex: 1;
+    min-height: 0;
+    max-height: none;
+    overflow: auto;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+  }
+  .shell:not(.shell-member):not(.shell-free) .boss-view > .panel-card {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  .shell:not(.shell-member):not(.shell-free) .boss-view .att-toolbar,
+  .shell:not(.shell-member):not(.shell-free) .boss-view .att-actions,
+  .shell:not(.shell-member):not(.shell-free) .boss-view .att-footer,
+  .shell:not(.shell-member):not(.shell-free) .boss-view .att-unmatched {
+    flex: none;
+  }
+  .shell:not(.shell-member):not(.shell-free) .boss-view .att-picker {
+    flex: 1;
+    min-height: 0;
+    max-height: none;
+    overscroll-behavior: contain;
+  }
+
+  /* CP update panels */
+  .shell:not(.shell-member):not(.shell-free) .content > .cp-update {
+    flex: 1;
+    min-height: 0;
+    height: auto;
+  }
+  .shell:not(.shell-member):not(.shell-free) .cp-layout {
+    flex: 1;
+    min-height: 0;
+  }
+  .shell:not(.shell-member):not(.shell-free) .cp-layout .panel-card {
+    min-height: 0;
+    overflow: hidden;
+  }
+  .shell:not(.shell-member):not(.shell-free) .cp-list,
+  .shell:not(.shell-member):not(.shell-free) .cp-read-list {
+    flex: 1;
+    min-height: 0;
+    max-height: none;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+  }
+
+  /* Guild roster overview */
+  .shell:not(.shell-member):not(.shell-free) .content-roster {
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
+  }
+  .shell:not(.shell-member):not(.shell-free) .content-roster > .roster-view {
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
+  }
+  .shell:not(.shell-member):not(.shell-free) .content-roster .stat-row {
+    flex: none;
+  }
+  .shell:not(.shell-member):not(.shell-free) .content-roster .roster-main {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+  }
+}
+
+/* ============================================================
+   Sidebar icon animations: rotation, drawing, flips and slides.
+   (No zoom / bouncing.)
+   ============================================================ */
+.nav-item .ico {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  overflow: visible;
+}
+.nav-item .nav-ico,
+.nav-item .nav-ico * {
+  transform-box: fill-box;
+}
+.nav-item .nav-ico {
+  overflow: visible;
+}
+
+/* ---- Generic icons: each part spins into place, alternating direction ---- */
+.nav-item:hover .ico > svg:not([class]) > *,
+.nav-item:active .ico > svg:not([class]) > * {
+  animation: nav-part-spin 0.78s cubic-bezier(0.35, 0.7, 0.25, 1) both;
+}
+.nav-item:hover .ico > svg:not([class]) > :nth-child(even),
+.nav-item:active .ico > svg:not([class]) > :nth-child(even) {
+  animation-name: nav-part-spin-rev;
+}
+.nav-item:hover .ico > svg:not([class]) > :nth-child(2),
+.nav-item:active .ico > svg:not([class]) > :nth-child(2) {
+  animation-delay: 80ms;
+}
+.nav-item:hover .ico > svg:not([class]) > :nth-child(3),
+.nav-item:active .ico > svg:not([class]) > :nth-child(3) {
+  animation-delay: 160ms;
+}
+.nav-item:hover .ico > svg:not([class]) > :nth-child(4),
+.nav-item:active .ico > svg:not([class]) > :nth-child(4) {
+  animation-delay: 240ms;
+}
+@keyframes nav-part-spin {
+  0% {
+    transform: rotate(0deg);
+    opacity: 0.35;
+  }
+  55% {
+    transform: rotate(200deg);
+    opacity: 1;
+  }
+  100% {
+    transform: rotate(360deg);
+    opacity: 1;
+  }
+}
+@keyframes nav-part-spin-rev {
+  0% {
+    transform: rotate(0deg);
+    opacity: 0.35;
+  }
+  55% {
+    transform: rotate(-200deg);
+    opacity: 1;
+  }
+  100% {
+    transform: rotate(-360deg);
+    opacity: 1;
+  }
+}
+
+/* ---- Plus: vertical stroke completes, then horizontal ---- */
+.nav-item:hover .nav-ico-plus .plus-v,
+.nav-item:active .nav-ico-plus .plus-v {
+  stroke-dasharray: 15;
+  animation: plus-v-draw 0.55s ease both;
+}
+.nav-item:hover .nav-ico-plus .plus-h,
+.nav-item:active .nav-ico-plus .plus-h {
+  stroke-dasharray: 15;
+  animation: plus-h-draw 0.55s ease both 170ms;
+}
+@keyframes plus-v-draw {
+  0% {
+    stroke-dashoffset: 15;
+  }
+  100% {
+    stroke-dashoffset: 0;
+  }
+}
+@keyframes plus-h-draw {
+  0% {
+    stroke-dashoffset: 15;
+  }
+  100% {
+    stroke-dashoffset: 0;
+  }
+}
+
+/* ---- Sheet tabs: grid lines draw, then the frame closes around them ---- */
+.nav-item:hover .nav-ico-grid .grid-h,
+.nav-item:active .nav-ico-grid .grid-h {
+  stroke-dasharray: 20;
+  animation: grid-line-draw 0.5s ease both;
+}
+.nav-item:hover .nav-ico-grid .grid-v,
+.nav-item:active .nav-ico-grid .grid-v {
+  stroke-dasharray: 20;
+  animation: grid-line-draw 0.5s ease both 100ms;
+}
+.nav-item:hover .nav-ico-grid .grid-frame,
+.nav-item:active .nav-ico-grid .grid-frame {
+  stroke-dasharray: 82;
+  animation: grid-frame-draw 0.62s ease both 200ms;
+}
+@keyframes grid-line-draw {
+  0% {
+    stroke-dashoffset: 20;
+  }
+  100% {
+    stroke-dashoffset: 0;
+  }
+}
+@keyframes grid-frame-draw {
+  0% {
+    stroke-dashoffset: 82;
+  }
+  100% {
+    stroke-dashoffset: 0;
+  }
+}
+
+/* ---- Gear (Boss Config / Distribution / Settings): full turn ---- */
+.nav-item:hover .nav-ico-gear,
+.nav-item:active .nav-ico-gear {
+  transform-origin: center;
+  animation: gear-turn 0.9s cubic-bezier(0.45, 0, 0.25, 1) both;
+}
+@keyframes gear-turn {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ---- Sign out: door swings, arrow exits right and re-enters left ---- */
+.nav-item:hover .nav-ico-logout .logout-door,
+.nav-item:active .nav-ico-logout .logout-door {
+  transform-origin: left center;
+  animation: logout-door-swing 0.9s ease both;
+}
+.nav-item:hover .nav-ico-logout .logout-arrow,
+.nav-item:active .nav-ico-logout .logout-arrow {
+  animation: logout-arrow-exit 0.9s cubic-bezier(0.45, 0, 0.25, 1) both;
+}
+.nav-item:hover .nav-ico-logout .logout-shaft,
+.nav-item:active .nav-ico-logout .logout-shaft {
+  stroke-dasharray: 12;
+  animation: logout-shaft-out 0.9s ease both;
+}
+@keyframes logout-door-swing {
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+  32% {
+    transform: rotate(-9deg);
+  }
+  62% {
+    transform: rotate(4deg);
+  }
+}
+@keyframes logout-arrow-exit {
+  0% {
+    transform: translate(0, 0);
+    opacity: 1;
+  }
+  35% {
+    transform: translate(3.5px, 0);
+    opacity: 0;
+  }
+  55% {
+    transform: translate(-4px, 0);
+    opacity: 0;
+  }
+  100% {
+    transform: translate(0, 0);
+    opacity: 1;
+  }
+}
+@keyframes logout-shaft-out {
+  0% {
+    stroke-dashoffset: 0;
+  }
+  35% {
+    stroke-dashoffset: 12;
+  }
+  55% {
+    stroke-dashoffset: -12;
+  }
+  100% {
+    stroke-dashoffset: 0;
+  }
+}
+
+/* Press: rotate-and-slide kick (no scaling) */
+.nav-item:active .ico {
+  animation: nav-ico-kick 0.46s cubic-bezier(0.3, 0.8, 0.3, 1);
+}
+@keyframes nav-ico-kick {
+  0% {
+    transform: rotate(0deg) translateX(0);
+  }
+  32% {
+    transform: rotate(-14deg) translateX(-1px);
+  }
+  64% {
+    transform: rotate(10deg) translateX(1px);
+  }
+  100% {
+    transform: rotate(0deg) translateX(0);
+  }
+}
+
+/* ---- Overview: tiles flip in a staggered wave ---- */
+.nav-ico-overview .ov-tile:nth-child(1) {
+  --spin: 1;
+}
+.nav-ico-overview .ov-tile:nth-child(2) {
+  --spin: -1;
+}
+.nav-ico-overview .ov-tile:nth-child(3) {
+  --spin: 1;
+}
+.nav-ico-overview .ov-tile:nth-child(4) {
+  --spin: -1;
+}
+.nav-item:hover .nav-ico-overview .ov-tile,
+.nav-item:active .nav-ico-overview .ov-tile {
+  animation: ov-tile-flip 0.82s cubic-bezier(0.4, 0.1, 0.25, 1) both;
+}
+.nav-item:hover .nav-ico-overview .ov-tile:nth-child(2),
+.nav-item:active .nav-ico-overview .ov-tile:nth-child(2) {
+  animation-delay: 75ms;
+}
+.nav-item:hover .nav-ico-overview .ov-tile:nth-child(3),
+.nav-item:active .nav-ico-overview .ov-tile:nth-child(3) {
+  animation-delay: 150ms;
+}
+.nav-item:hover .nav-ico-overview .ov-tile:nth-child(4),
+.nav-item:active .nav-ico-overview .ov-tile:nth-child(4) {
+  animation-delay: 225ms;
+}
+@keyframes ov-tile-flip {
+  0% {
+    transform: perspective(46px) rotateY(0deg);
+  }
+  55% {
+    transform: perspective(46px) rotateY(calc(var(--spin) * 180deg));
+  }
+  100% {
+    transform: perspective(46px) rotateY(calc(var(--spin) * 360deg));
+  }
+}
+
+/* ---- Profile completion: the whole mark draws itself ---- */
+.nav-item:hover .nav-ico-profile .pc-head,
+.nav-item:active .nav-ico-profile .pc-head {
+  stroke-dasharray: 34;
+  animation: pc-trace 0.8s ease both;
+}
+.nav-item:hover .nav-ico-profile .pc-body,
+.nav-item:active .nav-ico-profile .pc-body {
+  stroke-dasharray: 30;
+  animation: pc-trace 0.8s ease both 90ms;
+}
+.nav-item:hover .nav-ico-profile .pc-check,
+.nav-item:active .nav-ico-profile .pc-check {
+  stroke-dasharray: 14;
+  animation: pc-check-write 0.8s ease both 170ms;
+}
+@keyframes pc-trace {
+  0% {
+    stroke-dashoffset: 34;
+    opacity: 0.25;
+  }
+  100% {
+    stroke-dashoffset: 0;
+    opacity: 1;
+  }
+}
+@keyframes pc-check-write {
+  0% {
+    stroke-dashoffset: 14;
+    transform: rotate(-48deg) translate(-2px, -2px);
+    opacity: 0.15;
+  }
+  58% {
+    stroke-dashoffset: 0;
+    transform: rotate(5deg) translate(0.4px, 0.4px);
+    opacity: 1;
+  }
+  100% {
+    stroke-dashoffset: 0;
+    transform: none;
+    opacity: 1;
+  }
+}
+
+/* ---- Ranking: trophy swings like a pendulum, handles swing out of phase ---- */
+.nav-item:hover .nav-ico-trophy,
+.nav-item:active .nav-ico-trophy {
+  transform-origin: center bottom;
+  animation: trophy-swing 0.9s cubic-bezier(0.45, 0, 0.25, 1) both;
+}
+.nav-item:hover .nav-ico-trophy .trophy-cup,
+.nav-item:active .nav-ico-trophy .trophy-cup {
+  animation: trophy-cup-tilt 0.9s ease both;
+}
+.nav-item:hover .nav-ico-trophy .trophy-handle-l,
+.nav-item:active .nav-ico-trophy .trophy-handle-l {
+  transform-origin: right center;
+  animation: trophy-handle-l-turn 0.9s ease both;
+}
+.nav-item:hover .nav-ico-trophy .trophy-handle-r,
+.nav-item:active .nav-ico-trophy .trophy-handle-r {
+  transform-origin: left center;
+  animation: trophy-handle-r-turn 0.9s ease both;
+}
+.nav-item:hover .nav-ico-trophy .trophy-stem,
+.nav-item:active .nav-ico-trophy .trophy-stem {
+  animation: trophy-stem-sway 0.9s ease both;
+}
+@keyframes trophy-swing {
+  0% {
+    transform: rotate(0deg);
+  }
+  25% {
+    transform: rotate(-15deg);
+  }
+  55% {
+    transform: rotate(12deg);
+  }
+  80% {
+    transform: rotate(-5deg);
+  }
+  100% {
+    transform: rotate(0deg);
+  }
+}
+@keyframes trophy-cup-tilt {
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+  28% {
+    transform: rotate(7deg);
+  }
+  58% {
+    transform: rotate(-6deg);
+  }
+  80% {
+    transform: rotate(2deg);
+  }
+}
+@keyframes trophy-handle-l-turn {
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+  28% {
+    transform: rotate(26deg);
+  }
+  58% {
+    transform: rotate(-11deg);
+  }
+  80% {
+    transform: rotate(4deg);
+  }
+}
+@keyframes trophy-handle-r-turn {
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+  28% {
+    transform: rotate(-26deg);
+  }
+  58% {
+    transform: rotate(11deg);
+  }
+  80% {
+    transform: rotate(-4deg);
+  }
+}
+@keyframes trophy-stem-sway {
+  0%,
+  100% {
+    transform: translateX(0) rotate(0deg);
+  }
+  28% {
+    transform: translateX(0.8px) rotate(7deg);
+  }
+  58% {
+    transform: translateX(-0.6px) rotate(-5deg);
+  }
+  80% {
+    transform: translateX(0.2px) rotate(2deg);
+  }
+}
+
+/* ---- CP update: the trend line traces itself, arrow slides in ---- */
+.nav-item:hover .nav-ico-cp .cp-line,
+.nav-item:active .nav-ico-cp .cp-line {
+  stroke-dasharray: 30;
+  animation: cp-line-trace 0.82s cubic-bezier(0.4, 0, 0.2, 1) both;
+}
+.nav-ico-cp .cp-arrow {
+  transform-origin: right top;
+}
+.nav-item:hover .nav-ico-cp .cp-arrow,
+.nav-item:active .nav-ico-cp .cp-arrow {
+  animation: cp-arrow-slide 0.82s cubic-bezier(0.3, 0.8, 0.3, 1) both 120ms;
+}
+@keyframes cp-line-trace {
+  0% {
+    stroke-dashoffset: 30;
+  }
+  100% {
+    stroke-dashoffset: 0;
+  }
+}
+@keyframes cp-arrow-slide {
+  0% {
+    transform: translate(-4px, 4px) rotate(-38deg);
+    opacity: 0;
+  }
+  56% {
+    transform: translate(0.7px, -0.7px) rotate(6deg);
+    opacity: 1;
+  }
+  80% {
+    transform: translate(-0.3px, 0.3px) rotate(-2deg);
+  }
+  100% {
+    transform: none;
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nav-item .ico,
+  .nav-item .nav-ico,
+  .nav-item .nav-ico *,
+  .nav-item .ico > svg:not([class]) > * {
+    animation: none !important;
+    stroke-dasharray: none !important;
   }
 }
