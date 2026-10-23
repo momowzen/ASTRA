@@ -3,6 +3,7 @@ import type { DataResponse, TabData } from '../types';
 import { BOSSES } from '../bosses';
 import type { Boss } from '../bosses';
 import { addRow, ApiError, recordAttendance, saveCells, seedBossConfig } from '../api';
+import { initials } from '../utils';
 import { ocrVariants, scanParty } from '../ocr';
 import { useLang } from '../i18n';
 import { bossLabel } from '../display';
@@ -155,7 +156,11 @@ function ConfigView({
     return (
       <div className="boss-view">
         <div className="panel-card">
-          <h3>{t('admin.bossConfig')}</h3>
+          <div className="panel-head">
+            <div>
+              <h3>{t('admin.bossConfig')}</h3>
+            </div>
+          </div>
           <div className="empty">
             <div className="big">
               <span className="spinner" />
@@ -186,9 +191,11 @@ function ConfigView({
     <div className="boss-view config-view">
       <div className="table-card">
         <div className="table-meta">
-          <span>
-            <strong>{BOSSES.length}</strong> {t('boss.meta')}
-          </span>
+          <div className="table-meta-info">
+            <span>
+              <strong>{BOSSES.length}</strong> {t('boss.meta')}
+            </span>
+          </div>
           <span className="muted">{t('boss.changesInstant')}</span>
         </div>
         <div className="table-scroll config-scroll" ref={scrollRef}>
@@ -282,6 +289,8 @@ function AttendanceView({
   const [recording, setRecording] = useState(false);
   const [scanning, setScanning] = useState(false);
   const [unmatched, setUnmatched] = useState<string[]>([]);
+  const [dragOver, setDragOver] = useState(false);
+  const dragDepth = useRef(0);
   const scanRef = useRef<HTMLInputElement>(null);
 
   const roster = data.tabs.find((t) => t.meta.title.toUpperCase() === 'BASIC INFORMATION');
@@ -332,8 +341,7 @@ function AttendanceView({
     });
   }
 
-  async function onScanFiles(e: React.ChangeEvent<HTMLInputElement>) {
-    const files = Array.from(e.target.files ?? []);
+  async function scanFiles(files: File[]) {
     if (files.length === 0) return;
     setScanning(true);
     try {
@@ -364,6 +372,18 @@ function AttendanceView({
     }
   }
 
+  async function onScanFiles(e: React.ChangeEvent<HTMLInputElement>) {
+    await scanFiles(Array.from(e.target.files ?? []));
+  }
+
+  function onDropFiles(e: React.DragEvent<HTMLDivElement>) {
+    e.preventDefault();
+    dragDepth.current = 0;
+    setDragOver(false);
+    const files = Array.from(e.dataTransfer.files).filter((f) => f.type.startsWith('image/'));
+    if (files.length > 0) void scanFiles(files);
+  }
+
   async function record() {
     if (selected.size === 0) return;
     if (custom && customPts < 1) return;
@@ -380,9 +400,32 @@ function AttendanceView({
   }
 
   return (
-    <div className="boss-view">
-      <div className="panel-card">
-        <h3>{t('boss.recordTitle')}</h3>
+    <div className="boss-view attendance-view">
+      <div
+        className={`panel-card attendance-panel-card${dragOver ? ' drop-active' : ''}`}
+        onDragOver={(e) => {
+          if ([...e.dataTransfer.types].includes('Files')) {
+            e.preventDefault();
+          }
+        }}
+        onDragEnter={(e) => {
+          if ([...e.dataTransfer.types].includes('Files')) {
+            e.preventDefault();
+            dragDepth.current += 1;
+            setDragOver(true);
+          }
+        }}
+        onDragLeave={() => {
+          dragDepth.current = Math.max(0, dragDepth.current - 1);
+          if (dragDepth.current === 0) setDragOver(false);
+        }}
+        onDrop={onDropFiles}
+      >
+        <div className="panel-head">
+          <div>
+            <h3>{t('boss.recordTitle')}</h3>
+          </div>
+        </div>
         <div className="att-toolbar">
           <div className="field" style={{ minWidth: 220 }}>
             <label>{custom ? t('boss.customPoints') : t('boss.boss')}</label>
@@ -421,9 +464,15 @@ function AttendanceView({
             </span>
             {t('boss.custom')}
           </label>
-          <div className="att-summary">
-            <strong>{selected.size}</strong> {t('boss.selected')} ·{' '}
-            <strong>+{effPoints * selected.size}</strong> {t('boss.ptsTotal')}
+          <div className="att-stats">
+            <div className="att-stat">
+              <span>{selected.size}</span>
+              <small>{t('boss.selected')}</small>
+            </div>
+            <div className="att-stat att-stat--pts">
+              <span>+{effPoints * selected.size}</span>
+              <small>{t('boss.ptsTotal')}</small>
+            </div>
           </div>
         </div>
 
@@ -481,8 +530,12 @@ function AttendanceView({
                 className={`att-row ${on ? 'on' : ''}`}
                 onClick={() => toggle(name)}
               >
-                <input type="checkbox" checked={on} readOnly />
+                <span className="att-avatar">{initials(name)}</span>
                 <span className="att-ign">{name}</span>
+                <span className="att-check" aria-hidden="true">
+                  {on ? '✓' : ''}
+                </span>
+                <input type="checkbox" checked={on} readOnly tabIndex={-1} />
               </div>
             );
           })}
@@ -498,6 +551,7 @@ function AttendanceView({
             {recording ? <span className="spinner" /> : t('boss.record')}
           </button>
         </div>
+        {dragOver && <div className="drop-overlay">{t('drop.screenshot')}</div>}
       </div>
     </div>
   );
@@ -518,18 +572,20 @@ function DashboardView({ attendanceTab }: { attendanceTab: TabData | undefined }
   const bandCount = leaderboard.filter((x) => inBand(x.points)).length;
 
   return (
-    <div className="boss-view">
+    <div className="boss-view dashboard-view">
       <div className="table-card">
         <div className="table-meta">
-          <span>
-            <strong>{leaderboard.length}</strong> {t('boss.membersOnBoard')}
-            {bandCount > 0 && (
-              <>
-                {' '}
-                · {t('boss.top30Meta', { n: bandCount })}
-              </>
-            )}
-          </span>
+          <div className="table-meta-info">
+            <span>
+              <strong>{leaderboard.length}</strong> {t('boss.membersOnBoard')}
+              {bandCount > 0 && (
+                <>
+                  {' '}
+                  · {t('boss.top30Meta', { n: bandCount })}
+                </>
+              )}
+            </span>
+          </div>
         </div>
         <div className="table-scroll">
           <table className="grid">
@@ -546,14 +602,15 @@ function DashboardView({ attendanceTab }: { attendanceTab: TabData | undefined }
                 const cellCls = mark ? 'cell top-cell' : 'cell';
                 return (
                   <tr key={x.ign}>
-                    <td className="rownum">{i + 1}</td>
+                    <td className={`rownum ${i < 3 ? `rank-${i + 1}` : ''}`}>{i + 1}</td>
                     <td className="ign-col">
-                      <div className={cellCls} title={mark ? t('boss.top30') : undefined}>
+                      <div className={`${cellCls} roster-name`}>
+                        <span className={`mini-avatar tone-${i % 5}`}>{initials(x.ign)}</span>
                         {x.ign}
                       </div>
                     </td>
                     <td>
-                      <div className={cellCls} title={mark ? t('boss.top30') : undefined}>
+                      <div className={`${cellCls} points-cell`} title={mark ? t('boss.top30') : undefined}>
                         {x.points}
                       </div>
                     </td>

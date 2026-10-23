@@ -135,6 +135,8 @@ export default function LoadingScreen({ onDone }: { onDone: () => void }) {
 
   return (
     <div className={`intro${armed ? ' armed' : ''}`} aria-hidden="true">
+      <div className="intro-halo" />
+      <div className="intro-frame" />
       <div className="intro-stars intro-stars--far" />
       <div className="intro-stars intro-stars--mid" />
       <div className="intro-stars intro-stars--near" />
@@ -184,6 +186,11 @@ export default function LoadingScreen({ onDone }: { onDone: () => void }) {
           );
         })}
       </svg>
+      <div className="intro-meta">
+        <span className="intro-meta-rule" />
+        <span>GUILD MANAGER</span>
+        <span className="intro-meta-rule" />
+      </div>
     </div>
   );
 }

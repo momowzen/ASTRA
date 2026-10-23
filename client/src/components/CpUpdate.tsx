@@ -2,7 +2,7 @@ import { useMemo, useRef, useState } from 'react';
 import type { DataResponse } from '../types';
 import { ApiError, updateCp } from '../api';
 import type { CpItem } from '../api';
-import { formatCp } from '../utils';
+import { formatCp, initials } from '../utils';
 import { useLang } from '../i18n';
 import { tabLabel } from '../display';
 import { Select } from './Dropdown';
@@ -45,6 +45,8 @@ export default function CpUpdate({ data, toast }: Props) {
   const [items, setItems] = useState<CpItem[] | null>(null);
   const [reading, setReading] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [dragOver, setDragOver] = useState(false);
+  const dragDepth = useRef(0);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [manual, setManual] = useState<string | null>(null);
   const [manualCp, setManualCp] = useState('');
@@ -74,8 +76,7 @@ export default function CpUpdate({ data, toast }: Props) {
     }
   }
 
-  async function onFiles(e: React.ChangeEvent<HTMLInputElement>) {
-    const files = Array.from(e.target.files ?? []);
+  async function handleFiles(files: File[]) {
     if (files.length === 0) return;
     const loaded: Screenshot[] = [];
     for (const f of files) {
@@ -89,6 +90,18 @@ export default function CpUpdate({ data, toast }: Props) {
     setImages(merged);
     if (fileRef.current) fileRef.current.value = '';
     if (loaded.length > 0) void readAll(merged);
+  }
+
+  function onFiles(e: React.ChangeEvent<HTMLInputElement>) {
+    void handleFiles(Array.from(e.target.files ?? []));
+  }
+
+  function onDropFiles(e: React.DragEvent<HTMLDivElement>) {
+    e.preventDefault();
+    dragDepth.current = 0;
+    setDragOver(false);
+    const files = Array.from(e.dataTransfer.files).filter((f) => f.type.startsWith('image/'));
+    if (files.length > 0) void handleFiles(files);
   }
 
   function removeImage(index: number) {
@@ -178,10 +191,16 @@ export default function CpUpdate({ data, toast }: Props) {
     <div className="cp-update">
       <div className="cp-layout">
         <div className="panel-card">
-          <h3>{t('tools.cpLeft')}</h3>
+          <div className="panel-head">
+            <div>
+              <h3>{t('tools.cpLeft')}</h3>
+            </div>
+            <span className="panel-count">{roster.length}</span>
+          </div>
           <div className="cp-list">
-            {roster.map((r) => (
+            {roster.map((r, i) => (
               <div className="cp-row" key={r.ign}>
+                <span className={`mini-avatar tone-${i % 5}`}>{initials(r.ign)}</span>
                 <button
                   type="button"
                   className="cp-ign"
@@ -196,8 +215,31 @@ export default function CpUpdate({ data, toast }: Props) {
           </div>
         </div>
 
-        <div className="panel-card">
-          <h3>{t('tools.cpRight')}</h3>
+        <div
+          className={`panel-card${dragOver ? ' drop-active' : ''}`}
+          onDragOver={(e) => {
+            if ([...e.dataTransfer.types].includes('Files')) {
+              e.preventDefault();
+            }
+          }}
+          onDragEnter={(e) => {
+            if ([...e.dataTransfer.types].includes('Files')) {
+              e.preventDefault();
+              dragDepth.current += 1;
+              setDragOver(true);
+            }
+          }}
+          onDragLeave={() => {
+            dragDepth.current = Math.max(0, dragDepth.current - 1);
+            if (dragDepth.current === 0) setDragOver(false);
+          }}
+          onDrop={onDropFiles}
+        >
+          <div className="panel-head">
+            <div>
+              <h3>{t('tools.cpRight')}</h3>
+            </div>
+          </div>
           <div className="cp-upload">
             <input
               ref={fileRef}
@@ -207,8 +249,16 @@ export default function CpUpdate({ data, toast }: Props) {
               hidden
               onChange={(e) => void onFiles(e)}
             />
-            <button className="btn btn-primary" onClick={() => fileRef.current?.click()}>
-              {t('tools.cpUpload')}
+            <button className="cp-dropzone" type="button" onClick={() => fileRef.current?.click()}>
+              <span className="cp-dropzone-ico">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                  <polyline points="17 8 12 3 7 8" />
+                  <line x1="12" y1="3" x2="12" y2="15" />
+                </svg>
+              </span>
+              <span className="cp-dropzone-text">{t('tools.cpUpload')}</span>
+              <span className="cp-dropzone-hint">PNG / JPG</span>
             </button>
           </div>
 
@@ -280,6 +330,7 @@ export default function CpUpdate({ data, toast }: Props) {
               </div>
             </>
           )}
+          {dragOver && <div className="drop-overlay">{t('drop.screenshot')}</div>}
         </div>
       </div>
 

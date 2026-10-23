@@ -128,7 +128,8 @@ function Field({
   const [status, setStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
   const inputRef = useRef<HTMLInputElement>(null);
   const focused = useRef(false);
-  const fieldCls = memberColIsLong(rawLabel ?? '') ? 'field field-long' : 'field';
+  const longLabel = memberColIsLong(rawLabel ?? '');
+  const fieldCls = longLabel ? 'field field-question' : 'field';
 
   useEffect(() => {
     if (!focused.current) setVal(format ? formatCp(value) : value);
@@ -172,7 +173,7 @@ function Field({
     return (
       <div className={fieldCls} data-tab={dataTab} data-col={dataCol}>
         <label>
-          <FitLabel text={label} />
+          {longLabel ? <span className="question-text">{label}</span> : <FitLabel text={label} />}
         </label>
         <div className="field-ro" title={t('member.adminManaged')}>
           {shown.trim() || '—'}
@@ -188,7 +189,7 @@ function Field({
   return (
     <div className={fieldCls} data-tab={dataTab} data-col={dataCol}>
       <label style={{ display: 'flex', justifyContent: 'space-between', gap: 8 }}>
-        <FitLabel text={label} />
+        {longLabel ? <span className="question-text">{label}</span> : <FitLabel text={label} />}
         <span
           className={`save-note ${status === 'saved' ? 'ok' : status === 'error' ? 'err' : ''}`}
           style={{ textTransform: 'none', letterSpacing: 0 }}
@@ -345,7 +346,7 @@ export default function MemberApp({
   const [toolsOnline, setToolsOnline] = useState(true);
   const [toolsAlarm, setToolsAlarm] = useState(false);
   const toolsFrameRef = useRef<HTMLIFrameElement>(null);
-  const stripRef = useRef<HTMLElement>(null);
+  const toolsCursorCleanupRef = useRef<(() => void) | null>(null);
 
   const { t, lang } = useLang();
   const canEdit = data.memberEdit !== false;
@@ -419,11 +420,6 @@ export default function MemberApp({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [jump, activeTitle]);
 
-  useEffect(() => {
-    const el = stripRef.current?.querySelector<HTMLElement>('.main-tab.active');
-    el?.scrollIntoView({ inline: 'center', block: 'nearest' });
-  }, [activeTitle]);
-
   const mapLang = (l: string) => (l === 'ko' || l === 'ja' || l === 'zh' ? l : 'en');
   const viewerTool = toolsView === 'tracker' || toolsView === 'hidden' || toolsView === 'relic';
   const toolsApi = () =>
@@ -439,7 +435,37 @@ export default function MemberApp({
     setToolsAlarm(!!api.alarmOn());
     api.setLang(mapLang(lang));
     if (viewerTool && toolsView) api.setPage(toolsView);
+
+    // The astral pointer lives in the parent document. Forward pointer events
+    // from the tools iframe so the halo/trail keeps working over its panel.
+    const frame = toolsFrameRef.current;
+    const win = frame?.contentWindow;
+    if (frame && win) {
+      toolsCursorCleanupRef.current?.();
+      const forward = (type: 'pointermove' | 'pointerdown') => (e: PointerEvent) => {
+        const rect = frame.getBoundingClientRect();
+        window.dispatchEvent(
+          new PointerEvent(type, {
+            clientX: rect.left + e.clientX,
+            clientY: rect.top + e.clientY,
+            pointerId: e.pointerId,
+            pointerType: e.pointerType,
+            isPrimary: e.isPrimary,
+          }),
+        );
+      };
+      const onMove = forward('pointermove');
+      const onDown = forward('pointerdown');
+      win.addEventListener('pointermove', onMove, { passive: true });
+      win.addEventListener('pointerdown', onDown, { passive: true });
+      toolsCursorCleanupRef.current = () => {
+        win.removeEventListener('pointermove', onMove);
+        win.removeEventListener('pointerdown', onDown);
+      };
+    }
   }
+
+  useEffect(() => () => toolsCursorCleanupRef.current?.(), []);
 
   useEffect(() => {
     if (viewerTool && toolsView) toolsApi()?.setPage(toolsView);
@@ -502,6 +528,10 @@ export default function MemberApp({
   }
 
   const rosterMembers = data.roster ?? [];
+  const profileTabs = useMemo(
+    () => data.tabs.filter((tab) => !MEMBER_HIDDEN_TABS.includes(tab.meta.title.toUpperCase())),
+    [data.tabs],
+  );
   const rosterChoices = useMemo(() => {
     if (rosterCol < 0) return [] as string[];
     const key = ROSTER_FILTER_COLS[rosterCol].key;
@@ -526,6 +556,7 @@ export default function MemberApp({
   const lbTop = leaderboard[0]?.points ?? 0;
   const lbThreshold = lbTop > 0 ? Math.max(1, Math.round(lbTop * 0.3)) : 0;
   const inBand = (p: number) => lbThreshold > 0 && p >= lbThreshold;
+  const myPoints = leaderboard.find((x) => x.ign.trim().toLowerCase() === session.ign.trim().toLowerCase())?.points ?? 0;
 
   const liveState = viewerTool ? (toolsOnline ? 'live' : 'error') : live;
   const liveText = viewerTool ? (toolsOnline ? t('app.live') : t('app.offline')) : liveNote;
@@ -539,15 +570,20 @@ export default function MemberApp({
         }}
       >
         <div className="brand">
-          <img className="mark" src="./assets/logo.png" alt="" />
-          <div>
+          <span className="brand-crest">
+            <img className="mark" src="./assets/logo.png" alt="" />
+          </span>
+          <div className="brand-text">
             <div className="name">ASTRA</div>
             <div className="tag">{t('member.tag')}</div>
           </div>
           <button
             className="drawer-close"
             aria-label={t('common.close')}
-            onClick={() => setMenuOpen(false)}
+            onClick={(e) => {
+              e.stopPropagation();
+              setMenuOpen(false);
+            }}
           >
             <IconClose />
           </button>
@@ -644,26 +680,12 @@ export default function MemberApp({
           <button className="menu-btn" aria-label={t('common.menu')} onClick={() => setMenuOpen(true)}>
             <IconMenu />
           </button>
-          <h2>
-            <span className="topbar-tab-title">
-              {toolsView
-                ? toolsView === 'attendance'
-                  ? t('member.toolAttendance')
-                  : toolsView === 'tracker'
-                    ? t('member.toolBossTracker')
-                    : toolsView === 'hidden'
-                      ? t('member.toolHiddenClass')
-                      : t('member.toolRelic')
-                : rosterView
-                  ? t('member.roster')
-                  : isDashboard
-                    ? t('member.profile')
-                    : activeTab
-                      ? tabText(activeTab.meta.title)
-                      : t('member.loading')}
+          <div className="topbar-heading">
+            <span className="topbar-brand">
+              <img className="topbar-logo" src="./assets/logo.png" alt="" />
+              ASTRA
             </span>
-            <span className="topbar-brand">ASTRA</span>
-          </h2>
+          </div>
           <div className="grow" />
           {toolsView === 'tracker' && (
             <button
@@ -692,70 +714,39 @@ export default function MemberApp({
             <span className="live-text">{liveText}</span>
           </span>
           <LangToggle />
-          <nav className="main-tabs" ref={stripRef}>
-            <button className={`main-tab ${isDashboard ? 'active' : ''}`} onClick={() => selectTab('')}>
-              {t('member.profile')}
-            </button>
-            {memberTabs.map((mt) => (
-              <button
-                key={mt.meta.title}
-                className={`main-tab ${mt.meta.title === activeTitle ? 'active' : ''}`}
-                onClick={() => selectTab(mt.meta.title)}
-              >
-                {tabText(mt.meta.title)}
-              </button>
-            ))}
-            <button className={`main-tab ${rosterView ? 'active' : ''}`} onClick={showRoster}>
-              {t('member.roster')}
-            </button>
-            <button
-              className={`main-tab ${toolsView === 'attendance' ? 'active' : ''}`}
-              onClick={() => showTool('attendance')}
-            >
-              {t('member.toolAttendance')}
-            </button>
-            <button
-              className={`main-tab ${toolsView === 'tracker' ? 'active' : ''}`}
-              onClick={() => showTool('tracker')}
-            >
-              {t('member.toolBossTracker')}
-            </button>
-            <button
-              className={`main-tab ${toolsView === 'hidden' ? 'active' : ''}`}
-              onClick={() => showTool('hidden')}
-            >
-              {t('member.toolHiddenClass')}
-            </button>
-            <button
-              className={`main-tab ${toolsView === 'relic' ? 'active' : ''}`}
-              onClick={() => showTool('relic')}
-            >
-              {t('member.toolRelic')}
-            </button>
-          </nav>
         </header>
 
         <div className="content">
-          {!toolsView && !rosterView && (
-          <div className="profile-hero">
-            <div className="avatar">{initials(session.ign)}</div>
-            <div className="id">
-              <h1>{session.ign}</h1>
-              <div className="badges">
-                {profileBadges.map((b, i) => (
-                  <span key={i} className={`badge ${b.cls}`}>
-                    {b.label}
-                  </span>
-                ))}
-                {!rosterRow && (
-                  <span className="badge" style={{ color: 'var(--accent-2)' }}>
-                    {t('member.notOnRoster')}
-                  </span>
-                )}
+          {isDashboard && (
+            <div className="profile-hero">
+              <div className="hero-sigil">
+                <div className="avatar">{initials(session.ign)}</div>
+                <span className="hero-sigil-ring" aria-hidden="true" />
               </div>
+              <div className="id">
+                <span className="hero-kicker">{t('member.profile')}</span>
+                <h1>{session.ign}</h1>
+                <div className="badges">
+                  {profileBadges.map((b, i) => (
+                    <span key={i} className={`badge ${b.cls}`}>
+                      {b.label}
+                    </span>
+                  ))}
+                  {!rosterRow && (
+                    <span className="badge" style={{ color: 'var(--accent-2)' }}>
+                      {t('member.notOnRoster')}
+                    </span>
+                  )}
+                </div>
+              </div>
+              <div className="hero-stats">
+                <div className="hero-stat">
+                  <span>{t('boss.points')}</span>
+                  <strong>{myPoints.toLocaleString('en-US')}</strong>
+                </div>
+              </div>
+              <ProfileProgress tabs={profileTabs} ign={session.ign} tabText={tabText} onJump={jumpToField} />
             </div>
-            <ProfileProgress tabs={data.tabs} ign={session.ign} tabText={tabText} onJump={jumpToField} />
-          </div>
           )}
 
           {viewerTool && (
@@ -770,8 +761,13 @@ export default function MemberApp({
           )}
 
           {toolsView === 'attendance' && (
-            <div className="panel-card">
-              <h3>{t('member.topContributors')}</h3>
+            <div className="panel-card attendance-board">
+              <div className="panel-head">
+                <div>
+                  <h3>{t('member.topContributors')}</h3>
+                </div>
+                <span className="panel-count">{leaderboard.length}</span>
+              </div>
               <div className="table-scroll">
                 <table className="grid">
                   <thead>
@@ -787,7 +783,7 @@ export default function MemberApp({
                       const cellCls = mark ? 'cell top-cell' : 'cell';
                       return (
                         <tr key={x.ign}>
-                          <td className="rownum">{i + 1}</td>
+                          <td className={`rownum ${i < 3 ? `rank-${i + 1}` : ''}`}>{i + 1}</td>
                           <td className="ign-col">
                             <div className={cellCls} title={mark ? t('boss.top30') : undefined}>
                               {x.ign}
@@ -815,7 +811,9 @@ export default function MemberApp({
           {rosterView && (
             <div className="panel-card roster-panel">
               <div className="table-meta roster-filter">
-                <h3>{t('member.roster')}</h3>
+                <div>
+                  <h3>{t('member.roster')}</h3>
+                </div>
                 <div className="table-meta-right">
                   <Select
                     value={String(rosterCol)}
@@ -856,10 +854,13 @@ export default function MemberApp({
                     </tr>
                   </thead>
                   <tbody>
-                    {rosterRows.map((m) => (
+                    {rosterRows.map((m, i) => (
                       <tr key={m.ign}>
                         <td className="ign-col">
-                          <div className="cell">{m.ign}</div>
+                          <div className="cell roster-name">
+                            <span className={`mini-avatar tone-${i % 5}`}>{initials(m.ign)}</span>
+                            {m.ign}
+                          </div>
                         </td>
                         <td>
                           <div className="cell" style={{ color: optionColor(m.role) }}>
@@ -877,7 +878,7 @@ export default function MemberApp({
                           </div>
                         </td>
                         <td>
-                          <div className="cell">{m.cp ? formatCp(m.cp) : '—'}</div>
+                          <div className="cell cp-value">{m.cp ? formatCp(m.cp) : '—'}</div>
                         </td>
                       </tr>
                     ))}
@@ -895,90 +896,98 @@ export default function MemberApp({
           )}
 
           {isDashboard && (rosterTab || equipTab) && (
-            <div className="panel-card profile-panel">
-              <div className="panel-scroll">
-                {rosterTab && (
-                  <section className="profile-section">
-                    <h3>{tabText('BASIC INFORMATION')}</h3>
-                    {!rosterRow ? (
-                      <div className="empty">
-                        <div className="big">
-                          <IconGrid />
-                        </div>
-                        {t('member.noRowProfile')}
+            <div className="profile-sections">
+              {rosterTab && (
+                <section className="panel-card profile-section">
+                  <div className="panel-head">
+                    <div>
+                      <h3>{tabText('BASIC INFORMATION')}</h3>
+                    </div>
+                  </div>
+                  {!rosterRow ? (
+                    <div className="empty">
+                      <div className="big">
+                        <IconGrid />
                       </div>
-                    ) : (
-                      <div className="field-grid">
-                        {rosterCols.slice(1).map((c) => (
-                          <Field
-                            key={c.index}
-                            label={memberColLabel(c.label, t, lang)}
-                            rawLabel={c.label}
-                            value={rosterRow.cells[c.index] ?? ''}
-                            options={rosterTab.meta.options?.[c.index]}
-                            readOnly={
-                              (!canEdit && !MEMBER_ALWAYS_EDITABLE.has(c.label.trim().toUpperCase())) ||
-                              MEMBER_READONLY.has(c.label.trim().toUpperCase())
-                            }
-                      format={isCpLabel(c.label)}
-                      isDate={isDateLabel(c.label)}
-                      dataTab={rosterTab.meta.title}
-                      dataCol={c.index}
-                      onCommit={(v) => commit(rosterTab, rosterRow.row, c.index, v)}
-                          />
-                        ))}
-                        {rosterJoinedIdx >= 0 && (
-                          <div className="field">
-                            <label>{t('col.timeInGuild')}</label>
-                            <div className="field-ro" title={t('member.adminManaged')}>
-                              {guildDuration(rosterRow.cells[rosterJoinedIdx] ?? '') || '—'}
-                            </div>
+                      {t('member.noRowProfile')}
+                    </div>
+                  ) : (
+                    <div className="field-grid">
+                      {rosterCols.slice(1).map((c) => (
+                        <Field
+                          key={c.index}
+                          label={memberColLabel(c.label, t, lang)}
+                          rawLabel={c.label}
+                          value={rosterRow.cells[c.index] ?? ''}
+                          options={rosterTab.meta.options?.[c.index]}
+                          readOnly={
+                            (!canEdit && !MEMBER_ALWAYS_EDITABLE.has(c.label.trim().toUpperCase())) ||
+                            MEMBER_READONLY.has(c.label.trim().toUpperCase())
+                          }
+                          format={isCpLabel(c.label)}
+                          isDate={isDateLabel(c.label)}
+                          dataTab={rosterTab.meta.title}
+                          dataCol={c.index}
+                          onCommit={(v) => commit(rosterTab, rosterRow.row, c.index, v)}
+                        />
+                      ))}
+                      {rosterJoinedIdx >= 0 && (
+                        <div className="field">
+                          <label>{t('col.timeInGuild')}</label>
+                          <div className="field-ro" title={t('member.adminManaged')}>
+                            {guildDuration(rosterRow.cells[rosterJoinedIdx] ?? '') || '—'}
                           </div>
-                        )}
-                      </div>
-                    )}
-                  </section>
-                )}
-
-                {equipTab && (
-                  <section className="profile-section">
-                    <h3>{tabText('EQUIPMENT')}</h3>
-                    {!equipRow ? (
-                      <div className="empty">
-                        <div className="big">
-                          <IconGrid />
                         </div>
-                        {t('member.noRowProfile')}
+                      )}
+                    </div>
+                  )}
+                </section>
+              )}
+
+              {equipTab && (
+                <section className="panel-card profile-section">
+                  <div className="panel-head">
+                    <div>
+                      <h3>{tabText('EQUIPMENT')}</h3>
+                    </div>
+                  </div>
+                  {!equipRow ? (
+                    <div className="empty">
+                      <div className="big">
+                        <IconGrid />
                       </div>
-                    ) : (
-                      <div className="field-grid">
-                        {equipCols.slice(1).map((c) => (
-                          <Field
-                            key={c.index}
-                            label={memberColLabel(c.label, t, lang)}
-                            rawLabel={c.label}
-                            value={equipRow.cells[c.index] ?? ''}
-                            options={equipTab.meta.options?.[c.index]}
-                            readOnly={!canEdit || MEMBER_READONLY.has(c.label.trim().toUpperCase())}
-                      format={isCpLabel(c.label)}
-                      isDate={isDateLabel(c.label)}
-                      dataTab={equipTab.meta.title}
-                      dataCol={c.index}
-                      onCommit={(v) => commit(equipTab, equipRow.row, c.index, v)}
-                          />
-                        ))}
-                      </div>
-                    )}
-                  </section>
-                )}
-              </div>
+                      {t('member.noRowProfile')}
+                    </div>
+                  ) : (
+                    <div className="field-grid">
+                      {equipCols.slice(1).map((c) => (
+                        <Field
+                          key={c.index}
+                          label={memberColLabel(c.label, t, lang)}
+                          rawLabel={c.label}
+                          value={equipRow.cells[c.index] ?? ''}
+                          options={equipTab.meta.options?.[c.index]}
+                          readOnly={!canEdit || MEMBER_READONLY.has(c.label.trim().toUpperCase())}
+                          format={isCpLabel(c.label)}
+                          isDate={isDateLabel(c.label)}
+                          dataTab={equipTab.meta.title}
+                          dataCol={c.index}
+                          onCommit={(v) => commit(equipTab, equipRow.row, c.index, v)}
+                        />
+                      ))}
+                    </div>
+                  )}
+                </section>
+              )}
             </div>
           )}
 
           {!isDashboard && activeTab && (
-            <div className="panel-card">
+            <div className="panel-card sheet-panel">
               <div className="panel-head">
-                <h3>{tabText(activeTab.meta.title)}</h3>
+                <div>
+                  <h3>{tabText(activeTab.meta.title)}</h3>
+                </div>
                 {showCollectionTip && (
                   <div className="panel-tip">
                     <IconBulb />
@@ -1017,7 +1026,7 @@ export default function MemberApp({
               )}
 
               {row && activeTab.meta.headerRows === 2 && (
-                <div className="coll-grid">
+                <div className={`coll-grid${activeTab.meta.title.trim().toUpperCase() === 'BOSS COLLECTION' ? ' coll-grid--boss' : ''}`}>
                   {collectionGroups.map((g) => (
                     <section className="coll-card" key={g.label}>
                       <div className="coll-card-title">{colLabel(g.label, t, lang)}</div>

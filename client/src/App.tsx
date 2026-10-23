@@ -9,6 +9,7 @@ import AdminApp from './components/AdminApp';
 import MemberApp from './components/MemberApp';
 import Background from './components/Background';
 import LoadingScreen from './components/LoadingScreen';
+import CursorFX from './components/CursorFX';
 
 const POLL_MS = 4000;
 const WRITE_QUIET_MS = 12000;
@@ -182,7 +183,7 @@ export default function App() {
     body = <Login onDone={(s) => setSession(s)} />;
   } else if (error && !data) {
     body = (
-      <div className="auth">
+      <div className="auth auth-solo">
         <div className="auth-card">
           <h1>{t('app.connectionProblem')}</h1>
           <p className="sub">{error}</p>
@@ -199,7 +200,7 @@ export default function App() {
     );
   } else if (!data) {
     body = (
-      <div className="auth">
+      <div className="auth auth-solo">
         <div className="auth-card" style={{ textAlign: 'center' }}>
           <span className="spinner" style={{ width: 26, height: 26, color: 'var(--accent)' }} />
           <p className="sub" style={{ marginTop: 16, marginBottom: 0 }}>
@@ -210,7 +211,7 @@ export default function App() {
     );
   } else if (data.tabs.length === 0) {
     body = (
-      <div className="auth">
+      <div className="auth auth-solo">
         <div className="auth-card">
           <h1>{t('app.noTabs')}</h1>
           <p className="sub">{t('app.noTabsDesc')}</p>
@@ -238,6 +239,7 @@ export default function App() {
         {body}
       </div>
       <Toasts items={toasts} />
+      <CursorFX />
       {intro && <LoadingScreen onDone={finishIntro} />}
     </LangProvider>
   );

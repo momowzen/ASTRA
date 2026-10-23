@@ -1,10 +1,11 @@
-import { useLayoutEffect, useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import type { DataResponse, TabData } from '../types';
-import { attendanceStats, buildColumns, formatCp } from '../utils';
+import { attendanceStats, buildColumns, formatCp, initials } from '../utils';
 import type { AttendanceStats } from '../utils';
 import { useLang } from '../i18n';
 import { valueLabel } from '../display';
 import AnimatedNumber from './AnimatedNumber';
+import { IconGem, IconTrendingUp, IconTrophy, IconUsers } from './icons';
 
 interface Props {
   data: DataResponse;
@@ -78,8 +79,12 @@ function SummaryPanel({ titleKey, data }: { titleKey: string; data: ColumnSummar
   const { t, lang } = useLang();
   const rows = (data?.rows ?? []).map((r) => ({ ...r, label: valueLabel(r.label, t, lang) }));
   return (
-    <div className="panel-card">
-      <h3>{t(titleKey)}</h3>
+    <div className="panel-card summary-panel">
+      <div className="panel-head">
+        <div>
+          <h3>{t(titleKey)}</h3>
+        </div>
+      </div>
       {rows.length > 0 ? (
         <>
           <div className="muted roster-summary-meta">
@@ -110,14 +115,19 @@ function AttendancePanel({ stats }: { stats: AttendanceStats | null }) {
 
   return (
     <div className="panel-card attendance-panel">
-      <h3>{t('roster.attendanceTitle')}</h3>
+      <div className="panel-head">
+        <div>
+          <h3>{t('roster.attendanceTitle')}</h3>
+        </div>
+      </div>
       <div className="attendance-caption">{t('roster.attendanceCycle')}</div>
 
       <div className="attendance-ring" role="img" aria-label={aria} title={aria}>
         <svg className="attendance-donut" viewBox="0 0 120 120" aria-hidden="true" focusable="false">
           <defs>
             <linearGradient id="attendance-arc-grad" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="var(--astra-purple)" />
+              <stop offset="0%" stopColor="var(--astra-gold-bright)" />
+              <stop offset="55%" stopColor="var(--astra-purple)" />
               <stop offset="100%" stopColor="var(--astra-blue)" />
             </linearGradient>
           </defs>
@@ -189,23 +199,6 @@ export default function GuildRoster({ data }: Props) {
     [basic, attendanceTab],
   );
 
-  const [topOffset, setTopOffset] = useState(58);
-  useLayoutEffect(() => {
-    const measure = () => {
-      const el = document.querySelector<HTMLElement>('.topbar');
-      if (el) setTopOffset(el.getBoundingClientRect().height);
-    };
-    measure();
-    const el = document.querySelector<HTMLElement>('.topbar');
-    const ro = el ? new ResizeObserver(measure) : null;
-    if (el && ro) ro.observe(el);
-    window.addEventListener('resize', measure);
-    return () => {
-      ro?.disconnect();
-      window.removeEventListener('resize', measure);
-    };
-  }, []);
-
   const members = useMemo(() => {
     return (basic?.rows ?? [])
       .map((r) => ({ ign: (r.cells[0] || '').trim(), cp: cpNumber(r.cells[1]) }))
@@ -258,28 +251,36 @@ export default function GuildRoster({ data }: Props) {
 
   return (
     <div className="roster-view">
-      <div className="stat-row" style={{ top: topOffset }}>
-        <div className="stat-card">
+      <div className="stat-row">
+        <div className="stat-card stat-card--members">
+          <span className="stat-ico"><IconUsers /></span>
           <div className="stat-label">{t('roster.members')}</div>
           <div className="stat-value"><AnimatedNumber value={members.length} /></div>
+          <span className="stat-rule" />
         </div>
-        <div className="stat-card">
+        <div className="stat-card stat-card--cp">
+          <span className="stat-ico"><IconGem /></span>
           <div className="stat-label">{t('roster.totalCp')}</div>
           <div className="stat-value">
             {withCp.length ? <AnimatedNumber value={stats.total} format={(n) => formatCp(String(n))} /> : '—'}
           </div>
+          <span className="stat-rule" />
         </div>
-        <div className="stat-card">
+        <div className="stat-card stat-card--avg">
+          <span className="stat-ico"><IconTrendingUp /></span>
           <div className="stat-label">{t('roster.avgCp')}</div>
           <div className="stat-value">
             {withCp.length ? <AnimatedNumber value={stats.avg} format={(n) => formatCp(String(n))} /> : '—'}
           </div>
+          <span className="stat-rule" />
         </div>
-        <div className="stat-card">
+        <div className="stat-card stat-card--top">
+          <span className="stat-ico"><IconTrophy /></span>
           <div className="stat-label">{t('roster.topCp')}</div>
           <div className="stat-value">
             {withCp.length ? <AnimatedNumber value={stats.top} format={(n) => formatCp(String(n))} /> : '—'}
           </div>
+          <span className="stat-rule" />
         </div>
       </div>
 
@@ -293,7 +294,11 @@ export default function GuildRoster({ data }: Props) {
 
       <div className="roster-split">
         <div className="panel-card">
-          <h3>{t('roster.distTitle')}</h3>
+          <div className="panel-head">
+            <div>
+              <h3>{t('roster.distTitle')}</h3>
+            </div>
+          </div>
           {withCp.length ? (
             <DistList rows={brackets} />
           ) : (
@@ -302,7 +307,11 @@ export default function GuildRoster({ data }: Props) {
         </div>
 
         <div className="panel-card">
-          <h3>{t('roster.guilds')}</h3>
+          <div className="panel-head">
+            <div>
+              <h3>{t('roster.guilds')}</h3>
+            </div>
+          </div>
           {guildSummary.rows.length > 0 ? (
             <DistList rows={guildSummary.rows} />
           ) : (
@@ -316,7 +325,12 @@ export default function GuildRoster({ data }: Props) {
 
       <div className="table-card roster-top">
         <div className="table-meta">
-          <span>{t('roster.cpRank')}</span>
+          <div className="table-meta-info">
+            <span>{t('roster.cpRank')}</span>
+          </div>
+          <div className="table-meta-right">
+            <span className="muted">{cpRank.length} {t('roster.members')}</span>
+          </div>
         </div>
         <div className="table-scroll">
           <table className="grid">
@@ -330,12 +344,15 @@ export default function GuildRoster({ data }: Props) {
             <tbody>
               {cpRank.map((m, i) => (
                 <tr key={m.ign}>
-                  <td className="rownum">{i + 1}</td>
+                  <td className={`rownum ${i < 3 ? `rank-${i + 1}` : ''}`}>{i + 1}</td>
                   <td className="ign-col">
-                    <div className="cell">{m.ign}</div>
+                    <div className="cell roster-name">
+                      <span className={`mini-avatar tone-${i % 5}`}>{initials(m.ign)}</span>
+                      {m.ign}
+                    </div>
                   </td>
                   <td>
-                    <div className="cell">{formatCp(String(m.cp))}</div>
+                    <div className="cell cp-value">{formatCp(String(m.cp))}</div>
                   </td>
                 </tr>
               ))}

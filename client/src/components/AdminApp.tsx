@@ -139,7 +139,6 @@ export default function AdminApp({
   const [tipOpen, setTipOpen] = useState(false);
   const [busy, setBusy] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
-  const stripRef = useRef<HTMLElement>(null);
 
   const { t, lang } = useLang();
 
@@ -151,22 +150,6 @@ export default function AdminApp({
   };
 
   const sheetTabs = data.tabs.filter((tb) => !INTERNAL_TABS.includes(tb.meta.title.toUpperCase()));
-
-  function selectTab(title: string) {
-    setActiveTitle(title);
-    setBossView(null);
-    setToolView(null);
-    setRosterView(false);
-    setEditing(null);
-    setShowCol(-1);
-    setFilterVal('');
-    setMenuOpen(false);
-  }
-
-  useEffect(() => {
-    const el = stripRef.current?.querySelector<HTMLElement>('.main-tab.active');
-    el?.scrollIntoView({ inline: 'center', block: 'nearest' });
-  }, [activeTitle, rosterView, bossView, toolView]);
 
   const fit = toolView === 'distribution' || toolView === 'cp-update' || toolView === 'profile-completion' || bossView !== null || (!rosterView && !bossView && !toolView);
 
@@ -293,12 +276,16 @@ export default function AdminApp({
   }
 
   const groupRuns: { label: string; span: number }[] = [];
-  if (tab && tab.meta.headerRows === 2) {
+  const subHeaders = tab?.meta.headers[1] ?? [];
+  const grouped = !!tab && tab.meta.headerRows === 2 && !projecting;
+  const groupEnds = new Set<number>();
+  if (grouped) {
     for (let i = 1; i < cols.length; i++) {
       const g = cols[i].group;
       const last = groupRuns[groupRuns.length - 1];
       if (last && last.label === g) last.span += 1;
       else groupRuns.push({ label: g, span: 1 });
+      if (i === cols.length - 1 || cols[i + 1].group !== g) groupEnds.add(i);
     }
   }
 
@@ -311,15 +298,20 @@ export default function AdminApp({
         }}
       >
         <div className="brand">
-          <img className="mark" src="./assets/logo.png" alt="" />
-          <div>
+          <span className="brand-crest">
+            <img className="mark" src="./assets/logo.png" alt="" />
+          </span>
+          <div className="brand-text">
             <div className="name">ASTRA</div>
             <div className="tag">{t('admin.tag')}</div>
           </div>
           <button
             className="drawer-close"
             aria-label={t('common.close')}
-            onClick={() => setMenuOpen(false)}
+            onClick={(e) => {
+              e.stopPropagation();
+              setMenuOpen(false);
+            }}
           >
             <IconClose />
           </button>
@@ -486,35 +478,33 @@ export default function AdminApp({
           <button className="menu-btn" aria-label={t('common.menu')} onClick={() => setMenuOpen(true)}>
             <IconMenu />
           </button>
-          <h2>
-            <span className="topbar-tab-title">
-              {rosterView
-                ? `${t('admin.rosterSection')} · ${t('admin.rosterOverview')}`
-                : bossView
-                  ? `${t('admin.bossTitle')} · ${
-                      bossView === 'dashboard'
-                        ? t('admin.dashboard')
-                        : bossView === 'attendance'
-                          ? t('admin.attendance')
-                          : t('admin.bossConfig')
-                    }`
-                  : toolView
-                    ? `${toolView === 'profile-completion' ? t('admin.rosterSection') : t('tools.section')} · ${
-                        toolView === 'cp-update'
-                          ? t('tools.cpUpdate')
-                          : toolView === 'profile-completion'
-                            ? t('tools.profileCompletion')
-                            : t('tools.distribution')
-                      }`
-                    : tab
-                    ? tabLabel(tab.meta.title, t, lang)
-                    : t('member.loading')}
-            </span>
-            <span className="topbar-brand">ASTRA</span>
-          </h2>
+          <div className="topbar-heading">
+            <h2>
+              <span className="topbar-tab-title">
+                {rosterView
+                  ? t('admin.rosterOverview')
+                  : bossView
+                    ? bossView === 'dashboard'
+                      ? t('admin.dashboard')
+                      : bossView === 'attendance'
+                        ? t('admin.attendance')
+                        : t('admin.bossConfig')
+                    : toolView
+                      ? toolView === 'cp-update'
+                        ? t('tools.cpUpdate')
+                        : toolView === 'profile-completion'
+                          ? t('tools.profileCompletion')
+                          : t('tools.distribution')
+                      : tab
+                      ? tabLabel(tab.meta.title, t, lang)
+                      : t('member.loading')}
+              </span>
+              <span className="topbar-brand">ASTRA</span>
+            </h2>
+          </div>
           <div className="grow" />
           {!bossView && !toolView && !rosterView && (
-            <div className={`toolbar ${isCpH ? 'toolbar-search-only' : ''}`}>
+            <div className="toolbar">
               <div className="search">
                 <IconSearch />
                 <input
@@ -538,39 +528,37 @@ export default function AdminApp({
                   </button>
                 )}
               </div>
-              {!isCpH && (
-                <div className="col-filter">
-                  <Select
-                    value={String(showCol)}
-                    onChange={(v) => {
-                      setShowCol(Number(v));
-                      setFilterVal('');
-                      setEditing(null);
-                    }}
-                    clearable={false}
-                    options={[
-                      { value: '-1', label: t('admin.allColumns') },
-                      ...allCols.map((c) => ({ value: String(c.index), label: colLabel(c.label, t, lang) })),
-                    ]}
-                  />
-                  <Select
-                    value={filterVal}
-                    onChange={(v) => {
-                      setFilterVal(v);
-                      setEditing(null);
-                    }}
-                    disabled={showCol < 0}
-                    clearable={false}
-                    title={t('admin.filterBy', {
-                      col: colLabel(cols.find((c) => c.index === showCol)?.label ?? '', t, lang),
-                    })}
-                    options={[
-                      { value: '', label: t('admin.allValues') },
-                      ...filterChoices.map((v) => ({ value: v, label: valueLabel(v, t, lang), color: optionColor(v) })),
-                    ]}
-                  />
-                </div>
-              )}
+              <div className="col-filter">
+                <Select
+                  value={String(showCol)}
+                  onChange={(v) => {
+                    setShowCol(Number(v));
+                    setFilterVal('');
+                    setEditing(null);
+                  }}
+                  clearable={false}
+                  options={[
+                    { value: '-1', label: t('admin.allColumns') },
+                    ...allCols.map((c) => ({ value: String(c.index), label: colLabel(c.label, t, lang) })),
+                  ]}
+                />
+                <Select
+                  value={filterVal}
+                  onChange={(v) => {
+                    setFilterVal(v);
+                    setEditing(null);
+                  }}
+                  disabled={showCol < 0}
+                  clearable={false}
+                  title={t('admin.filterBy', {
+                    col: colLabel(cols.find((c) => c.index === showCol)?.label ?? '', t, lang),
+                  })}
+                  options={[
+                    { value: '', label: t('admin.allValues') },
+                    ...filterChoices.map((v) => ({ value: v, label: valueLabel(v, t, lang), color: optionColor(v) })),
+                  ]}
+                />
+              </div>
               <button
                 className={`btn btn-ghost btn-sm toolbar-clear ${search || showCol >= 0 || filterVal ? '' : 'is-empty'}`}
                 disabled={!search && showCol < 0 && !filterVal}
@@ -582,8 +570,8 @@ export default function AdminApp({
               >
                 {t('admin.clear')}
               </button>
-              {!isCpH && (
-                <button className="btn btn-primary toolbar-add" onClick={() => setAddOpen(true)}>
+              {isBasic && (
+                <button className="btn btn-primary btn-sm toolbar-add" onClick={() => setAddOpen(true)}>
                   <IconPlus /> {t('admin.addRow')}
                 </button>
               )}
@@ -594,17 +582,6 @@ export default function AdminApp({
             <span className="live-text">{liveNote}</span>
           </span>
           <LangToggle />
-          <nav className="main-tabs" ref={stripRef}>
-            {sheetTabs.map((tb) => (
-              <button
-                key={tb.meta.title}
-                className={`main-tab ${!bossView && !toolView && !rosterView && tb.meta.title === tab?.meta.title ? 'active' : ''}`}
-                onClick={() => selectTab(tb.meta.title)}
-              >
-                {tabLabel(tb.meta.title, t, lang)}
-              </button>
-            ))}
-          </nav>
         </header>
 
         <div className={`content${fit ? ' content-fit' : ''}${rosterView ? ' content-roster' : ''}`}>
@@ -625,27 +602,28 @@ export default function AdminApp({
           ) : (
             <div className="table-card">
             <div className="table-meta">
-              <span>
-                <strong>{rows.length}</strong>{' '}
-                {rows.length !== tab?.rows.length
-                  ? t('admin.memberRowsOf', { a: rows.length, b: tab?.rows.length })
-                  : t('admin.memberRows', { a: rows.length })}{' '}
-                ·{' '}
-                {projecting
-                  ? t('admin.showingCols', { a: cols.length, b: allCols.length })
-                  : t('admin.columnsCount', { a: cols.length + (showTime ? 1 : 0) })}
-              </span>
+              <div className="table-meta-info">
+                <span>
+                  {rows.length !== tab?.rows.length
+                    ? t('admin.memberRowsOf', { a: rows.length, b: tab?.rows.length })
+                    : t('admin.memberRows', { a: rows.length })}{' '}
+                  ·{' '}
+                  {projecting
+                    ? t('admin.showingCols', { a: cols.length, b: allCols.length })
+                    : t('admin.columnsCount', { a: cols.length + (showTime ? 1 : 0) })}
+                </span>
+              </div>
               <div className="table-meta-right">
                 <span className="muted">{t('admin.editHint')}</span>
                 {isBasic && (
-                  <button className="btn btn-ghost btn-sm" onClick={() => setTipOpen(true)}>
+                  <button className="btn btn-ghost btn-sm tip-btn" onClick={() => setTipOpen(true)}>
                     <IconBulb /> {t('admin.tip')}
                   </button>
                 )}
               </div>
             </div>
             <div className="table-scroll">
-              <table className="grid">
+              <table className={`grid admin-grid${grouped ? ' grouped' : ''}`}>
                 <thead>
                   {tab && tab.meta.headerRows === 2 && !projecting ? (
                     <>
@@ -657,7 +635,7 @@ export default function AdminApp({
                           {colLabel(cols[0]?.label ?? '', t, lang)}
                         </th>
                         {groupRuns.map((g, i) => (
-                          <th key={i} colSpan={g.span}>
+                          <th key={i} colSpan={g.span} className="col-sep">
                             {colLabel(g.label, t, lang)}
                           </th>
                         ))}
@@ -665,7 +643,9 @@ export default function AdminApp({
                       </tr>
                       <tr className="labels">
                         {cols.slice(1).map((c) => (
-                          <th key={c.index}>{colLabel(c.label, t, lang)}</th>
+                          <th key={c.index} className={groupEnds.has(c.index) ? 'col-sep' : undefined}>
+                            {colLabel((subHeaders[c.index] ?? '').trim() || c.label, t, lang)}
+                          </th>
                         ))}
                       </tr>
                     </>
@@ -682,9 +662,9 @@ export default function AdminApp({
                   )}
                 </thead>
                 <tbody>
-                  {rows.map((r) => (
+                  {rows.map((r, ri) => (
                     <tr key={r.row}>
-                      <td className="rownum">{r.row}</td>
+                      <td className={`rownum ${ri < 3 ? `rank-${ri + 1}` : ''}`}>{r.row}</td>
                       {cols.map((c) => {
                         const isEditing = editing?.row === r.row && editing?.col === c.index;
                         const value = r.cells[c.index] ?? '';
@@ -692,7 +672,7 @@ export default function AdminApp({
                         return (
                           <td
                             key={c.index}
-                            className={c.index === 0 ? 'ign-col' : ''}
+                            className={`${c.index === 0 ? 'ign-col' : ''}${groupEnds.has(c.index) ? ' col-sep' : ''}`}
                             onClick={() => !busy && setEditing({ row: r.row, col: c.index })}
                           >
                             {isEditing ? (
@@ -705,7 +685,7 @@ export default function AdminApp({
                                 onCancel={() => setEditing(null)}
                               />
                             ) : (
-                                <div className="cell" title={shown} style={{ color: optionColor(value) }}>
+                                <div className={`cell${isCpLabel(c.label) ? ' cp-value' : ''}${c.index === 0 ? ' ign-cell' : ''}`} title={shown} style={{ color: optionColor(value) }}>
                                 {shown || <span className="muted">—</span>}
                               </div>
                             )}
@@ -718,13 +698,15 @@ export default function AdminApp({
                         </td>
                       )}
                       <td className="actions">
-                        <button
-                          className="icon-btn"
-                          title={t('admin.deleteRow')}
-                          onClick={() => setConfirmDelete(r.row)}
-                        >
-                          <IconTrash />
-                        </button>
+                        {isBasic && (
+                          <button
+                            className="icon-btn"
+                            title={t('admin.deleteRow')}
+                            onClick={() => setConfirmDelete(r.row)}
+                          >
+                            <IconTrash />
+                          </button>
+                        )}
                       </td>
                     </tr>
                   ))}

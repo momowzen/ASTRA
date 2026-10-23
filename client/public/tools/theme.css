@@ -1,0 +1,179 @@
+/* ASTRA - Astral Command theme bridge for the tools workspace.
+   Deep spruce, verdigris, burnt copper and bone. */
+
+:root {
+  --void-900: #050807;
+  --void-800: #080d0a;
+  --void-700: #0b100d;
+  --void-600: #101713;
+  --void-500: #17211b;
+  --void-400: #232f27;
+
+  --astral-purple: #c98a5f;
+  --astral-purple-dim: #8c5a3d;
+  --astral-purple-glow: rgba(201, 138, 95, 0.3);
+
+  --deep-space: #060a08;
+  --deep-space-light: #101713;
+
+  --electric-cyan: #8fb7a5;
+  --electric-cyan-dim: #4e7565;
+  --electric-cyan-glow: rgba(127, 168, 143, 0.32);
+
+  --soft-gold: #e8b88f;
+  --soft-gold-dim: #96603f;
+  --soft-gold-glow: rgba(232, 184, 143, 0.28);
+
+  --alive-green: #7fbf9b;
+  --alive-green-dim: #4e7565;
+  --alive-green-glow: rgba(127, 191, 155, 0.34);
+
+  --soon-orange: #d9a17b;
+  --soon-orange-dim: #8c5a3d;
+  --soon-orange-glow: rgba(217, 161, 123, 0.3);
+
+  --danger-red: #d9685f;
+  --danger-red-dim: #8b3a35;
+  --danger-red-glow: rgba(217, 104, 95, 0.3);
+
+  --killed-slate: #6b746b;
+  --killed-slate-dim: #363b38;
+
+  --text-primary: #ece9df;
+  --text-secondary: #a3aa9f;
+  --text-tertiary: #717a72;
+  --text-muted: #505a52;
+
+  --glass-bg: rgba(11, 16, 13, 0.58);
+  --glass-border: rgba(143, 183, 165, 0.14);
+  --glass-border-strong: rgba(143, 183, 165, 0.3);
+  --glass-highlight: rgba(255, 255, 255, 0.04);
+
+  --font-display: 'Cinzel', Georgia, serif;
+  --font-body: 'Manrope', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+
+  --radius-sm: 4px;
+  --radius-md: 5px;
+  --radius-lg: 6px;
+  --radius-xl: 8px;
+  --radius-2xl: 10px;
+
+  --shadow-md: 0 10px 28px rgba(0, 0, 0, 0.36);
+  --shadow-lg: 0 18px 44px rgba(0, 0, 0, 0.46);
+  --shadow-xl: 0 28px 70px rgba(0, 0, 0, 0.55);
+  --shadow-glow: 0 0 24px rgba(201, 138, 95, 0.14);
+}
+
+body {
+  background: #050807;
+}
+
+/* When embedded in the main app, let the parent page's backdrop show through
+   and drop the standalone header so the tools read as part of the same page. */
+.embedded body {
+  background: transparent;
+}
+
+.embedded .bg-canvas {
+  display: none;
+}
+
+.embedded .astra-header {
+  display: none;
+}
+
+.embedded .astra-app {
+  height: 100%;
+  max-width: none;
+  padding: 0;
+  gap: 0;
+}
+
+.bg-canvas {
+  background:
+    radial-gradient(ellipse 80% 50% at 50% -10%, rgba(109, 156, 140, 0.13), transparent),
+    radial-gradient(ellipse 60% 40% at 18% 82%, rgba(201, 138, 95, 0.08), transparent),
+    radial-gradient(ellipse 50% 50% at 86% 58%, rgba(127, 168, 143, 0.08), transparent),
+    linear-gradient(180deg, #050807 0%, #080d0a 44%, #0b120e 100%);
+}
+
+.nebula-1 {
+  background: radial-gradient(circle, rgba(201, 138, 95, 0.2), transparent 70%);
+}
+
+.nebula-2 {
+  background: radial-gradient(circle, rgba(109, 156, 140, 0.22), transparent 70%);
+}
+
+.nebula-3 {
+  background: radial-gradient(circle, rgba(127, 168, 143, 0.2), transparent 70%);
+}
+
+::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(201, 138, 95, 0.42);
+  border-radius: 99px;
+  border: 0;
+  background-clip: padding-box;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(201, 138, 95, 0.72);
+  background-clip: padding-box;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-corner,
+::-webkit-scrollbar-button {
+  background: transparent;
+  display: none;
+}
+
+*:focus-visible {
+  outline-color: rgba(232, 184, 143, 0.8);
+}
+
+.brand-text {
+  background: linear-gradient(120deg, #ece9df 0%, #c98a5f 45%, #7fa88f 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  text-shadow: 0 0 30px rgba(201, 138, 95, 0.18);
+  letter-spacing: 0.16em;
+}
+
+.hero-next {
+  background: linear-gradient(135deg, rgba(201, 138, 95, 0.1) 0%, rgba(11, 16, 13, 0.72) 50%, rgba(127, 168, 143, 0.08) 100%);
+}
+
+.hero-next::before {
+  background: linear-gradient(90deg, rgba(201, 138, 95, 0.08) 0%, transparent 30%, transparent 70%, rgba(127, 168, 143, 0.07) 100%);
+}
+
+.hero-next::after {
+  background: linear-gradient(90deg, transparent, rgba(232, 184, 143, 0.68), transparent);
+}
+
+.nav-indicator {
+  background: linear-gradient(135deg, rgba(232, 184, 143, 0.9), rgba(127, 168, 143, 0.62));
+  box-shadow: 0 0 14px rgba(201, 138, 95, 0.26);
+}
+
+.nav-btn.active::before {
+  background: linear-gradient(135deg, rgba(232, 184, 143, 0.82), rgba(127, 168, 143, 0.52));
+}
+
+.panel,
+.astra-header,
+.nav-pill,
+.segmented {
+  box-shadow: var(--shadow-md), inset 0 1px 0 rgba(255, 255, 255, 0.035);
+}

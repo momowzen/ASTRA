@@ -998,9 +998,11 @@ function fitRelic(){
     }
 
     function fitExpandedCards(){
-      if(window.innerWidth>900)return;
       document.querySelectorAll('#hiddenList .class-card .class-card-body').forEach(b=>b.style.removeProperty('zoom'));
-      document.querySelectorAll('#hiddenList .class-card.expanded').forEach(fitClassCard);
+      const cards=window.innerWidth>900
+        ? document.querySelectorAll('#hiddenList .class-card')
+        : document.querySelectorAll('#hiddenList .class-card.expanded');
+      cards.forEach(fitClassCard);
     }
 
     function fitCollapsedCards(){

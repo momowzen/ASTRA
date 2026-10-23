@@ -140,14 +140,6 @@ export default function AdminTools({ data, toast }: Props) {
     <>
       <div className="boss-view dist-view">
         <div className="announce">
-          {saved && (
-            <div className="announce-head">
-              <div className="announce-date">
-                {t('tools.distributedOn')} {saved.date}
-              </div>
-            </div>
-          )}
-
           <div className="announce-stats">
             <div className="stat-card">
               <div className="stat-label">{t('tools.totalBand')}</div>

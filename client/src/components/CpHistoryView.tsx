@@ -47,15 +47,17 @@ export default function CpHistoryView({ tab, rows }: Props) {
   return (
     <div className="table-card">
       <div className="table-meta">
-        <span>
-          <strong>{sorted.length}</strong> {t('admin.memberRows', { a: sorted.length })}
-        </span>
+        <div className="table-meta-info">
+          <span>
+            {t('admin.memberRows', { a: sorted.length })}
+          </span>
+        </div>
         <div className="table-meta-right">
           <span className="muted">{t('cp.historyHint')}</span>
         </div>
       </div>
       <div className="table-scroll">
-        <table className="grid">
+        <table className="grid admin-grid">
           <thead>
             <tr className="labels single">
               <th className="rownum">#</th>

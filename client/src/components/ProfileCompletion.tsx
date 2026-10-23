@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import type { DataResponse, TabData } from '../types';
 import { MEMBER_HIDDEN_TABS } from '../types';
-import { memberCompletion, profileColumns } from '../utils';
+import { memberCompletion, profileColumns, initials } from '../utils';
 import { useLang } from '../i18n';
 import type { Lang, T } from '../i18n';
 import { colLabel, tabLabel } from '../display';
@@ -120,10 +120,16 @@ export default function ProfileCompletion({ data }: Props) {
       <div className="completion-panels">
         {panels.map((p) => (
           <div className="panel-card completion-panel" key={p.title}>
-            <h3>{p.title}</h3>
+            <div className="panel-head">
+              <div>
+                <h3>{p.title}</h3>
+              </div>
+              <span className="panel-count">{p.members.length}</span>
+            </div>
             <div className="completion-list">
-              {p.members.map((m) => (
+              {p.members.map((m, i) => (
                 <div className="completion-row" key={m.ign}>
+                  <span className={`mini-avatar tone-${i % 5}`}>{initials(m.ign)}</span>
                   <button
                     type="button"
                     className="completion-ign"
