@@ -1,5 +1,6 @@
 import express, { NextFunction, Request, Response } from 'express';
 import cors from 'cors';
+import path from 'node:path';
 import { config } from './config';
 import { api } from './routes';
 import { initStore } from './store';
@@ -31,7 +32,22 @@ async function main(): Promise<void> {
   };
   app.use(cors(corsOptions));
   app.options('*', cors(corsOptions));
+
+  app.use(
+    '/api/avatars',
+    express.static(path.resolve(process.cwd(), 'uploads', 'avatars'), {
+      maxAge: '1y',
+      immutable: true,
+      fallthrough: true,
+    }),
+  );
   app.use('/api', api);
+
+  if (!config.storageBucket) {
+    console.warn(
+      '[avatars] GOOGLE_STORAGE_BUCKET is not set; using server/uploads/avatars for this run. Set it in production.',
+    );
+  }
 
   app.use((err: Error, _req: Request, res: Response, _next: NextFunction) => {
     if (err.message === 'Origin not allowed') {

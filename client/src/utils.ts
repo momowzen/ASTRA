@@ -73,6 +73,45 @@ export function initials(name: string): string {
   return (first + second) || '?';
 }
 
+export function isSupportedAvatar(file: File): boolean {
+  return ['image/png', 'image/jpeg', 'image/webp'].includes(file.type.toLowerCase());
+}
+
+function loadImage(src: string): Promise<HTMLImageElement> {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => resolve(img);
+    img.onerror = () => reject(new Error('Could not read image'));
+    img.src = src;
+  });
+}
+
+export async function fileToAvatarDataUrl(file: File): Promise<string> {
+  const raw = await new Promise<string>((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result ?? ''));
+    reader.onerror = () => reject(new Error('Could not read image'));
+    reader.readAsDataURL(file);
+  });
+
+  try {
+    const img = await loadImage(raw);
+    const size = 512;
+    const canvas = document.createElement('canvas');
+    canvas.width = size;
+    canvas.height = size;
+    const ctx = canvas.getContext('2d');
+    if (!ctx || !img.naturalWidth || !img.naturalHeight) return raw;
+    const scale = Math.max(size / img.naturalWidth, size / img.naturalHeight);
+    const width = img.naturalWidth * scale;
+    const height = img.naturalHeight * scale;
+    ctx.drawImage(img, (size - width) / 2, (size - height) / 2, width, height);
+    return canvas.toDataURL('image/webp', 0.86);
+  } catch {
+    return raw;
+  }
+}
+
 export function clsx(...parts: (string | false | null | undefined)[]): string {
   return parts.filter(Boolean).join(' ');
 }

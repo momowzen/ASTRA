@@ -2,10 +2,11 @@ import { useMemo, useRef, useState } from 'react';
 import type { DataResponse } from '../types';
 import { ApiError, updateCp } from '../api';
 import type { CpItem } from '../api';
-import { formatCp, initials } from '../utils';
+import { formatCp } from '../utils';
 import { useLang } from '../i18n';
 import { tabLabel } from '../display';
 import { Select } from './Dropdown';
+import Avatar from './Avatar';
 import { ocrVariants, mergeVariants } from '../ocr';
 import type { ScannedRow } from '../ocr';
 
@@ -200,7 +201,11 @@ export default function CpUpdate({ data, toast }: Props) {
           <div className="cp-list">
             {roster.map((r, i) => (
               <div className="cp-row" key={r.ign}>
-                <span className={`mini-avatar tone-${i % 5}`}>{initials(r.ign)}</span>
+                <Avatar
+                  ign={r.ign}
+                  src={data.avatars?.[r.ign.trim().toLowerCase()]}
+                  className={`mini-avatar tone-${i % 5}`}
+                />
                 <button
                   type="button"
                   className="cp-ign"

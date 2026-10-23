@@ -222,6 +222,20 @@ export async function deleteRow(tabTitle: string, row: number): Promise<void> {
   await request(`/tabs/${encodeURIComponent(tabTitle)}/rows?row=${row}`, { method: 'DELETE' });
 }
 
+export async function uploadAvatar(image: string, ign?: string): Promise<{ url: string }> {
+  return request('/profile/avatar', {
+    method: 'POST',
+    body: JSON.stringify({ image, ...(ign ? { ign } : {}) }),
+  });
+}
+
+export async function removeAvatar(ign?: string): Promise<void> {
+  await request('/profile/avatar', {
+    method: 'DELETE',
+    body: JSON.stringify({ ...(ign ? { ign } : {}) }),
+  });
+}
+
 export async function seedBossConfig(): Promise<{ ok: boolean; seeded: boolean; count?: number }> {
   return request('/boss/config/seed', { method: 'POST' });
 }

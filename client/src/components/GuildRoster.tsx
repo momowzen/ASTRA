@@ -1,10 +1,11 @@
 import { useMemo } from 'react';
 import type { DataResponse, TabData } from '../types';
-import { attendanceStats, buildColumns, formatCp, initials } from '../utils';
+import { attendanceStats, buildColumns, formatCp } from '../utils';
 import type { AttendanceStats } from '../utils';
 import { useLang } from '../i18n';
 import { valueLabel } from '../display';
 import AnimatedNumber from './AnimatedNumber';
+import Avatar from './Avatar';
 import { IconGem, IconTrendingUp, IconTrophy, IconUsers } from './icons';
 
 interface Props {
@@ -347,7 +348,11 @@ export default function GuildRoster({ data }: Props) {
                   <td className={`rownum ${i < 3 ? `rank-${i + 1}` : ''}`}>{i + 1}</td>
                   <td className="ign-col">
                     <div className="cell roster-name">
-                      <span className={`mini-avatar tone-${i % 5}`}>{initials(m.ign)}</span>
+                      <Avatar
+                        ign={m.ign}
+                        src={data.avatars?.[m.ign.trim().toLowerCase()]}
+                        className={`mini-avatar tone-${i % 5}`}
+                      />
                       {m.ign}
                     </div>
                   </td>

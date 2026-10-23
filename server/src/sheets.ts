@@ -207,13 +207,14 @@ async function withRetry<T>(fn: () => Promise<T>): Promise<T> {
 export async function batchUpdateValues(
   title: string,
   updates: { a1: string; values: string[][] }[],
+  valueInputOption: 'RAW' | 'USER_ENTERED' = 'USER_ENTERED',
 ): Promise<void> {
   if (updates.length === 0) return;
   await withRetry(() =>
     sheetsRequest(`/spreadsheets/${config.spreadsheetId}/values:batchUpdate`, {
       method: 'POST',
       body: JSON.stringify({
-        valueInputOption: 'USER_ENTERED',
+        valueInputOption,
         includeValuesInResponse: false,
         data: updates.map((u) => ({ range: `${q(title)}!${u.a1}`, values: u.values })),
       }),
@@ -223,6 +224,10 @@ export async function batchUpdateValues(
 
 export async function updateValues(title: string, a1: string, values: string[][]): Promise<void> {
   await batchUpdateValues(title, [{ a1, values }]);
+}
+
+export async function updateValuesRaw(title: string, a1: string, values: string[][]): Promise<void> {
+  await batchUpdateValues(title, [{ a1, values }], 'RAW');
 }
 
 export async function appendRow(title: string, cells: string[], columnCount: number): Promise<void> {

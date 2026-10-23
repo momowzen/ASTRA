@@ -1,9 +1,11 @@
-import { Router, Response } from 'express';
+import { Router, Request, Response } from 'express';
 import { config } from './config';
 import * as sheets from './sheets';
 import { findCredential, findCredentialByIgn, renameUsername, deleteCredentialByIgn, setPassword, verifyCredential } from './credentials';
 import { rateLimit, requireAdmin, requireAuth, signToken } from './auth';
 import { applyLocalWrite, findIgn, getSnapshot, getTab, memberEditEnabled, rowBelongsTo, scheduleRefresh, noteWrite, lastError } from './store';
+import { avatarMap, clearAvatar, setAvatar } from './avatars';
+import { deleteAvatarByUrl, prepareAvatar, storeAvatar } from './storage';
 import { BOSS_NAMES } from './bosses';
 
 class ForbiddenRow extends Error {
@@ -16,6 +18,7 @@ export const api = Router();
 
 const MAX_VALUE_LEN = 1000;
 const MAX_UPDATES = 200;
+const MAX_AVATAR_BYTES = 4 * 1024 * 1024;
 
 const INTERNAL_TABS = ['BOSS ATTENDANCE', 'BOSS CONFIG', 'DISTRIBUTION HISTORY', 'CP HISTORY', 'SETTINGS'];
 
@@ -38,6 +41,19 @@ function formatCp(value: string): string {
 
 function bad(res: Response, status: number, message: string): void {
   res.status(status).json({ error: message });
+}
+
+function requestOrigin(req: Request): string {
+  const proto = (req.get('x-forwarded-proto') || req.protocol).split(',')[0].trim();
+  const host = (req.get('x-forwarded-host') || req.get('host') || '').split(',')[0].trim();
+  return `${proto}://${host}`;
+}
+
+function avatarTarget(req: Request): string | null {
+  const s = req.session!;
+  const requested = String(req.body?.ign ?? '').trim();
+  if (s.role === 'ADMIN') return requested || s.ign.trim() || null;
+  return s.ign.trim() || null;
 }
 
 api.get('/health', (_req, res) => {
@@ -195,13 +211,38 @@ api.get('/data', requireAuth, (req, res) => {
     }));
 
   const basic = snap.tabs.find((t) => t.meta.title.toUpperCase() === 'BASIC INFORMATION');
-  const roster: { ign: string; role: string; status: string; guild: string; cp: string }[] = [];
+  const roster: {
+    ign: string;
+    role: string;
+    status: string;
+    guild: string;
+    cp: string;
+    country: string;
+    nickname: string;
+    joined: string;
+    notes: string;
+    mainWeapon: string;
+  }[] = [];
   if (basic) {
     const h = (basic.meta.headers[0] || []).map((x) => String(x).trim().toUpperCase());
     const roleI = h.indexOf('ROLE');
     const statusI = h.indexOf('STATUS');
     const guildI = h.indexOf('GUILD');
     const cpI = h.indexOf('CP');
+    const countryI = h.indexOf('COUNTRY');
+    const nicknameI = h.indexOf('NICKNAME');
+    const joinedI = h.indexOf('DATE JOINED');
+    const notesI = h.indexOf('NOTES');
+    const equipment = snap.tabs.find((t) => t.meta.title.toUpperCase() === 'EQUIPMENT');
+    const eh = (equipment?.meta.headers[0] || []).map((x) => String(x).trim().toUpperCase());
+    const mainWeaponI = eh.indexOf('MAIN WEAPON');
+    const weapons = new Map<string, string>();
+    if (mainWeaponI >= 0) {
+      for (const r of equipment?.rows ?? []) {
+        const rowIgn = (r.cells[0] || '').trim().toLowerCase();
+        if (rowIgn) weapons.set(rowIgn, (r.cells[mainWeaponI] || '').trim());
+      }
+    }
     for (const r of basic.rows) {
       const rowIgn = (r.cells[0] || '').trim();
       if (!rowIgn) continue;
@@ -211,13 +252,37 @@ api.get('/data', requireAuth, (req, res) => {
         status: statusI >= 0 ? (r.cells[statusI] || '').trim() : '',
         guild: guildI >= 0 ? (r.cells[guildI] || '').trim() : '',
         cp: cpI >= 0 ? (r.cells[cpI] || '').trim() : '',
+        country: countryI >= 0 ? (r.cells[countryI] || '').trim() : '',
+        nickname: nicknameI >= 0 ? (r.cells[nicknameI] || '').trim() : '',
+        joined: joinedI >= 0 ? (r.cells[joinedI] || '').trim() : '',
+        notes: notesI >= 0 ? (r.cells[notesI] || '').trim() : '',
+        mainWeapon: weapons.get(rowIgn.toLowerCase()) || '',
       });
     }
   }
 
   const attTab = snap.tabs.find((t) => t.meta.title.toUpperCase() === 'BOSS ATTENDANCE');
+  const configTab = snap.tabs.find((t) => t.meta.title.toUpperCase() === 'BOSS CONFIG');
+  const configPoints = new Map<string, number>();
+  for (const r of configTab?.rows ?? []) {
+    const boss = (r.cells[0] || '').trim().toLowerCase();
+    if (boss) configPoints.set(boss, intPoints(r.cells[1]));
+  }
+  const attHeaders = attTab?.meta.headers[0] ?? [];
+  let perfect = 0;
+  for (let i = 2; i < attHeaders.length; i++) {
+    const boss = String(attHeaders[i] ?? '').trim().toLowerCase();
+    if (!boss) continue;
+    const configured = configPoints.get(boss);
+    if (configured !== undefined) {
+      perfect += configured;
+    } else {
+      const maxCell = Math.max(0, ...(attTab?.rows ?? []).map((r) => intPoints(r.cells[i])));
+      perfect += maxCell;
+    }
+  }
   const leaderboard = (attTab?.rows ?? [])
-    .map((r) => ({ ign: (r.cells[0] || '').trim(), points: intPoints(r.cells[1]) }))
+    .map((r) => ({ ign: (r.cells[0] || '').trim(), points: intPoints(r.cells[1]), perfect }))
     .filter((m) => m.ign)
     .sort((a, b) => b.points - a.points || a.ign.localeCompare(b.ign));
 
@@ -231,11 +296,83 @@ api.get('/data', requireAuth, (req, res) => {
     tabs,
     roster,
     leaderboard,
+    avatars: avatarMap(),
     memberEdit: memberEditEnabled(),
     sheetUrl: config.spreadsheetId
       ? `https://docs.google.com/spreadsheets/d/${config.spreadsheetId}/edit`
       : '',
   });
+});
+
+api.post('/profile/avatar', requireAuth, async (req, res) => {
+  try {
+  const s = req.session!;
+  const target = avatarTarget(req);
+  if (!target) return bad(res, 400, 'No member selected');
+  if (s.role !== 'ADMIN' && target.toLowerCase() !== s.ign.trim().toLowerCase()) {
+    return bad(res, 403, 'You can only change your own profile picture');
+  }
+  if (!rateLimit(`avatar:${s.username.toLowerCase()}`, 10, 10 * 60 * 1000)) {
+    return bad(res, 429, 'Too many profile picture changes. Try again later.');
+  }
+
+  const dataUrl = String(req.body?.image ?? '');
+  const match = /^data:image\/(?:png|jpe?g|webp);base64,([A-Za-z0-9+/=\r\n]+)$/i.exec(dataUrl);
+  if (!match) return bad(res, 400, 'Choose a PNG, JPEG, or WebP image');
+  const input = Buffer.from(match[1], 'base64');
+  if (input.length === 0) return bad(res, 400, 'The image is empty');
+  if (input.length > MAX_AVATAR_BYTES) return bad(res, 413, 'Image is too large (max 4 MB)');
+
+  let processed: Buffer;
+  try {
+    processed = await prepareAvatar(input);
+  } catch {
+    return bad(res, 400, 'That image could not be processed. Choose a PNG, JPEG, or WebP image.');
+  }
+
+  let stored: { url: string; key: string };
+  try {
+    stored = await storeAvatar(processed, requestOrigin(req));
+  } catch (err) {
+    console.error('[avatar] upload failed:', err instanceof Error ? err.message : err);
+    return bad(res, 500, 'Could not store the profile picture');
+  }
+
+  const result = await setAvatar(target, stored.url).catch(async (err) => {
+    await deleteAvatarByUrl(stored.url).catch(() => undefined);
+    throw err;
+  });
+  if (!result) {
+    await deleteAvatarByUrl(stored.url).catch(() => undefined);
+    return bad(res, 404, 'Member row not found');
+  }
+  if (result.previous && result.previous !== stored.url) {
+    await deleteAvatarByUrl(result.previous).catch(() => undefined);
+  }
+  res.json({ url: stored.url });
+  } catch (err) {
+    console.error('[avatar] request failed:', err instanceof Error ? err.message : err);
+    if (!res.headersSent) bad(res, 500, 'Could not update the profile picture');
+  }
+});
+
+api.delete('/profile/avatar', requireAuth, async (req, res) => {
+  try {
+  const s = req.session!;
+  const target = avatarTarget(req);
+  if (!target) return bad(res, 400, 'No member selected');
+  if (s.role !== 'ADMIN' && target.toLowerCase() !== s.ign.trim().toLowerCase()) {
+    return bad(res, 403, 'You can only change your own profile picture');
+  }
+
+  const result = await clearAvatar(target);
+  if (!result) return bad(res, 404, 'Member row not found');
+  if (result.previous) await deleteAvatarByUrl(result.previous).catch(() => undefined);
+  res.json({ ok: true });
+  } catch (err) {
+    console.error('[avatar] delete failed:', err instanceof Error ? err.message : err);
+    if (!res.headersSent) bad(res, 500, 'Could not remove the profile picture');
+  }
 });
 
 api.put('/tabs/:title/values', requireAuth, async (req, res) => {

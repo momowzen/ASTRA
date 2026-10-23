@@ -1,11 +1,14 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { MEMBER_HIDDEN_TABS } from '../types';
-import type { Column, DataResponse, Session, TabData } from '../types';
-import { buildColumns, formatCp, initials, isCpLabel, isDateLabel, isMark, MEMBER_ALWAYS_EDITABLE, MEMBER_READONLY, optionColor, timeInGuildParts, toIsoDate } from '../utils';
+import type { Column, DataResponse, RosterMember, Session, TabData } from '../types';
+import { buildColumns, formatCp, isCpLabel, isDateLabel, isMark, MEMBER_ALWAYS_EDITABLE, MEMBER_READONLY, optionColor, timeInGuildParts, toIsoDate } from '../utils';
 import { ApiError, apiBase, saveCells } from '../api';
 import { IconBulb, IconClose, IconGear, IconGem, IconGrid, IconLogout, IconMenu, IconSheet, IconSparkles, IconTimer, IconTrophy, IconUser, IconUsers } from './icons';
+import Avatar from './Avatar';
 import MemberSettingsModal from './MemberSettingsModal';
 import ProfileProgress from './ProfileProgress';
+import AttendancePodium from './AttendancePodium';
+import RosterProfileCard from './RosterProfileCard';
 import { DatePicker, Select } from './Dropdown';
 import { LangToggle, useLang } from '../i18n';
 import { colLabel, memberColIsLong, memberColLabel, memberColValueLabel, tabLabel, valueLabel } from '../display';
@@ -345,12 +348,16 @@ export default function MemberApp({
   const [toolsView, setToolsView] = useState<ToolView | null>(null);
   const [toolsOnline, setToolsOnline] = useState(true);
   const [toolsAlarm, setToolsAlarm] = useState(false);
+  const [profileMember, setProfileMember] = useState<RosterMember | null>(null);
   const toolsFrameRef = useRef<HTMLIFrameElement>(null);
   const toolsCursorCleanupRef = useRef<(() => void) | null>(null);
+  const [avatarOverride, setAvatarOverride] = useState<string | null | undefined>(undefined);
 
   const { t, lang } = useLang();
   const canEdit = data.memberEdit !== false;
   const tabText = (raw: string) => tabLabel(raw, t, lang, prettyTitle);
+  const avatarKey = session.ign.trim().toLowerCase();
+  const ownAvatar = avatarOverride === undefined ? (data.avatars?.[avatarKey] ?? '') : (avatarOverride ?? '');
 
   const guildDuration = (value: string): string => {
     const p = timeInGuildParts(value);
@@ -720,7 +727,7 @@ export default function MemberApp({
           {isDashboard && (
             <div className="profile-hero">
               <div className="hero-sigil">
-                <div className="avatar">{initials(session.ign)}</div>
+                <Avatar ign={session.ign} src={ownAvatar} className="avatar" alt={session.ign} />
                 <span className="hero-sigil-ring" aria-hidden="true" />
               </div>
               <div className="id">
@@ -766,9 +773,9 @@ export default function MemberApp({
                 <div>
                   <h3>{t('member.topContributors')}</h3>
                 </div>
-                <span className="panel-count">{leaderboard.length}</span>
               </div>
-              <div className="table-scroll">
+              <AttendancePodium entries={leaderboard} avatars={data.avatars} />
+              <div className="table-scroll attendance-ranking-list">
                 <table className="grid">
                   <thead>
                     <tr className="labels single">
@@ -786,6 +793,11 @@ export default function MemberApp({
                           <td className={`rownum ${i < 3 ? `rank-${i + 1}` : ''}`}>{i + 1}</td>
                           <td className="ign-col">
                             <div className={cellCls} title={mark ? t('boss.top30') : undefined}>
+                              <Avatar
+                                ign={x.ign}
+                                src={data.avatars?.[x.ign.trim().toLowerCase()]}
+                                className={`mini-avatar tone-${i % 5}`}
+                              />
                               {x.ign}
                             </div>
                           </td>
@@ -857,8 +869,24 @@ export default function MemberApp({
                     {rosterRows.map((m, i) => (
                       <tr key={m.ign}>
                         <td className="ign-col">
-                          <div className="cell roster-name">
-                            <span className={`mini-avatar tone-${i % 5}`}>{initials(m.ign)}</span>
+                          <div
+                            className="cell roster-name roster-ign-click"
+                            role="button"
+                            tabIndex={0}
+                            title={t('member.viewProfile')}
+                            onClick={() => setProfileMember(m)}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter' || e.key === ' ') {
+                                e.preventDefault();
+                                setProfileMember(m);
+                              }
+                            }}
+                          >
+                            <Avatar
+                              ign={m.ign}
+                              src={data.avatars?.[m.ign.trim().toLowerCase()]}
+                              className={`mini-avatar tone-${i % 5}`}
+                            />
                             {m.ign}
                           </div>
                         </td>
@@ -1070,6 +1098,16 @@ export default function MemberApp({
           onClose={() => setSettingsOpen(false)}
           onSessionChange={onSessionChange}
           toast={toast}
+          avatarUrl={ownAvatar}
+          onAvatarUpdated={(url) => setAvatarOverride(url)}
+        />
+      )}
+
+      {profileMember && (
+        <RosterProfileCard
+          member={profileMember}
+          avatar={data.avatars?.[profileMember.ign.trim().toLowerCase()]}
+          onClose={() => setProfileMember(null)}
         />
       )}
     </div>

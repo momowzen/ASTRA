@@ -44,6 +44,9 @@ export const config = {
   spreadsheetId: required('GOOGLE_SHEETS_ID'),
   serviceEmail: required('GOOGLE_SERVICE_ACCOUNT_EMAIL'),
   privateKey: normalizePrivateKey(required('GOOGLE_PRIVATE_KEY')),
+  googleProjectId: (process.env.GOOGLE_CLOUD_PROJECT || '').trim(),
+  storageBucket: (process.env.GOOGLE_STORAGE_BUCKET || '').trim(),
+  storagePublicBase: (process.env.GOOGLE_STORAGE_PUBLIC_BASE || '').trim(),
   jwtSecret,
   tokenTtl: process.env.TOKEN_TTL || '7d',
   corsOrigins: originList(process.env.CORS_ORIGINS, [

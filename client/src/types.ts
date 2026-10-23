@@ -27,7 +27,8 @@ export interface DataResponse {
   ign: string;
   tabs: TabData[];
   roster?: RosterMember[];
-  leaderboard?: { ign: string; points: number }[];
+  leaderboard?: { ign: string; points: number; perfect?: number }[];
+  avatars?: Record<string, string>;
   memberEdit?: boolean;
   sheetUrl?: string;
   unchanged?: boolean;
@@ -39,6 +40,11 @@ export interface RosterMember {
   status: string;
   guild: string;
   cp: string;
+  country?: string;
+  nickname?: string;
+  joined?: string;
+  notes?: string;
+  mainWeapon?: string;
 }
 
 export interface Session {

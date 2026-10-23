@@ -1,18 +1,34 @@
-import { FormEvent, useState } from 'react';
-import { changePassword, changeUsername, ApiError } from '../api';
+import { FormEvent, useRef, useState, type ChangeEvent } from 'react';
+import { changePassword, changeUsername, removeAvatar, uploadAvatar, ApiError } from '../api';
 import type { Session } from '../types';
 import { useLang } from '../i18n';
+import { fileToAvatarDataUrl, isSupportedAvatar } from '../utils';
+import Avatar from './Avatar';
+import { IconCamera } from './icons';
 
 interface Props {
   session: Session;
   onClose: () => void;
   onSessionChange: (s: Session) => void;
   toast: (msg: string, kind?: 'ok' | 'err') => void;
+  avatarUrl?: string;
+  onAvatarUpdated?: (url: string | null) => void;
 }
 
-export default function MemberSettingsModal({ session, onClose, onSessionChange, toast }: Props) {
+export default function MemberSettingsModal({
+  session,
+  onClose,
+  onSessionChange,
+  toast,
+  avatarUrl,
+  onAvatarUpdated,
+}: Props) {
   const { t } = useLang();
-  const [view, setView] = useState<'menu' | 'username' | 'password'>('menu');
+  const [view, setView] = useState<'menu' | 'picture' | 'username' | 'password'>('menu');
+  const avatarInput = useRef<HTMLInputElement>(null);
+  const [avatarPreview, setAvatarPreview] = useState<string | undefined>(undefined);
+  const [avatarBusy, setAvatarBusy] = useState(false);
+  const shownAvatar = avatarPreview === undefined ? (avatarUrl ?? '') : avatarPreview;
 
   const [username, setUsername] = useState(session.username);
   const [unamePw, setUnamePw] = useState('');
@@ -82,6 +98,47 @@ export default function MemberSettingsModal({ session, onClose, onSessionChange,
     }
   }
 
+  async function onAvatarFile(e: ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (!file) return;
+    if (file.size > 4 * 1024 * 1024) {
+      toast(t('member.photoTooLarge'), 'err');
+      return;
+    }
+    if (!isSupportedAvatar(file)) {
+      toast(t('member.photoInvalid'), 'err');
+      return;
+    }
+    setAvatarBusy(true);
+    try {
+      const image = await fileToAvatarDataUrl(file);
+      const res = await uploadAvatar(image);
+      setAvatarPreview(res.url);
+      onAvatarUpdated?.(res.url);
+      toast(t('member.photoUpdated'), 'ok');
+    } catch (err) {
+      toast(err instanceof ApiError ? err.message : t('member.photoFailed'), 'err');
+    } finally {
+      setAvatarBusy(false);
+    }
+  }
+
+  async function removePhoto() {
+    if (!shownAvatar || avatarBusy) return;
+    setAvatarBusy(true);
+    try {
+      await removeAvatar();
+      setAvatarPreview('');
+      onAvatarUpdated?.(null);
+      toast(t('member.photoRemoved'), 'ok');
+    } catch (err) {
+      toast(err instanceof ApiError ? err.message : t('member.photoFailed'), 'err');
+    } finally {
+      setAvatarBusy(false);
+    }
+  }
+
   const chevron = (
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
       <polyline points="9 18 15 12 9 6" />
@@ -97,6 +154,10 @@ export default function MemberSettingsModal({ session, onClose, onSessionChange,
           <>
             <p className="desc">{t('member.settingsDesc')}</p>
             <div className="settings-menu">
+              <button type="button" className="settings-item" onClick={() => setView('picture')}>
+                <span>{t('member.profilePicture')}</span>
+                {chevron}
+              </button>
               <button type="button" className="settings-item" onClick={() => setView('username')}>
                 <span>{t('member.usernameSection')}</span>
                 {chevron}
@@ -116,6 +177,42 @@ export default function MemberSettingsModal({ session, onClose, onSessionChange,
             </svg>
             {t('settings.back')}
           </button>
+        )}
+
+        {view === 'picture' && (
+          <div className="avatar-settings">
+            <div className="settings-section-title avatar-settings-title">{t('member.profilePicture')}</div>
+            <div className="avatar-settings-preview">
+              <div className="avatar-settings-avatar">
+                <Avatar ign={session.ign} src={shownAvatar} className="avatar" alt={session.ign} />
+                <button
+                  type="button"
+                  className="avatar-settings-edit"
+                  title={shownAvatar ? t('member.changePhoto') : t('member.uploadPhoto')}
+                  aria-label={shownAvatar ? t('member.changePhoto') : t('member.uploadPhoto')}
+                  onClick={() => avatarInput.current?.click()}
+                  disabled={avatarBusy}
+                >
+                  {avatarBusy ? <span className="spinner" /> : <IconCamera />}
+                </button>
+              </div>
+            </div>
+            {shownAvatar && (
+              <div className="avatar-settings-actions">
+                <button type="button" className="btn btn-ghost avatar-remove-btn" onClick={removePhoto} disabled={avatarBusy}>
+                  {t('member.removePhoto')}
+                </button>
+              </div>
+            )}
+            <p className="desc avatar-settings-hint">{t('member.photoHint')}</p>
+            <input
+              ref={avatarInput}
+              className="avatar-input"
+              type="file"
+              accept="image/png,image/jpeg,image/webp"
+              onChange={onAvatarFile}
+            />
+          </div>
         )}
 
         {view === 'username' && (

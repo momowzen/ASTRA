@@ -3,11 +3,11 @@ import type { DataResponse, TabData } from '../types';
 import { BOSSES } from '../bosses';
 import type { Boss } from '../bosses';
 import { addRow, ApiError, recordAttendance, saveCells, seedBossConfig } from '../api';
-import { initials } from '../utils';
 import { ocrVariants, scanParty } from '../ocr';
 import { useLang } from '../i18n';
 import { bossLabel } from '../display';
 import { Select } from './Dropdown';
+import Avatar from './Avatar';
 
 interface Props {
   view: 'dashboard' | 'attendance' | 'config';
@@ -97,7 +97,7 @@ export default function BossTracker({ view, data, onPatch, toast }: Props) {
     );
   }
 
-  return <DashboardView attendanceTab={attendanceTab} />;
+  return <DashboardView attendanceTab={attendanceTab} avatars={data.avatars} />;
 }
 
 function ConfigView({
@@ -530,7 +530,11 @@ function AttendanceView({
                 className={`att-row ${on ? 'on' : ''}`}
                 onClick={() => toggle(name)}
               >
-                <span className="att-avatar">{initials(name)}</span>
+                <Avatar
+                  ign={name}
+                  src={data.avatars?.[name.trim().toLowerCase()]}
+                  className="att-avatar"
+                />
                 <span className="att-ign">{name}</span>
                 <span className="att-check" aria-hidden="true">
                   {on ? '✓' : ''}
@@ -557,7 +561,7 @@ function AttendanceView({
   );
 }
 
-function DashboardView({ attendanceTab }: { attendanceTab: TabData | undefined }) {
+function DashboardView({ attendanceTab, avatars }: { attendanceTab: TabData | undefined; avatars?: Record<string, string> }) {
   const { t } = useLang();
   const leaderboard = useMemo(() => {
     return (attendanceTab?.rows ?? [])
@@ -605,7 +609,11 @@ function DashboardView({ attendanceTab }: { attendanceTab: TabData | undefined }
                     <td className={`rownum ${i < 3 ? `rank-${i + 1}` : ''}`}>{i + 1}</td>
                     <td className="ign-col">
                       <div className={`${cellCls} roster-name`}>
-                        <span className={`mini-avatar tone-${i % 5}`}>{initials(x.ign)}</span>
+                        <Avatar
+                          ign={x.ign}
+                          src={avatars?.[x.ign.trim().toLowerCase()]}
+                          className={`mini-avatar tone-${i % 5}`}
+                        />
                         {x.ign}
                       </div>
                     </td>

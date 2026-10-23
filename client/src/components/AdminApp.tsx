@@ -1,8 +1,8 @@
-import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState, type MouseEvent, type CSSProperties } from 'react';
 import type { RefObject } from 'react';
 import { INTERNAL_TABS } from '../types';
-import type { Column, DataResponse, Session } from '../types';
-import { buildColumns, formatCp, isCpLabel, isDateLabel, optionColor, timeInGuildParts, toIsoDate } from '../utils';
+import type { Column, DataResponse, RowData, Session } from '../types';
+import { buildColumns, formatCp, isCpLabel, isDateLabel, optionColor, parseCpNumber, timeInGuildParts, toIsoDate } from '../utils';
 import { addRow as apiAddRow, deleteRow as apiDeleteRow, saveCells, ApiError } from '../api';
 import { DatePicker, Select } from './Dropdown';
 import { IconBulb, IconClose, IconGear, IconGrid, IconLogout, IconMenu, IconOverview, IconPlus, IconSearch, IconTrash, IconTrendingUp, IconTrophy, IconUserCheck } from './icons';
@@ -12,6 +12,7 @@ import GuildRoster from './GuildRoster';
 import AdminTools from './AdminTools';
 import CpUpdate from './CpUpdate';
 import CpHistoryView from './CpHistoryView';
+import Avatar from './Avatar';
 import ProfileCompletion from './ProfileCompletion';
 import { LangToggle, useLang } from '../i18n';
 import { colLabel, tabLabel, valueLabel } from '../display';
@@ -24,6 +25,49 @@ interface Props {
   onPatch: (tabTitle: string, updates: { row: number; col: number; value: string }[]) => void;
   toast: (msg: string, kind?: 'ok' | 'err') => void;
   onLogout: () => void;
+}
+
+function leftAlignedLabel(label: string): boolean {
+  const value = label.trim().toUpperCase();
+  return value === 'IGN' || value === 'NICKNAME' || value === 'NOTES';
+}
+
+type SortKey = 'ign' | 'cp' | 'country' | 'guild' | 'role' | 'status' | 'joined' | 'tenure';
+type SortState = { key: SortKey; dir: 'asc' | 'desc' };
+
+function sortKeyForColumn(c: Column): SortKey | null {
+  if (c.index === 0) return 'ign';
+  const label = c.label.trim().toUpperCase();
+  if (label === 'CP') return 'cp';
+  if (label === 'COUNTRY') return 'country';
+  if (label === 'GUILD') return 'guild';
+  if (label === 'ROLE') return 'role';
+  if (label === 'STATUS') return 'status';
+  if (label === 'DATE JOINED') return 'joined';
+  return null;
+}
+
+function SortButton({
+  label,
+  active,
+  dir,
+  title,
+  onClick,
+}: {
+  label: string;
+  active: boolean;
+  dir?: 'asc' | 'desc';
+  title: string;
+  onClick: () => void;
+}) {
+  return (
+    <button type="button" className={`th-sort-btn${active ? ' active' : ''}`} title={title} onClick={onClick}>
+      <span>{label}</span>
+      <span className="th-sort-arrow" aria-hidden="true">
+        {active ? (dir === 'asc' ? '▲' : '▼') : '↕'}
+      </span>
+    </button>
+  );
 }
 
 function EditableCell({
@@ -139,6 +183,13 @@ export default function AdminApp({
   const [tipOpen, setTipOpen] = useState(false);
   const [busy, setBusy] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [sort, setSort] = useState<SortState | null>(null);
+  const [avatarPreview, setAvatarPreview] = useState<{
+    url: string;
+    ign: string;
+    originX: number;
+    originY: number;
+  } | null>(null);
 
   const { t, lang } = useLang();
 
@@ -221,7 +272,7 @@ export default function AdminApp({
   const rows = useMemo(() => {
     if (!tab) return [];
     const q = search.trim().toLowerCase();
-    return tab.rows.filter((r) => {
+    const filtered = tab.rows.filter((r) => {
       if (q) {
         const ign = (r.cells[0] || '').trim().toLowerCase();
         if (!ign.includes(q) && !nickIgns.has(ign)) return false;
@@ -229,7 +280,61 @@ export default function AdminApp({
       if (showCol >= 0 && filterVal && (r.cells[showCol] ?? '').trim() !== filterVal) return false;
       return true;
     });
-  }, [tab, search, showCol, filterVal, nickIgns]);
+    if (!isBasic || !sort) return filtered;
+
+    const labelIndex = (label: string) =>
+      allCols.find((c) => c.label.trim().toUpperCase() === label)?.index ?? -1;
+    const column =
+      sort.key === 'ign'
+        ? 0
+        : sort.key === 'tenure'
+          ? joinedIdx
+          : sort.key === 'joined'
+            ? labelIndex('DATE JOINED')
+            : sort.key === 'cp'
+              ? labelIndex('CP')
+              : sort.key === 'country'
+                ? labelIndex('COUNTRY')
+                : sort.key === 'guild'
+                  ? labelIndex('GUILD')
+                  : sort.key === 'role'
+                    ? labelIndex('ROLE')
+                    : labelIndex('STATUS');
+    if (column < 0) return filtered;
+
+    const now = Date.now();
+    const dir = sort.dir === 'asc' ? 1 : -1;
+    const value = (r: RowData): { raw: string; num: number | null } => {
+      const raw = String(r.cells[column] ?? '').trim();
+      if (sort.key === 'cp') {
+        const num = parseCpNumber(raw);
+        return { raw, num: Number.isNaN(num) ? null : num };
+      }
+      if (sort.key === 'tenure') {
+        const iso = toIsoDate(raw);
+        const joined = iso ? new Date(`${iso}T00:00:00`).getTime() : NaN;
+        return { raw, num: Number.isNaN(joined) ? null : now - joined };
+      }
+      if (sort.key === 'joined') {
+        const iso = toIsoDate(raw);
+        const joined = iso ? new Date(`${iso}T00:00:00`).getTime() : NaN;
+        return { raw, num: Number.isNaN(joined) ? null : joined };
+      }
+      return { raw, num: null };
+    };
+
+    return [...filtered].sort((a, b) => {
+      const av = value(a);
+      const bv = value(b);
+      const aEmpty = av.raw === '';
+      const bEmpty = bv.raw === '';
+      if (aEmpty && bEmpty) return 0;
+      if (aEmpty) return 1;
+      if (bEmpty) return -1;
+      if (av.num !== null && bv.num !== null) return (av.num - bv.num) * dir;
+      return av.raw.localeCompare(bv.raw, undefined, { numeric: true, sensitivity: 'base' }) * dir;
+    });
+  }, [tab, search, showCol, filterVal, nickIgns, isBasic, sort, allCols, joinedIdx]);
 
   async function commitCell(row: number, col: number, value: string): Promise<boolean> {
     if (!tab) return false;
@@ -274,6 +379,44 @@ export default function AdminApp({
       setBusy(false);
     }
   }
+
+  useEffect(() => {
+    if (!avatarPreview) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setAvatarPreview(null);
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [avatarPreview]);
+
+  function openAvatarPreview(ign: string, url: string, e: MouseEvent<HTMLSpanElement>) {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const size = Math.min(window.innerWidth - 48, 420);
+    const cardHeight = size + 74;
+    const left = (window.innerWidth - size) / 2;
+    const top = (window.innerHeight - cardHeight) / 2;
+    const originX = ((rect.left + rect.width / 2 - left) / size) * 100;
+    const originY = ((rect.top + rect.height / 2 - top) / cardHeight) * 100;
+    setAvatarPreview({
+      url,
+      ign,
+      originX: Math.max(6, Math.min(94, originX)),
+      originY: Math.max(6, Math.min(94, originY)),
+    });
+  }
+
+  function toggleSort(key: SortKey): void {
+    setSort((prev) => {
+      if (!prev || prev.key !== key) return { key, dir: 'asc' };
+      return prev.dir === 'asc' ? { key, dir: 'desc' } : null;
+    });
+  }
+
+  const sortAria = (key: SortKey | null): 'ascending' | 'descending' | 'none' | undefined => {
+    if (!key) return undefined;
+    if (sort?.key !== key) return 'none';
+    return sort.dir === 'asc' ? 'ascending' : 'descending';
+  };
 
   const groupRuns: { label: string; span: number }[] = [];
   const subHeaders = tab?.meta.headers[1] ?? [];
@@ -639,7 +782,7 @@ export default function AdminApp({
                             {colLabel(g.label, t, lang)}
                           </th>
                         ))}
-                        <th className="actions" rowSpan={2} />
+                        {isBasic && <th className="actions" rowSpan={2} />}
                       </tr>
                       <tr className="labels">
                         {cols.slice(1).map((c) => (
@@ -652,12 +795,58 @@ export default function AdminApp({
                   ) : (
                     <tr className="labels single">
                       <th className="rownum">#</th>
-                      <th className="ign-col">{colLabel(cols[0]?.label ?? 'IGN', t, lang)}</th>
-                      {cols.slice(1).map((c) => (
-                        <th key={c.index}>{colLabel(c.label, t, lang)}</th>
-                      ))}
-                      {showTime && <th className="time-col">{t('col.timeInGuild')}</th>}
-                      <th className="actions" />
+                      <th className="ign-col" aria-sort={isBasic ? sortAria('ign') : undefined}>
+                        {isBasic ? (
+                          <SortButton
+                            label={colLabel(cols[0]?.label ?? 'IGN', t, lang)}
+                            active={sort?.key === 'ign'}
+                            dir={sort?.dir}
+                            title={t('admin.sortBy', { col: colLabel(cols[0]?.label ?? 'IGN', t, lang) })}
+                            onClick={() => toggleSort('ign')}
+                          />
+                        ) : (
+                          colLabel(cols[0]?.label ?? 'IGN', t, lang)
+                        )}
+                      </th>
+                      {cols.slice(1).map((c) => {
+                        const key = isBasic ? sortKeyForColumn(c) : null;
+                        const label = colLabel(c.label, t, lang);
+                        return (
+                          <th
+                            key={c.index}
+                            className={leftAlignedLabel(c.label) ? 'align-left' : undefined}
+                            aria-sort={key ? sortAria(key) : undefined}
+                          >
+                            {key ? (
+                              <SortButton
+                                label={label}
+                                active={sort?.key === key}
+                                dir={sort?.dir}
+                                title={t('admin.sortBy', { col: label })}
+                                onClick={() => toggleSort(key)}
+                              />
+                            ) : (
+                              label
+                            )}
+                          </th>
+                        );
+                      })}
+                      {showTime && (
+                        <th className="time-col" aria-sort={isBasic ? sortAria('tenure') : undefined}>
+                          {isBasic ? (
+                            <SortButton
+                              label={t('col.timeInGuild')}
+                              active={sort?.key === 'tenure'}
+                              dir={sort?.dir}
+                              title={t('admin.sortBy', { col: t('col.timeInGuild') })}
+                              onClick={() => toggleSort('tenure')}
+                            />
+                          ) : (
+                            t('col.timeInGuild')
+                          )}
+                        </th>
+                      )}
+                      {isBasic && <th className="actions" />}
                     </tr>
                   )}
                 </thead>
@@ -668,24 +857,65 @@ export default function AdminApp({
                       {cols.map((c) => {
                         const isEditing = editing?.row === r.row && editing?.col === c.index;
                         const value = r.cells[c.index] ?? '';
-                        const shown = isCpLabel(c.label) ? formatCp(value) : isDateLabel(c.label) ? toIsoDate(value) : tab.meta.options?.[c.index] ? valueLabel(value, t, lang) : value;
+                        const options = tab.meta.options?.[c.index];
+                        const isOption = !!options;
+                        const isDate = isDateLabel(c.label);
+                        const optionList = options
+                          ? (options.includes(value) ? options : [value, ...options]).filter((o) => o !== '')
+                          : [];
+                        const shown = isCpLabel(c.label) ? formatCp(value) : isDate ? toIsoDate(value) : options ? valueLabel(value, t, lang) : value;
+                        const avatarUrl = c.index === 0 ? data.avatars?.[String(value).trim().toLowerCase()] : undefined;
                         return (
                           <td
                             key={c.index}
-                            className={`${c.index === 0 ? 'ign-col' : ''}${groupEnds.has(c.index) ? ' col-sep' : ''}`}
-                            onClick={() => !busy && setEditing({ row: r.row, col: c.index })}
+                            className={`${c.index === 0 ? 'ign-col' : ''}${groupEnds.has(c.index) ? ' col-sep' : ''}${leftAlignedLabel(c.label) ? ' align-left' : ''}`}
+                            onClick={() => {
+                              if (!busy && !isOption && !isDate) setEditing({ row: r.row, col: c.index });
+                            }}
                           >
-                            {isEditing ? (
+                            {isEditing && !isOption && !isDate ? (
                               <EditableCell
                                 initial={value}
-                                options={tab.meta.options?.[c.index]}
+                                options={options}
                                 format={isCpLabel(c.label)}
-                                isDate={isDateLabel(c.label)}
+                                isDate={isDate}
                                 onCommit={(v) => commitCell(r.row, c.index, v)}
                                 onCancel={() => setEditing(null)}
                               />
+                            ) : isOption ? (
+                              <Select
+                                variant="cell"
+                                value={value}
+                                disabled={busy}
+                                title={shown}
+                                onChange={(next) => void commitCell(r.row, c.index, next)}
+                                options={optionList.map((o) => ({ value: o, label: valueLabel(o, t, lang), color: optionColor(o) }))}
+                              />
+                            ) : isDate ? (
+                              <DatePicker
+                                variant="cell"
+                                value={toIsoDate(value)}
+                                disabled={busy}
+                                onChange={(iso) => void commitCell(r.row, c.index, iso)}
+                              />
                             ) : (
                                 <div className={`cell${isCpLabel(c.label) ? ' cp-value' : ''}${c.index === 0 ? ' ign-cell' : ''}`} title={shown} style={{ color: optionColor(value) }}>
+                                {c.index === 0 && (
+                                  <Avatar
+                                    ign={String(value)}
+                                    src={avatarUrl}
+                                    className={`mini-avatar${avatarUrl ? ' admin-avatar' : ''}`}
+                                    title={avatarUrl ? t('member.viewPhoto') : undefined}
+                                    onClick={
+                                      avatarUrl
+                                        ? (e) => {
+                                            e.stopPropagation();
+                                            openAvatarPreview(String(value), avatarUrl, e);
+                                          }
+                                        : undefined
+                                    }
+                                  />
+                                )}
                                 {shown || <span className="muted">—</span>}
                               </div>
                             )}
@@ -697,8 +927,8 @@ export default function AdminApp({
                           <div className="cell">{guildDuration(r.cells[joinedIdx] ?? '')}</div>
                         </td>
                       )}
-                      <td className="actions">
-                        {isBasic && (
+                      {isBasic && (
+                        <td className="actions">
                           <button
                             className="icon-btn"
                             title={t('admin.deleteRow')}
@@ -706,13 +936,13 @@ export default function AdminApp({
                           >
                             <IconTrash />
                           </button>
-                        )}
-                      </td>
+                        </td>
+                      )}
                     </tr>
                   ))}
                   {rows.length === 0 && (
                     <tr>
-                      <td colSpan={cols.length + 2 + (showTime ? 1 : 0)}>
+                      <td colSpan={cols.length + 1 + (showTime ? 1 : 0) + (isBasic ? 1 : 0)}>
                         <div className="empty">
                           <div className="big">
                             <IconGrid />
@@ -812,6 +1042,40 @@ export default function AdminApp({
                 {t('admin.tipClose')}
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {avatarPreview && (
+        <div
+          className="avatar-lightbox"
+          onMouseDown={(e) => e.target === e.currentTarget && setAvatarPreview(null)}
+        >
+          <div
+            className="avatar-lightbox-card"
+            style={
+              {
+                '--avatar-origin-x': `${avatarPreview.originX}%`,
+                '--avatar-origin-y': `${avatarPreview.originY}%`,
+              } as CSSProperties
+            }
+          >
+            <button
+              type="button"
+              className="avatar-lightbox-close"
+              aria-label={t('common.close')}
+              title={t('common.close')}
+              onClick={() => setAvatarPreview(null)}
+            >
+              <IconClose />
+            </button>
+            <Avatar
+              ign={avatarPreview.ign}
+              src={avatarPreview.url}
+              className="avatar-lightbox-image"
+              alt={avatarPreview.ign}
+            />
+            <div className="avatar-lightbox-name">{avatarPreview.ign}</div>
           </div>
         </div>
       )}
