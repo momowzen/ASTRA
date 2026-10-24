@@ -8,6 +8,7 @@ import { useLang } from '../i18n';
 import { bossLabel } from '../display';
 import { Select } from './Dropdown';
 import Avatar from './Avatar';
+import { IconClose } from './icons';
 
 interface Props {
   view: 'dashboard' | 'attendance' | 'config';
@@ -477,13 +478,25 @@ function AttendanceView({
         </div>
 
         <div className="att-actions">
-          <input
-            className="input"
-            placeholder={t('boss.filterMembers')}
-            value={filter}
-            onChange={(e) => setFilter(e.target.value)}
-            style={{ width: 220 }}
-          />
+          <div className="att-search">
+            <input
+              className="input"
+              placeholder={t('boss.filterMembers')}
+              value={filter}
+              onChange={(e) => setFilter(e.target.value)}
+            />
+            {filter !== '' && (
+              <button
+                type="button"
+                className="att-search-clear"
+                aria-label={t('admin.clear')}
+                title={t('admin.clear')}
+                onClick={() => setFilter('')}
+              >
+                <IconClose />
+              </button>
+            )}
+          </div>
           <button className="btn btn-ghost btn-sm" onClick={() => setSelected(new Set(filtered))}>
             {t('boss.selectAll')}
           </button>
