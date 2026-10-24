@@ -1,5 +1,18 @@
 import type { Column, RowData, TabData, TabMeta } from './types';
 
+const AVATAR_HEADERS = new Set([
+  'PROFILE PICTURE',
+  'PROFILE PICTURES',
+  'PROFILE PIC',
+  'AVATAR',
+  'AVATAR URL',
+  'PFP',
+]);
+
+export function isAvatarLabel(label: string): boolean {
+  return AVATAR_HEADERS.has(label.trim().toUpperCase());
+}
+
 export function expandedGroups(meta: TabMeta): string[] {
   const row = meta.headers[0] || [];
   const out: string[] = [];
@@ -17,6 +30,8 @@ export function buildColumns(meta: TabMeta): Column[] {
   const sub = meta.headerRows === 2 ? meta.headers[1] || [] : [];
   const cols: Column[] = [];
   for (let i = 0; i < meta.columnCount; i++) {
+    if (isAvatarLabel(meta.headers[0]?.[i] ?? '')) continue;
+    if (meta.headerRows === 2 && isAvatarLabel(meta.headers[1]?.[i] ?? '')) continue;
     if (meta.headerRows === 1) {
       const first = (meta.headers[0]?.[i] || '').trim();
       cols.push({ index: i, label: first || `Column ${i + 1}`, group: '' });
@@ -70,7 +85,19 @@ export const MEMBER_READONLY = new Set(['CP', 'ROLE', 'STATUS']);
 
 export const MEMBER_ALWAYS_EDITABLE = new Set(['COUNTRY', 'NATION', 'NICKNAME', 'NOTES']);
 
-export const COMPLETION_EXCLUDED = new Set(['CP', 'ROLE', 'STATUS', 'NICKNAME', 'NOTES']);
+export const COMPLETION_EXCLUDED = new Set([
+  'CP',
+  'ROLE',
+  'STATUS',
+  'NICKNAME',
+  'NOTES',
+  'PROFILE PICTURE',
+  'PROFILE PICTURES',
+  'PROFILE PIC',
+  'AVATAR',
+  'AVATAR URL',
+  'PFP',
+]);
 
 export interface ProfileColumn {
   index: number;
@@ -86,6 +113,7 @@ export function profileColumns(meta: TabMeta): ProfileColumn[] {
   const out: ProfileColumn[] = [];
   for (let i = 1; i < width; i++) {
     const first = String(h0[i] ?? '').trim();
+    if (isAvatarLabel(first) || isAvatarLabel(String(h1[i] ?? ''))) continue;
     if (meta.headerRows === 2) {
       const g = String(groups[i] ?? '').trim();
       const s = String(h1[i] ?? '').trim();

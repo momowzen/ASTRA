@@ -30,6 +30,14 @@ if (isProd && jwtSecret.length < 24) {
   throw new Error('JWT_SECRET must be at least 24 characters in production');
 }
 
+function originList(value: string | undefined, fallbacks: string[]): string[] {
+  const parsed = (value || '')
+    .split(',')
+    .map((s) => s.trim().replace(/\/+$/, ''))
+    .filter(Boolean);
+  return [...new Set([...fallbacks, ...parsed].map((s) => s.replace(/\/+$/, '')))];
+}
+
 export const config = {
   isProd,
   port: num(process.env.PORT, 3001),
@@ -38,10 +46,11 @@ export const config = {
   privateKey: normalizePrivateKey(required('GOOGLE_PRIVATE_KEY')),
   jwtSecret,
   tokenTtl: process.env.TOKEN_TTL || '7d',
-  corsOrigins: (process.env.CORS_ORIGINS || 'http://localhost:5173')
-    .split(',')
-    .map((s) => s.trim())
-    .filter(Boolean),
+  corsOrigins: originList(process.env.CORS_ORIGINS, [
+    'http://localhost:5173',
+    'http://localhost:4173',
+    'https://momowzen.github.io',
+  ]),
   credentialsTab: process.env.CREDENTIALS_TAB || 'credentials',
   settingsTab: process.env.SETTINGS_TAB || 'SETTINGS',
   pollIntervalMs: num(process.env.SYNC_POLL_INTERVAL_MS, 5000),
