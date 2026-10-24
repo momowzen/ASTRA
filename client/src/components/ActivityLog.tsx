@@ -188,7 +188,11 @@ export default function ActivityLog() {
             <span>{t('activity.logTitle')}</span>
           </div>
           <div className="table-meta-right">
-            <span className="muted">{t('activity.latestFirst')}</span>
+            <span className="muted">
+              {entries[0]
+                ? t('activity.lastUpdate', { time: formatTime(entries[0].at) })
+                : '—'}
+            </span>
             <button
               type="button"
               className={`activity-refresh${loading || refreshing ? ' is-spinning' : ''}`}

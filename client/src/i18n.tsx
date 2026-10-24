@@ -306,11 +306,6 @@ const DICT: Record<string, { en: string; ko: string; ja: string; zh: string }> =
   },
 
   'cp.change': { en: 'Change', ko: '변동', ja: "変化", zh: '变化' },
-  'cp.historyHint': {
-    en: 'Latest CP first · change vs the previous date',
-    ko: '최신 CP 우선 · 이전 날짜 대비 변동', ja: "最新CP順 · 前回日付との変化",
-    zh: '最新 CP 优先 · 与上一日期相比的变化',
-  },
 
   'boss.seeding': { en: 'Seeding the boss list…', ko: '보스 목록 생성 중…', ja: "ボスリストを作成中…", zh: '正在生成首领列表…' },
   'boss.noBosses': { en: 'No bosses configured yet.', ko: '아직 설정된 보스가 없습니다.', ja: "まだボスが設定されていません。", zh: '尚未配置首领。' },
@@ -443,7 +438,7 @@ const DICT: Record<string, { en: string; ko: string; ja: string; zh: string }> =
     ja: "プロフィール編集とGoogleスプレッドシートでの直接変更を、変更前と変更後の値で確認できます。",
     zh: '查看个人资料修改和 Google 表格中的直接更改，并显示修改前后的值。',
   },
-  'activity.logTitle': { en: 'Change history', ko: '변경 내역', ja: "変更履歴", zh: '变更历史' },
+  'activity.logTitle': { en: 'Logs', ko: '로그', ja: "ログ", zh: '日志' },
   'activity.total': { en: 'Total changes', ko: '전체 변경', ja: "変更合計", zh: '全部变更' },
   'activity.sourceProfile': { en: 'Member profile', ko: '멤버 프로필', ja: "メンバープロフィール", zh: '成员资料' },
   'activity.sourceAdmin': { en: 'Admin', ko: '관리자', ja: "管理者", zh: '管理员' },
@@ -453,9 +448,14 @@ const DICT: Record<string, { en: string; ko: string; ja: string; zh: string }> =
   'activity.allTabs': { en: 'All tabs', ko: '전체 탭', ja: "すべてのタブ", zh: '全部标签页' },
   'activity.searchPh': { en: 'Search member, field, or value…', ko: '멤버, 항목 또는 값 검색…', ja: "メンバー、項目、値を検索…", zh: '搜索成员、字段或值…' },
   'activity.updated': { en: 'Updated {time}', ko: '{time} 업데이트', ja: "{time} 更新", zh: '更新于 {time}' },
+  'activity.lastUpdate': {
+    en: 'Last update {time}',
+    ko: '마지막 업데이트 {time}',
+    ja: "最終更新 {time}",
+    zh: '最后更新 {time}',
+  },
   'activity.refresh': { en: 'Refresh', ko: '새로고침', ja: "更新", zh: '刷新' },
   'activity.showing': { en: 'Showing {shown} of {total}', ko: '{total}개 중 {shown}개 표시', ja: "{total}件中{shown}件を表示", zh: '显示 {total} 条中的 {shown} 条' },
-  'activity.latestFirst': { en: 'Latest first', ko: '최신순', ja: "新しい順", zh: '最新优先' },
   'activity.loading': { en: 'Loading activity…', ko: '활동 기록을 불러오는 중…', ja: "アクティビティを読み込み中…", zh: '正在加载活动…' },
   'activity.loadFailed': { en: 'Could not load the activity log', ko: '활동 기록을 불러올 수 없습니다', ja: "アクティビティログを読み込めませんでした", zh: '无法加载活动日志' },
   'activity.empty': { en: 'No activity recorded yet', ko: '아직 기록된 활동이 없습니다', ja: "まだ記録されたアクティビティはありません", zh: '尚无活动记录' },

@@ -203,7 +203,7 @@ export default function AdminApp({
 
   const sheetTabs = data.tabs.filter((tb) => !INTERNAL_TABS.includes(tb.meta.title.toUpperCase()));
 
-  const fit = toolView === 'distribution' || toolView === 'cp-update' || toolView === 'profile-completion' || bossView !== null || (!rosterView && !bossView && !toolView);
+  const fit = toolView === 'distribution' || toolView === 'cp-update' || toolView === 'profile-completion' || toolView === 'activity-log' || bossView !== null || (!rosterView && !bossView && !toolView);
 
   useLayoutEffect(() => {
     const el = document.querySelector<HTMLElement>('.topbar');
@@ -223,6 +223,7 @@ export default function AdminApp({
   const tab = data.tabs.find((t) => t.meta.title === activeTitle) || data.tabs[0];
   const isBasic = (tab?.meta.title ?? '').toUpperCase() === 'BASIC INFORMATION';
   const isCpH = (tab?.meta.title ?? '').toUpperCase() === 'CP HISTORY';
+  const isDistH = (tab?.meta.title ?? '').toUpperCase() === 'DISTRIBUTION HISTORY';
 
   const rosterTab = useMemo(
     () =>
@@ -777,14 +778,16 @@ export default function AdminApp({
                     : t('admin.columnsCount', { a: cols.length + (showTime ? 1 : 0) })}
                 </span>
               </div>
-              <div className="table-meta-right">
-                <span className="muted">{t('admin.editHint')}</span>
-                {isBasic && (
-                  <button className="btn btn-ghost btn-sm tip-btn" onClick={() => setTipOpen(true)}>
-                    <IconBulb /> {t('admin.tip')}
-                  </button>
-                )}
-              </div>
+              {!isDistH && (
+                <div className="table-meta-right">
+                  <span className="muted">{t('admin.editHint')}</span>
+                  {isBasic && (
+                    <button className="btn btn-ghost btn-sm tip-btn" onClick={() => setTipOpen(true)}>
+                      <IconBulb /> {t('admin.tip')}
+                    </button>
+                  )}
+                </div>
+              )}
             </div>
             <div className="table-scroll">
               <table className={`grid admin-grid${grouped ? ' grouped' : ''}`}>
@@ -890,11 +893,12 @@ export default function AdminApp({
                           <td
                             key={c.index}
                             className={`${c.index === 0 ? 'ign-col' : ''}${groupEnds.has(c.index) ? ' col-sep' : ''}${leftAlignedLabel(c.label) ? ' align-left' : ''}`}
+                            aria-readonly={isDistH || undefined}
                             onClick={() => {
-                              if (!busy && !isOption && !isDate) setEditing({ row: r.row, col: c.index });
+                              if (!isDistH && !busy && !isOption && !isDate) setEditing({ row: r.row, col: c.index });
                             }}
                           >
-                            {isEditing && !isOption && !isDate ? (
+                            {!isDistH && isEditing && !isOption && !isDate ? (
                               <EditableCell
                                 initial={value}
                                 options={options}
@@ -903,7 +907,7 @@ export default function AdminApp({
                                 onCommit={(v) => commitCell(r.row, c.index, v)}
                                 onCancel={() => setEditing(null)}
                               />
-                            ) : isOption ? (
+                            ) : !isDistH && isOption ? (
                               <Select
                                 variant="cell"
                                 value={value}
@@ -912,7 +916,7 @@ export default function AdminApp({
                                 onChange={(next) => void commitCell(r.row, c.index, next)}
                                 options={optionList.map((o) => ({ value: o, label: valueLabel(o, t, lang), color: optionColor(o) }))}
                               />
-                            ) : isDate ? (
+                            ) : !isDistH && isDate ? (
                               <DatePicker
                                 variant="cell"
                                 value={toIsoDate(value)}

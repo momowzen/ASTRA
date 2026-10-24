@@ -52,9 +52,6 @@ export default function CpHistoryView({ tab, rows }: Props) {
             {t('admin.memberRows', { a: sorted.length })}
           </span>
         </div>
-        <div className="table-meta-right">
-          <span className="muted">{t('cp.historyHint')}</span>
-        </div>
       </div>
       <div className="table-scroll">
         <table className="grid admin-grid">
