@@ -7996,3 +7996,114 @@ table.grid.dist-table thead th.ign-col {
     margin-top: 14px;
   }
 }
+
+@media (max-width: 700px) {
+  .attendance-podium {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 4px;
+    align-items: end;
+    overflow: visible;
+    padding: 4px 0 6px;
+    margin-bottom: 12px;
+  }
+
+  .attendance-podium-slot,
+  .attendance-podium-slot.rank-1 {
+    flex: none;
+    width: auto;
+    min-width: 0;
+  }
+
+  .attendance-podium-card {
+    min-height: 132px;
+    gap: 4px;
+    padding: 8px 3px 6px;
+    border-top-width: 2px;
+  }
+
+  .attendance-podium-slot.rank-1 .attendance-podium-card {
+    min-height: 152px;
+    padding-top: 10px;
+  }
+
+  .attendance-podium-avatar-wrap,
+  .attendance-podium-avatar {
+    width: 36px;
+    height: 36px;
+  }
+
+  .attendance-podium-avatar {
+    font-size: 12px;
+  }
+
+  .attendance-podium-slot.rank-1 .attendance-podium-avatar-wrap,
+  .attendance-podium-slot.rank-1 .attendance-podium-avatar {
+    width: 44px;
+    height: 44px;
+  }
+
+  .attendance-podium-slot.rank-1 .attendance-podium-avatar {
+    font-size: 14px;
+  }
+
+  .attendance-podium-rank {
+    right: -3px;
+    bottom: -3px;
+    min-width: 16px;
+    height: 16px;
+    padding: 0 2px;
+    border-width: 1px;
+  }
+
+  .attendance-podium-rank svg {
+    width: 9px;
+    height: 9px;
+  }
+
+  .attendance-podium-slot.rank-1 .attendance-podium-rank {
+    width: 18px;
+    height: 18px;
+  }
+
+  .attendance-podium-ign {
+    font-size: 8px;
+    letter-spacing: 0;
+  }
+
+  .attendance-podium-slot.rank-1 .attendance-podium-ign {
+    font-size: 9.5px;
+  }
+
+  .attendance-podium-score {
+    gap: 1px;
+  }
+
+  .attendance-podium-score strong {
+    font-size: 10.5px;
+  }
+
+  .attendance-podium-slot.rank-1 .attendance-podium-score strong {
+    font-size: 12.5px;
+  }
+
+  .attendance-podium-score span {
+    font-size: 7px;
+  }
+
+  .attendance-podium-score-label {
+    display: none;
+  }
+
+  .attendance-podium-base {
+    height: calc(var(--base-h) * 0.42);
+  }
+
+  .attendance-podium-base span {
+    font-size: 12px;
+  }
+
+  .attendance-podium-slot.rank-1 .attendance-podium-base span {
+    font-size: 16px;
+  }
+}
