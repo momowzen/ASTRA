@@ -201,11 +201,9 @@ export default function App() {
   } else if (!data) {
     body = (
       <div className="auth auth-solo">
-        <div className="auth-card" style={{ textAlign: 'center' }}>
-          <span className="spinner" style={{ width: 26, height: 26, color: 'var(--accent)' }} />
-          <p className="sub" style={{ marginTop: 16, marginBottom: 0 }}>
-            {t('app.loadingData')}
-          </p>
+        <div className="auth-card loading-card">
+          <span className="spinner loading-spinner" />
+          <p className="sub loading-text">{t('app.loadingData')}</p>
         </div>
       </div>
     );
