@@ -3795,73 +3795,9 @@ table.grid.roster-grid td .roster-name {
   overflow: hidden;
 }
 
-.activity-hero,
 .activity-stats,
 .activity-filters {
   flex: none;
-}
-
-.activity-hero {
-  display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: 18px;
-  flex-wrap: wrap;
-  padding: 20px 22px;
-  border: 1px solid transparent;
-  border-radius: var(--radius);
-  background:
-    linear-gradient(140deg, rgba(18, 23, 36, 0.9), rgba(7, 9, 15, 0.92)) padding-box,
-    var(--edge) border-box;
-  box-shadow: var(--shadow-soft);
-}
-
-.activity-kicker {
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-  font-family: var(--mono);
-  font-size: 9px;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  color: var(--gold);
-}
-
-.activity-kicker svg {
-  width: 14px;
-  height: 14px;
-}
-
-.activity-hero h1 {
-  font-family: var(--display);
-  font-size: clamp(24px, 2.4vw, 34px);
-  font-weight: 600;
-  letter-spacing: 0.035em;
-  line-height: 1.1;
-  margin: 8px 0 6px;
-  color: #ece9df;
-}
-
-.activity-hero p {
-  margin: 0;
-  max-width: 720px;
-  color: var(--muted);
-  font-size: 12px;
-  line-height: 1.6;
-}
-
-.activity-hero-actions {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  flex-wrap: wrap;
-}
-
-.activity-updated {
-  font-family: var(--mono);
-  font-size: 9px;
-  letter-spacing: 0.03em;
-  color: var(--faint);
 }
 
 .activity-stats {
@@ -3967,6 +3903,49 @@ table.grid.roster-grid td .roster-name {
   letter-spacing: 0.03em;
   color: var(--faint);
   white-space: nowrap;
+}
+
+.activity-refresh {
+  display: grid;
+  place-items: center;
+  width: 27px;
+  height: 27px;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--faint);
+  cursor: pointer;
+  transition: color 0.16s ease, border-color 0.16s ease, background 0.16s ease;
+}
+
+.activity-refresh:hover:not(:disabled) {
+  color: var(--gold-bright);
+  border-color: rgba(201, 138, 95, 0.26);
+  background: rgba(201, 138, 95, 0.07);
+}
+
+.activity-refresh:disabled {
+  cursor: default;
+  opacity: 0.72;
+}
+
+.activity-refresh svg {
+  transition: transform 0.35s ease;
+}
+
+.activity-refresh:hover:not(:disabled) svg {
+  transform: rotate(180deg);
+}
+
+.activity-refresh.is-spinning svg {
+  animation: activity-refresh-spin 0.72s linear infinite;
+}
+
+@keyframes activity-refresh-spin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .activity-table-card {
@@ -7880,7 +7859,7 @@ table.grid.dist-table thead th.ign-col {
   }
 }
 
-/* ---- Gear (Boss Config / Distribution / Settings): full turn ---- */
+/* ---- Gear (Boss Config / Settings): full turn ---- */
 .nav-item:hover .nav-ico-gear,
 .nav-item:active .nav-ico-gear {
   transform-origin: center;
@@ -7892,6 +7871,117 @@ table.grid.dist-table thead th.ign-col {
   }
   to {
     transform: rotate(360deg);
+  }
+}
+
+/* ---- History (Activity log): arc traces back, clock hand sweeps ---- */
+.nav-ico-history .history-arc {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 0;
+}
+.nav-item:hover .nav-ico-history .history-arc,
+.nav-item:active .nav-ico-history .history-arc {
+  animation: history-arc-draw 0.82s cubic-bezier(0.4, 0, 0.2, 1) both;
+}
+.nav-ico-history .history-hand {
+  transform-origin: 12px 12px;
+}
+.nav-item:hover .nav-ico-history .history-hand,
+.nav-item:active .nav-ico-history .history-hand {
+  animation: history-hand-sweep 0.82s cubic-bezier(0.3, 0.8, 0.3, 1) both 90ms;
+}
+.nav-ico-history .history-arrow {
+  transform-origin: 5.5px 6.5px;
+}
+.nav-item:hover .nav-ico-history .history-arrow,
+.nav-item:active .nav-ico-history .history-arrow {
+  animation: history-arrow-tick 0.82s ease both;
+}
+@keyframes history-arc-draw {
+  from {
+    stroke-dashoffset: 1;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+@keyframes history-hand-sweep {
+  0% {
+    transform: rotate(-110deg);
+  }
+  70% {
+    transform: rotate(8deg);
+  }
+  100% {
+    transform: rotate(0deg);
+  }
+}
+@keyframes history-arrow-tick {
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+  38% {
+    transform: rotate(-22deg);
+  }
+  70% {
+    transform: rotate(4deg);
+  }
+}
+
+/* ---- Reward distribution: hand draws, coins pop into place ---- */
+.nav-ico-reward .reward-hand {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 0;
+}
+.nav-item:hover .nav-ico-reward .reward-hand,
+.nav-item:active .nav-ico-reward .reward-hand {
+  animation: reward-hand-draw 0.78s cubic-bezier(0.4, 0, 0.2, 1) both;
+}
+.nav-item:hover .nav-ico-reward .reward-hand-b,
+.nav-item:active .nav-ico-reward .reward-hand-b {
+  animation-delay: 90ms;
+}
+.nav-item:hover .nav-ico-reward .reward-hand-c,
+.nav-item:active .nav-ico-reward .reward-hand-c {
+  animation-delay: 170ms;
+}
+.nav-ico-reward .reward-coin {
+  transform-box: fill-box;
+  transform-origin: center;
+}
+.nav-item:hover .nav-ico-reward .reward-coin,
+.nav-item:active .nav-ico-reward .reward-coin {
+  animation: reward-coin-pop 0.82s cubic-bezier(0.25, 0.9, 0.3, 1.15) both;
+}
+.nav-item:hover .nav-ico-reward .reward-coin-a,
+.nav-item:active .nav-ico-reward .reward-coin-a {
+  animation-delay: 120ms;
+}
+.nav-item:hover .nav-ico-reward .reward-coin-b,
+.nav-item:active .nav-ico-reward .reward-coin-b {
+  animation-delay: 40ms;
+}
+@keyframes reward-hand-draw {
+  from {
+    stroke-dashoffset: 1;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+@keyframes reward-coin-pop {
+  0% {
+    opacity: 0.15;
+    transform: translateY(3px) scale(0.35);
+  }
+  55% {
+    opacity: 1;
+    transform: translateY(-2.2px) scale(1.16);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
   }
 }
 
@@ -8595,11 +8685,6 @@ table.grid.dist-table thead th.ign-col {
 }
 
 @media (max-width: 900px) {
-  .activity-hero {
-    align-items: flex-start;
-    padding: 16px;
-  }
-
   .activity-stats {
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 9px;
@@ -8634,19 +8719,6 @@ table.grid.dist-table thead th.ign-col {
 }
 
 @media (max-width: 560px) {
-  .activity-hero h1 {
-    font-size: 22px;
-  }
-
-  .activity-hero p {
-    font-size: 11px;
-  }
-
-  .activity-hero-actions {
-    width: 100%;
-    justify-content: space-between;
-  }
-
   .activity-table {
     min-width: 840px;
   }

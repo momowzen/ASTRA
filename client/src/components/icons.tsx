@@ -84,6 +84,17 @@ export function IconClose() {
   );
 }
 
+export function IconRefresh() {
+  return (
+    <svg className="refresh-ico" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8" />
+      <path d="M21 3v5h-5" />
+      <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16" />
+      <path d="M8 16H3v5" />
+    </svg>
+  );
+}
+
 export function IconBulb() {
   return (
     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
@@ -127,9 +138,21 @@ export function IconTimer() {
 export function IconHistory() {
   return (
     <svg className="nav-ico nav-ico-history" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M3 12a9 9 0 1 0 2.6-6.4" />
-      <path d="M3 4v5h5" />
-      <path d="M12 7v5l3 2" />
+      <path className="history-arc" pathLength="1" d="M3 12a9 9 0 1 0 2.6-6.4" />
+      <path className="history-arrow" d="M3 4v5h5" />
+      <path className="history-hand" d="M12 7v5l3 2" />
+    </svg>
+  );
+}
+
+export function IconReward() {
+  return (
+    <svg className="nav-ico nav-ico-reward" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <path className="reward-hand reward-hand-a" pathLength="1" d="M11 15h2a2 2 0 1 0 0-4h-3c-.6 0-1.1.2-1.4.6L3 17" />
+      <path className="reward-hand reward-hand-b" pathLength="1" d="m7 21 1.6-1.4c.3-.4.8-.6 1.4-.6h4c1.1 0 2.1-.4 2.8-1.2l4.6-4.4a2 2 0 0 0-2.75-2.91l-4.2 3.9" />
+      <path className="reward-hand reward-hand-c" pathLength="1" d="m2 16 6 6" />
+      <circle className="reward-coin reward-coin-a" cx="16" cy="9" r="2.9" />
+      <circle className="reward-coin reward-coin-b" cx="6" cy="5" r="3" />
     </svg>
   );
 }

@@ -5,7 +5,7 @@ import type { Column, DataResponse, RowData, Session } from '../types';
 import { buildColumns, formatCp, isCpLabel, isDateLabel, optionColor, parseCpNumber, timeInGuildParts, toIsoDate } from '../utils';
 import { addRow as apiAddRow, deleteRow as apiDeleteRow, saveCells, ApiError } from '../api';
 import { DatePicker, Select } from './Dropdown';
-import { IconBulb, IconClose, IconGear, IconGrid, IconHistory, IconLogout, IconMenu, IconOverview, IconPlus, IconSearch, IconTrash, IconTrendingUp, IconTrophy, IconUserCheck } from './icons';
+import { IconBulb, IconClose, IconGear, IconGrid, IconHistory, IconLogout, IconMenu, IconOverview, IconPlus, IconReward, IconSearch, IconTrash, IconTrendingUp, IconTrophy, IconUserCheck } from './icons';
 import AdminSettings from './AdminSettings';
 import BossTracker from './BossTracker';
 import GuildRoster from './GuildRoster';
@@ -549,7 +549,7 @@ export default function AdminApp({
           }}
         >
           <span className="ico">
-            <IconGear />
+            <IconReward />
           </span>
           {t('tools.distribution')}
         </button>

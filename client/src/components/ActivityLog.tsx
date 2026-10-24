@@ -4,7 +4,7 @@ import { ApiError, getActivity } from '../api';
 import { useLang } from '../i18n';
 import { colLabel, tabLabel } from '../display';
 import { Select } from './Dropdown';
-import { IconClose, IconHistory, IconSearch } from './icons';
+import { IconClose, IconHistory, IconRefresh, IconSearch } from './icons';
 
 const SOURCES: { value: '' | ActivitySource; key: string }[] = [
   { value: '', key: 'activity.allSources' },
@@ -118,31 +118,6 @@ export default function ActivityLog() {
 
   return (
     <div className="activity-view">
-      <div className="activity-hero">
-        <div className="activity-hero-copy">
-          <span className="activity-kicker">
-            <IconHistory /> {t('tools.activityLog')}
-          </span>
-          <h1>{t('activity.title')}</h1>
-          <p>{t('activity.subtitle')}</p>
-        </div>
-        <div className="activity-hero-actions">
-          {lastLoaded && (
-            <span className="activity-updated">
-              {t('activity.updated', { time: timeFormat.format(lastLoaded) })}
-            </span>
-          )}
-          <button
-            type="button"
-            className="btn btn-ghost btn-sm"
-            disabled={loading || refreshing}
-            onClick={() => void load(false)}
-          >
-            {refreshing ? <span className="spinner" /> : t('activity.refresh')}
-          </button>
-        </div>
-      </div>
-
       <div className="activity-stats">
         <div className="stat-card activity-stat">
           <div className="stat-label">{t('activity.total')}</div>
@@ -214,6 +189,20 @@ export default function ActivityLog() {
           </div>
           <div className="table-meta-right">
             <span className="muted">{t('activity.latestFirst')}</span>
+            <button
+              type="button"
+              className={`activity-refresh${loading || refreshing ? ' is-spinning' : ''}`}
+              disabled={loading || refreshing}
+              aria-label={t('activity.refresh')}
+              title={
+                lastLoaded
+                  ? t('activity.updated', { time: timeFormat.format(lastLoaded) })
+                  : t('activity.refresh')
+              }
+              onClick={() => void load(false)}
+            >
+              <IconRefresh />
+            </button>
           </div>
         </div>
         <div className="table-scroll activity-table-scroll">
