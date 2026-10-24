@@ -597,7 +597,7 @@ select option {
   overflow: hidden;
 }
 
-.auth-solo {
+.auth.auth-solo {
   grid-template-columns: 1fr;
   place-items: center;
   padding: 24px;
@@ -3514,16 +3514,26 @@ table.grid.roster-grid td .roster-name {
 }
 
 .roster-summaries {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  display: flex;
+  flex-wrap: wrap;
   gap: 16px;
 }
 
+.roster-summaries > .panel-card {
+  flex: 1 1 250px;
+  min-width: 0;
+}
+
 .roster-split {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(290px, 1fr));
+  display: flex;
+  flex-wrap: wrap;
   gap: 16px;
   align-items: stretch;
+}
+
+.roster-split > .panel-card {
+  flex: 1 1 290px;
+  min-width: 0;
 }
 
 .roster-summaries .panel-card + .panel-card,
@@ -6243,10 +6253,12 @@ table.grid.dist-table thead th.ign-col {
     min-height: 0;
   }
   .content-roster .roster-summaries {
+    display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
     min-height: 0;
   }
   .content-roster .roster-split {
+    display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
     min-height: 0;
   }
@@ -6359,6 +6371,13 @@ table.grid.dist-table thead th.ign-col {
   }
   .profile-hero {
     grid-template-columns: auto minmax(0, 1fr);
+  }
+}
+
+@media (min-width: 901px) and (max-width: 1024px) {
+  .stat-row {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
@@ -6826,6 +6845,7 @@ table.grid.dist-table thead th.ign-col {
 
   .roster-summaries,
   .roster-split {
+    display: grid;
     grid-template-columns: 1fr;
   }
 
@@ -7184,6 +7204,10 @@ table.grid.dist-table thead th.ign-col {
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
     overscroll-behavior: contain;
+  }
+  .shell:not(.shell-member):not(.shell-free) .content-roster .roster-left,
+  .shell:not(.shell-member):not(.shell-free) .content-roster .roster-top {
+    flex: none;
   }
 }
 
