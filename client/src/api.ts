@@ -1,4 +1,4 @@
-import type { DataResponse, Session } from './types';
+import type { ActivityResponse, DataResponse, Session } from './types';
 
 const TOKEN_KEY = 'astra.token';
 const SESSION_KEY = 'astra.session';
@@ -209,6 +209,10 @@ export function saveCells(
       flushWriteBatch(tabTitle);
     }, FLUSH_DELAY_MS);
   });
+}
+
+export async function getActivity(limit = 1000): Promise<ActivityResponse> {
+  return request(`/activity?limit=${encodeURIComponent(String(limit))}`);
 }
 
 export async function addRow(tabTitle: string, cells: string[]): Promise<void> {

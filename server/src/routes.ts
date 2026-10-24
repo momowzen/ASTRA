@@ -3,10 +3,12 @@ import { config } from './config';
 import * as sheets from './sheets';
 import { findCredential, findCredentialByIgn, renameUsername, deleteCredentialByIgn, setPassword, verifyCredential } from './credentials';
 import { rateLimit, requireAdmin, requireAuth, signToken } from './auth';
-import { applyLocalWrite, findIgn, getSnapshot, getTab, memberEditEnabled, rowBelongsTo, scheduleRefresh, noteWrite, lastError } from './store';
+import { applyLocalWrite, findIgn, getSnapshot, getTab, memberEditEnabled, rowBelongsTo, scheduleRefresh, noteWrite, noteTabMutation, lastError } from './store';
 import { avatarMap, clearAvatar, setAvatar } from './avatars';
 import { deleteAvatarByUrl, prepareAvatar, storeAvatar } from './storage';
 import { BOSS_NAMES } from './bosses';
+import { listActivity, logEntries, makeCellEntry, snapshotValue } from './activity';
+import type { ActivityActor } from './activity';
 
 class ForbiddenRow extends Error {
   constructor(public row: number) {
@@ -54,6 +56,13 @@ function avatarTarget(req: Request): string | null {
   const requested = String(req.body?.ign ?? '').trim();
   if (s.role === 'ADMIN') return requested || s.ign.trim() || null;
   return s.ign.trim() || null;
+}
+
+function actorFor(req: Request): ActivityActor {
+  const s = req.session!;
+  return s.role === 'ADMIN'
+    ? { actor: s.username, role: 'ADMIN', source: 'admin' }
+    : { actor: s.ign || s.username, role: 'MEMBER', source: 'profile' };
 }
 
 api.get('/health', (_req, res) => {
@@ -304,6 +313,17 @@ api.get('/data', requireAuth, (req, res) => {
   });
 });
 
+api.get('/activity', requireAuth, requireAdmin, async (req, res) => {
+  const limit = Number(req.query.limit ?? 1000);
+  try {
+    const result = await listActivity(Number.isFinite(limit) ? limit : 1000);
+    res.json(result);
+  } catch (err) {
+    console.error('[activity] read failed:', err instanceof Error ? err.message : err);
+    bad(res, 502, 'Could not load the activity log');
+  }
+});
+
 api.post('/profile/avatar', requireAuth, async (req, res) => {
   try {
   const s = req.session!;
@@ -349,6 +369,12 @@ api.post('/profile/avatar', requireAuth, async (req, res) => {
   if (result.previous && result.previous !== stored.url) {
     await deleteAvatarByUrl(result.previous).catch(() => undefined);
   }
+  const tab = getTab('BASIC INFORMATION');
+  if (tab && result.previous !== stored.url) {
+    logEntries([
+      makeCellEntry(tab, result.row, result.col, result.previous, stored.url, actorFor(req)),
+    ]);
+  }
   res.json({ url: stored.url });
   } catch (err) {
     console.error('[avatar] request failed:', err instanceof Error ? err.message : err);
@@ -368,6 +394,10 @@ api.delete('/profile/avatar', requireAuth, async (req, res) => {
   const result = await clearAvatar(target);
   if (!result) return bad(res, 404, 'Member row not found');
   if (result.previous) await deleteAvatarByUrl(result.previous).catch(() => undefined);
+  const tab = getTab('BASIC INFORMATION');
+  if (tab && result.col >= 0 && result.previous) {
+    logEntries([makeCellEntry(tab, result.row, result.col, result.previous, '', actorFor(req))]);
+  }
   res.json({ ok: true });
   } catch (err) {
     console.error('[avatar] delete failed:', err instanceof Error ? err.message : err);
@@ -432,12 +462,26 @@ api.put('/tabs/:title/values', requireAuth, async (req, res) => {
       }
     }
 
+    const previous = new Map<string, string>();
+    for (const u of clean) previous.set(`${u.row}:${u.col}`, snapshotValue(tab, u.row, u.col));
+
     await sheets.batchUpdateValues(
       title,
       clean.map((u) => ({ a1: `${sheets.columnLetter(u.col)}${u.row}`, values: [[u.value]] })),
     );
     for (const u of clean) noteWrite(title, u.row, u.col, u.value);
     for (const u of clean) applyLocalWrite(title, u.row, u.col, u.value);
+
+    const actor = actorFor(req);
+    const entries = clean
+      .map((u) => {
+        const before = previous.get(`${u.row}:${u.col}`) ?? '';
+        return before === u.value
+          ? null
+          : makeCellEntry(tab, u.row, u.col, before, u.value, actor);
+      })
+      .filter((e): e is NonNullable<typeof e> => e !== null);
+    logEntries(entries);
     res.json({ ok: true });
   } catch (err) {
     if (err instanceof ForbiddenRow) {
@@ -467,6 +511,7 @@ api.post('/tabs/:title/rows', requireAuth, requireAdmin, async (req, res) => {
     const padded = [...cells];
     while (padded.length < tab.meta.columnCount) padded.push('');
     await sheets.appendRow(title, padded, tab.meta.columnCount);
+    noteTabMutation(title);
     scheduleRefresh();
     res.json({ ok: true });
   } catch (err) {
@@ -486,6 +531,7 @@ api.delete('/tabs/:title/rows', requireAuth, requireAdmin, async (req, res) => {
 
   try {
     await sheets.deleteRow(title, tab.meta.sheetId, row);
+    noteTabMutation(title);
     scheduleRefresh();
     res.json({ ok: true });
   } catch (err) {
@@ -518,6 +564,7 @@ api.post('/admin/settings', requireAuth, requireAdmin, async (req, res) => {
     } else {
       await sheets.updateValues(config.settingsTab, 'A2:B2', [['member_edit', value]]);
     }
+    noteTabMutation(config.settingsTab);
     scheduleRefresh();
     res.json({ ok: true, memberEdit });
   } catch (err) {
@@ -546,6 +593,7 @@ api.post('/boss/config/seed', requireAuth, requireAdmin, async (_req, res) => {
       return res.json({ ok: true, seeded: false, count: 0 });
     }
     await sheets.batchUpdateValues('BOSS CONFIG', writes);
+    noteTabMutation('BOSS CONFIG');
     scheduleRefresh();
     res.json({ ok: true, seeded: true, count: missing.length });
   } catch (err) {
@@ -608,6 +656,7 @@ api.post('/boss/attendance/record', requireAuth, requireAdmin, async (req, res) 
 
     await sheets.batchUpdateValues('BOSS ATTENDANCE', writes);
     for (const cells of newRows) await sheets.appendRow('BOSS ATTENDANCE', cells, newCol + 1);
+    noteTabMutation('BOSS ATTENDANCE');
     scheduleRefresh();
     res.json({ ok: true, column: boss });
   } catch (err) {
@@ -723,6 +772,8 @@ api.post('/boss/distribute', requireAuth, requireAdmin, async (req, res) => {
     }
     if (resetWrites.length > 0) await sheets.batchUpdateValues('BOSS ATTENDANCE', resetWrites);
     for (const r of attTab.rows) noteWrite('BOSS ATTENDANCE', r.row, 1, '');
+    noteTabMutation('DISTRIBUTION HISTORY');
+    noteTabMutation('BOSS ATTENDANCE');
 
     scheduleRefresh();
     res.json({ ok: true, date, pool, totalBandPoints, rows });
@@ -1070,6 +1121,8 @@ api.post('/cp/update', requireAuth, requireAdmin, async (req, res) => {
       const bRow = basicRow.get(it.ign);
       if (bRow) noteWrite('BASIC INFORMATION', bRow, 1, it.cp);
     }
+    noteTabMutation('BASIC INFORMATION');
+    noteTabMutation('CP HISTORY');
 
     scheduleRefresh();
     res.json({ ok: true, date, count: clean.length, items: clean, reusedColumn });

@@ -230,15 +230,26 @@ export async function updateValuesRaw(title: string, a1: string, values: string[
   await batchUpdateValues(title, [{ a1, values }], 'RAW');
 }
 
-export async function appendRow(title: string, cells: string[], columnCount: number): Promise<void> {
-  const lastCol = columnLetter(Math.max(columnCount, cells.length) - 1);
+export async function appendRows(
+  title: string,
+  rows: string[][],
+  columnCount: number,
+  valueInputOption: 'RAW' | 'USER_ENTERED' = 'USER_ENTERED',
+): Promise<void> {
+  if (rows.length === 0) return;
+  const widest = Math.max(columnCount, ...rows.map((r) => r.length));
+  const lastCol = columnLetter(widest - 1);
   const range = `${q(title)}!A1:${lastCol}${config.maxRows}`;
   await withRetry(() =>
     sheetsRequest(
-      `/spreadsheets/${config.spreadsheetId}/values/${encodeURIComponent(range)}:append?valueInputOption=USER_ENTERED&insertDataOption=INSERT_ROWS`,
-      { method: 'POST', body: JSON.stringify({ values: [cells] }) },
+      `/spreadsheets/${config.spreadsheetId}/values/${encodeURIComponent(range)}:append?valueInputOption=${valueInputOption}&insertDataOption=INSERT_ROWS`,
+      { method: 'POST', body: JSON.stringify({ values: rows }) },
     ),
   );
+}
+
+export async function appendRow(title: string, cells: string[], columnCount: number): Promise<void> {
+  await appendRows(title, [cells], columnCount);
 }
 
 export async function deleteRow(title: string, sheetId: number, rowIndex1Based: number): Promise<void> {

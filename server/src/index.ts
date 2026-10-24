@@ -6,6 +6,7 @@ import { api } from './routes';
 import { initStore } from './store';
 import { ensureCredentialsTab } from './credentials';
 import { ensureSettingsTab } from './settings';
+import { initActivityLog } from './activity';
 
 function normalizeOrigin(origin: string): string {
   return origin.trim().replace(/\/+$/, '');
@@ -60,6 +61,9 @@ async function main(): Promise<void> {
 
   await ensureCredentialsTab();
   await ensureSettingsTab();
+  await initActivityLog().catch((err) => {
+    console.error('[activity] failed to initialize:', err instanceof Error ? err.message : err);
+  });
   await initStore();
 
   const server = app.listen(config.port, () => {

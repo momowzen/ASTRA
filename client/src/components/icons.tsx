@@ -124,6 +124,16 @@ export function IconTimer() {
   );
 }
 
+export function IconHistory() {
+  return (
+    <svg className="nav-ico nav-ico-history" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M3 12a9 9 0 1 0 2.6-6.4" />
+      <path d="M3 4v5h5" />
+      <path d="M12 7v5l3 2" />
+    </svg>
+  );
+}
+
 export function IconSparkles() {
   return (
     <svg className="nav-ico nav-ico-spark" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">

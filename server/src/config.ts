@@ -56,6 +56,7 @@ export const config = {
   ]),
   credentialsTab: process.env.CREDENTIALS_TAB || 'credentials',
   settingsTab: process.env.SETTINGS_TAB || 'SETTINGS',
+  activityTab: process.env.ACTIVITY_LOG_TAB || 'ACTIVITY LOG',
   pollIntervalMs: num(process.env.SYNC_POLL_INTERVAL_MS, 5000),
   maxRows: num(process.env.SYNC_MAX_ROWS, 2000),
   adminUsername: 'admin',

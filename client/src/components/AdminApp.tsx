@@ -5,11 +5,12 @@ import type { Column, DataResponse, RowData, Session } from '../types';
 import { buildColumns, formatCp, isCpLabel, isDateLabel, optionColor, parseCpNumber, timeInGuildParts, toIsoDate } from '../utils';
 import { addRow as apiAddRow, deleteRow as apiDeleteRow, saveCells, ApiError } from '../api';
 import { DatePicker, Select } from './Dropdown';
-import { IconBulb, IconClose, IconGear, IconGrid, IconLogout, IconMenu, IconOverview, IconPlus, IconSearch, IconTrash, IconTrendingUp, IconTrophy, IconUserCheck } from './icons';
+import { IconBulb, IconClose, IconGear, IconGrid, IconHistory, IconLogout, IconMenu, IconOverview, IconPlus, IconSearch, IconTrash, IconTrendingUp, IconTrophy, IconUserCheck } from './icons';
 import AdminSettings from './AdminSettings';
 import BossTracker from './BossTracker';
 import GuildRoster from './GuildRoster';
 import AdminTools from './AdminTools';
+import ActivityLog from './ActivityLog';
 import CpUpdate from './CpUpdate';
 import CpHistoryView from './CpHistoryView';
 import Avatar from './Avatar';
@@ -174,7 +175,7 @@ export default function AdminApp({
   const [showCol, setShowCol] = useState(-1);
   const [filterVal, setFilterVal] = useState('');
   const [bossView, setBossView] = useState<'dashboard' | 'attendance' | 'config' | null>(null);
-  const [toolView, setToolView] = useState<'distribution' | 'cp-update' | 'profile-completion' | null>(null);
+  const [toolView, setToolView] = useState<'distribution' | 'cp-update' | 'profile-completion' | 'activity-log' | null>(null);
   const [rosterView, setRosterView] = useState(true);
   const [editing, setEditing] = useState<{ row: number; col: number } | null>(null);
   const [addOpen, setAddOpen] = useState(false);
@@ -568,6 +569,22 @@ export default function AdminApp({
           </span>
           {t('tools.cpUpdate')}
         </button>
+        <button
+          className={`nav-item nav-caps ${toolView === 'activity-log' ? 'active' : ''}`}
+          onClick={() => {
+            setToolView('activity-log');
+            setBossView(null);
+            setRosterView(false);
+            setEditing(null);
+            setShowCol(-1);
+            setFilterVal('');
+          }}
+        >
+          <span className="ico">
+            <IconHistory />
+          </span>
+          {t('tools.activityLog')}
+        </button>
 
         <div className="section-label">{t('admin.sheetTabs')}</div>
         <div className="tab-scroll">
@@ -637,7 +654,9 @@ export default function AdminApp({
                         ? t('tools.cpUpdate')
                         : toolView === 'profile-completion'
                           ? t('tools.profileCompletion')
-                          : t('tools.distribution')
+                          : toolView === 'activity-log'
+                            ? t('tools.activityLog')
+                            : t('tools.distribution')
                       : tab
                       ? tabLabel(tab.meta.title, t, lang)
                       : t('member.loading')}
@@ -737,6 +756,8 @@ export default function AdminApp({
               <CpUpdate data={data} toast={toast} />
             ) : toolView === 'profile-completion' ? (
               <ProfileCompletion data={data} />
+            ) : toolView === 'activity-log' ? (
+              <ActivityLog />
             ) : (
               <AdminTools data={data} toast={toast} />
             )

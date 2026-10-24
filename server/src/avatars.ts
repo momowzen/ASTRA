@@ -64,21 +64,23 @@ export async function setAvatar(
   return { previous, row: row.row, col };
 }
 
-export async function clearAvatar(ign: string): Promise<{ previous: string } | null> {
+export async function clearAvatar(
+  ign: string,
+): Promise<{ previous: string; row: number; col: number } | null> {
   const tab = getTab('BASIC INFORMATION');
   if (!tab) return null;
   const row = findAvatarRow(tab, ign);
   if (!row) return null;
   const col = findAvatarColumn(tab);
-  if (col < 0) return { previous: '' };
+  if (col < 0) return { previous: '', row: row.row, col: -1 };
 
   const previous = String(row.cells[col] ?? '').trim();
-  if (!previous) return { previous: '' };
+  if (!previous) return { previous: '', row: row.row, col };
   await sheets.updateValuesRaw('BASIC INFORMATION', `${sheets.columnLetter(col)}${row.row}`, [['']]);
   noteWrite('BASIC INFORMATION', row.row, col, '');
   applyLocalWrite('BASIC INFORMATION', row.row, col, '');
   scheduleRefresh();
-  return { previous };
+  return { previous, row: row.row, col };
 }
 
 export function avatarMap(): Record<string, string> {

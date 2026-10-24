@@ -1,6 +1,7 @@
 import { createHash } from 'node:crypto';
 import * as sheets from './sheets';
 import { config } from './config';
+import { diffSnapshots, logEntries } from './activity';
 
 export interface TabMeta {
   title: string;
@@ -36,8 +37,29 @@ export let lastError: string | null = null;
 const RECENT_WRITE_TTL_MS = 8_000;
 const recentWrites = new Map<string, { row: number; col: number; value: string; expires: number }>();
 
+const TAB_MUTATION_TTL_MS = 30_000;
+const recentTabMutations = new Map<string, number>();
+
 export function noteWrite(title: string, row: number, col: number, value: string): void {
   recentWrites.set(`${title}!${row}!${col}`, { row, col, value, expires: Date.now() + RECENT_WRITE_TTL_MS });
+}
+
+/**
+ * Mark app-originated writes so the next sheet poll does not report them as
+ * direct Google Sheet edits in the activity log.
+ */
+export function noteTabMutation(title: string): void {
+  recentTabMutations.set(title.toLowerCase(), Date.now() + TAB_MUTATION_TTL_MS);
+}
+
+function tabRecentlyMutated(title: string): boolean {
+  const until = recentTabMutations.get(title.toLowerCase());
+  if (!until) return false;
+  if (until < Date.now()) {
+    recentTabMutations.delete(title.toLowerCase());
+    return false;
+  }
+  return true;
 }
 
 function applyRecentWrites(title: string, values: string[][]): void {
@@ -167,7 +189,12 @@ function recomputeAttendance(next: Snapshot): { a1: string; values: string[][] }
 async function load(): Promise<Snapshot> {
   const meta = await getMeta();
   const visible = meta.sheets
-    .filter((s) => (!s.hidden || s.title === config.settingsTab) && s.title !== config.credentialsTab)
+    .filter(
+      (s) =>
+        (!s.hidden || s.title === config.settingsTab) &&
+        s.title !== config.credentialsTab &&
+        s.title !== config.activityTab,
+    )
     .sort((a, b) => a.index - b.index);
   const titles = visible.map((s) => s.title);
   const values = await sheets.batchGetValues(titles);
@@ -217,7 +244,15 @@ async function doRefresh(): Promise<void> {
     return;
   }
   try {
+    const previous = snapshot;
     const next = await load();
+    if (previous && previous.rev !== next.rev) {
+      const direct = diffSnapshots(previous, next).filter((e) => !tabRecentlyMutated(e.tab));
+      if (direct.length > 0) {
+        logEntries(direct);
+        console.log(`[activity] recorded ${direct.length} direct sheet change(s)`);
+      }
+    }
     try {
       const writes = recomputeAttendance(next);
       if (writes.length > 0) {

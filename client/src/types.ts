@@ -54,6 +54,36 @@ export interface Session {
   ign: string;
 }
 
+export type ActivitySource = 'profile' | 'admin' | 'sheet' | 'system';
+export type ActivityAction = 'update' | 'row_added' | 'row_deleted';
+
+export interface ActivityEntry {
+  id: string;
+  at: string;
+  actor: string;
+  role: 'MEMBER' | 'ADMIN' | 'SHEET' | 'SYSTEM';
+  source: ActivitySource;
+  tab: string;
+  row: number;
+  column: number;
+  field: string;
+  member: string;
+  previous: string;
+  next: string;
+  action: ActivityAction;
+}
+
+export interface ActivityResponse {
+  entries: ActivityEntry[];
+  total: number;
+  counts: {
+    profile: number;
+    admin: number;
+    sheet: number;
+    system: number;
+  };
+}
+
 export interface Column {
   index: number;
   label: string;
