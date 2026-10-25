@@ -147,6 +147,7 @@ export default function MediaMusic({
   const [mobileListOpen, setMobileListOpen] = useState(false);
   const audioRef = useRef<HTMLAudioElement>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
+  const searchRef = useRef<HTMLDivElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
   const playerSwipeRef = useRef<{ x: number; y: number; blocked: boolean } | null>(null);
   const listSwipeRef = useRef<{ x: number; y: number; blocked: boolean; scrollTop: number } | null>(null);
@@ -163,6 +164,18 @@ export default function MediaMusic({
   const progressPct = duration > 0 ? Math.min(100, (currentTime / duration) * 100) : 0;
   const isMuted = muted || volume === 0;
   const volumePct = (isMuted ? 0 : volume) * 100;
+  const coverStyle = useMemo(() => {
+    const key = current?.id ?? 'astra-cover';
+    let hash = 0;
+    for (let i = 0; i < key.length; i += 1) {
+      hash = (hash * 31 + key.charCodeAt(i)) >>> 0;
+    }
+    const hue = hash % 360;
+    return {
+      '--cover-hue': `${hue}`,
+      '--cover-hue-2': `${(hue + 58) % 360}`,
+    } as CSSProperties;
+  }, [current?.id]);
   const fabBounceStyle = useMemo(
     () =>
       ({
@@ -188,6 +201,7 @@ export default function MediaMusic({
       setMobileListOpen(false);
       setSearchOpen(false);
       setQuery('');
+      searchInputRef.current?.blur();
     } catch (err) {
       setError(err instanceof ApiError ? err.message : '');
     } finally {
@@ -236,6 +250,28 @@ export default function MediaMusic({
     if (!searchOpen) return;
     const id = window.setTimeout(() => searchInputRef.current?.focus(), 80);
     return () => window.clearTimeout(id);
+  }, [searchOpen]);
+
+  useEffect(() => {
+    if (!searchOpen) return;
+    const close = () => {
+      setSearchOpen(false);
+      setQuery('');
+      searchInputRef.current?.blur();
+    };
+    const onClickOutside = (event: MouseEvent) => {
+      if (searchRef.current?.contains(event.target as Node)) return;
+      close();
+    };
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') close();
+    };
+    document.addEventListener('click', onClickOutside);
+    document.addEventListener('keydown', onKeyDown);
+    return () => {
+      document.removeEventListener('click', onClickOutside);
+      document.removeEventListener('keydown', onKeyDown);
+    };
   }, [searchOpen]);
 
   useEffect(() => {
@@ -501,6 +537,7 @@ export default function MediaMusic({
     if (searchOpen) {
       setSearchOpen(false);
       setQuery('');
+      searchInputRef.current?.blur();
       return;
     }
     setSearchOpen(true);
@@ -629,17 +666,10 @@ export default function MediaMusic({
               }}
             >
               <div className="music-cover-wrap">
-                <div className={`music-cover${playing ? ' is-playing' : ''}`}>
+                <div className="music-cover" style={coverStyle}>
                   <img src="./assets/logo.png" alt="" />
                   <span className="music-cover-label">ASTRA</span>
                   <span className="music-cover-sub">SONGS</span>
-                  <span className="music-eq" aria-hidden="true">
-                    <span />
-                    <span />
-                    <span />
-                    <span />
-                    <span />
-                  </span>
                 </div>
                 <div className="music-cover-index">
                   {String(index + 1).padStart(2, '0')}
@@ -800,17 +830,44 @@ export default function MediaMusic({
               <div className="music-playlist-head">
                 <h3>{t('media.tracks')}</h3>
                 <div className="music-playlist-actions">
-                  <button
-                    type="button"
-                    className={`music-search-toggle${searchOpen ? ' is-on' : ''}`}
-                    aria-label={searchOpen ? t('media.closeSearch') : t('media.searchPh')}
-                    aria-expanded={searchOpen}
-                    aria-controls="music-search"
-                    title={searchOpen ? t('media.closeSearch') : t('media.searchPh')}
-                    onClick={toggleSearch}
+                  <div
+                    ref={searchRef}
+                    className={`music-search-expand${searchOpen ? ' is-open' : ''}`}
+                    role="search"
                   >
-                    <IconSearch />
-                  </button>
+                    <input
+                      id="music-search"
+                      ref={searchInputRef}
+                      value={query}
+                      tabIndex={searchOpen ? 0 : -1}
+                      aria-hidden={searchOpen ? undefined : true}
+                      autoComplete="off"
+                      onChange={(e) => setQuery(e.target.value)}
+                      placeholder={t('media.searchPh')}
+                      aria-label={t('media.searchPh')}
+                    />
+                    {query.trim() !== '' && (
+                      <button
+                        type="button"
+                        className="music-search-clear"
+                        aria-label={t('common.clear')}
+                        onClick={clearSearch}
+                      >
+                        <IconClose />
+                      </button>
+                    )}
+                    <button
+                      type="button"
+                      className="music-search-toggle"
+                      aria-label={searchOpen ? t('media.closeSearch') : t('media.searchPh')}
+                      aria-expanded={searchOpen}
+                      aria-controls="music-search"
+                      title={searchOpen ? t('media.closeSearch') : t('media.searchPh')}
+                      onClick={toggleSearch}
+                    >
+                      <IconSearch />
+                    </button>
+                  </div>
                   <button
                     type="button"
                     className="music-list-hide"
@@ -821,37 +878,6 @@ export default function MediaMusic({
                     <IconChevronDown />
                   </button>
                 </div>
-              </div>
-
-              <div className={`music-search-wrap${searchOpen ? ' is-open' : ''}`} aria-hidden={searchOpen ? undefined : true}>
-                <label className="music-search" id="music-search">
-                  <input
-                    ref={searchInputRef}
-                    value={query}
-                    tabIndex={searchOpen ? 0 : -1}
-                    autoComplete="off"
-                    onChange={(e) => setQuery(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Escape') {
-                        setSearchOpen(false);
-                        setQuery('');
-                        searchInputRef.current?.blur();
-                      }
-                    }}
-                    placeholder={t('media.searchPh')}
-                    aria-label={t('media.searchPh')}
-                  />
-                  {query.trim() !== '' && (
-                    <button
-                      type="button"
-                      className="music-search-clear"
-                      aria-label={t('common.clear')}
-                      onClick={clearSearch}
-                    >
-                      <IconClose />
-                    </button>
-                  )}
-                </label>
               </div>
 
               <div className="music-list" ref={listRef}>
