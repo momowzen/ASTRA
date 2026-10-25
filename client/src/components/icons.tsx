@@ -145,6 +145,18 @@ export function IconHistory() {
   );
 }
 
+export function IconMusic() {
+  return (
+    <svg className="nav-ico nav-ico-music" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round">
+      <path className="music-bar music-bar-1" d="M4 10v4" />
+      <path className="music-bar music-bar-2" d="M8 7v10" />
+      <path className="music-bar music-bar-3" d="M12 4v16" />
+      <path className="music-bar music-bar-4" d="M16 8v8" />
+      <path className="music-bar music-bar-5" d="M20 11v2" />
+    </svg>
+  );
+}
+
 export function IconReward() {
   return (
     <svg className="nav-ico nav-ico-reward" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">

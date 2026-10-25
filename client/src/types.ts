@@ -84,6 +84,22 @@ export interface ActivityResponse {
   };
 }
 
+export interface MediaTrack {
+  id: string;
+  title: string;
+  artist: string;
+  modified: string;
+  mime: string;
+  stream: string;
+}
+
+export interface MediaResponse {
+  folder: string;
+  folderUrl: string;
+  tracks: MediaTrack[];
+  fetchedAt: string;
+}
+
 export interface Column {
   index: number;
   label: string;

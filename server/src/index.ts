@@ -27,7 +27,8 @@ async function main(): Promise<void> {
       cb(null, false);
     },
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'Range', 'If-Range', 'Accept'],
+    exposedHeaders: ['Content-Range', 'Accept-Ranges', 'Content-Length'],
     optionsSuccessStatus: 204,
     maxAge: 86400,
   };

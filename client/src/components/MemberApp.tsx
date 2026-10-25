@@ -3,12 +3,13 @@ import { MEMBER_HIDDEN_TABS } from '../types';
 import type { Column, DataResponse, RosterMember, Session, TabData } from '../types';
 import { buildColumns, formatCp, isCpLabel, isDateLabel, isMark, MEMBER_ALWAYS_EDITABLE, MEMBER_READONLY, optionColor, timeInGuildParts, toIsoDate } from '../utils';
 import { ApiError, apiBase, saveCells } from '../api';
-import { IconBulb, IconClose, IconGear, IconGem, IconGrid, IconLogout, IconMenu, IconSheet, IconSparkles, IconTimer, IconTrophy, IconUser, IconUsers } from './icons';
+import { IconBulb, IconClose, IconGear, IconGem, IconGrid, IconLogout, IconMenu, IconMusic, IconSheet, IconSparkles, IconTimer, IconTrophy, IconUser, IconUsers } from './icons';
 import Avatar from './Avatar';
 import MemberSettingsModal from './MemberSettingsModal';
 import ProfileProgress from './ProfileProgress';
 import AttendancePodium from './AttendancePodium';
 import RosterProfileCard from './RosterProfileCard';
+import MediaMusic from './MediaMusic';
 import { DatePicker, Select } from './Dropdown';
 import { LangToggle, useLang } from '../i18n';
 import { colLabel, memberColIsLong, memberColLabel, memberColValueLabel, tabLabel, valueLabel } from '../display';
@@ -346,6 +347,16 @@ export default function MemberApp({
   const [rosterCol, setRosterCol] = useState(-1);
   const [rosterVal, setRosterVal] = useState('');
   const [toolsView, setToolsView] = useState<ToolView | null>(null);
+  const [mediaView, setMediaView] = useState<'music' | null>(null);
+  const [musicVisited, setMusicVisited] = useState(false);
+  const [musicBackground, setMusicBackground] = useState(() => {
+    try {
+      return localStorage.getItem('astra.music.background') === '1';
+    } catch {
+      return false;
+    }
+  });
+  const [nowPlaying, setNowPlaying] = useState<{ title: string; artist: string; playing: boolean } | null>(null);
   const [toolsOnline, setToolsOnline] = useState(true);
   const [toolsAlarm, setToolsAlarm] = useState(false);
   const [profileMember, setProfileMember] = useState<RosterMember | null>(null);
@@ -384,6 +395,7 @@ export default function MemberApp({
     setActiveTitle(title);
     setRosterView(false);
     setToolsView(null);
+    setMediaView(null);
     setMenuOpen(false);
   }
 
@@ -391,6 +403,7 @@ export default function MemberApp({
     setRosterView(true);
     setActiveTitle('');
     setToolsView(null);
+    setMediaView(null);
     setRosterCol(-1);
     setRosterVal('');
     setMenuOpen(false);
@@ -400,6 +413,16 @@ export default function MemberApp({
     setToolsView(tool);
     setActiveTitle('');
     setRosterView(false);
+    setMediaView(null);
+    setMenuOpen(false);
+  }
+
+  function showMedia(view: 'music') {
+    setMediaView(view);
+    setMusicVisited(true);
+    setActiveTitle('');
+    setRosterView(false);
+    setToolsView(null);
     setMenuOpen(false);
   }
 
@@ -484,8 +507,16 @@ export default function MemberApp({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [lang]);
 
+  useEffect(() => {
+    try {
+      localStorage.setItem('astra.music.background', musicBackground ? '1' : '0');
+    } catch {
+      // Storage is optional.
+    }
+  }, [musicBackground]);
+
   const activeTab = memberTabs.find((t) => t.meta.title === activeTitle);
-  const isDashboard = !activeTab && !rosterView && !toolsView;
+  const isDashboard = !activeTab && !rosterView && !toolsView && !mediaView;
 
   const myRow = useMemo(() => {
     const ign = session.ign.trim().toLowerCase();
@@ -663,6 +694,17 @@ export default function MemberApp({
           {t('member.toolRelic')}
         </button>
 
+        <div className="section-label">{t('member.media')}</div>
+        <button
+          className={`nav-item ${mediaView === 'music' ? 'active' : ''}`}
+          onClick={() => showMedia('music')}
+        >
+          <span className="ico">
+            <IconMusic />
+          </span>
+          {t('member.music')}
+        </button>
+
         <div className="spacer" />
         <div className="userbox">
           <button className="nav-item" onClick={() => setSettingsOpen(true)}>
@@ -694,6 +736,25 @@ export default function MemberApp({
             </span>
           </div>
           <div className="grow" />
+          {mediaView !== 'music' && musicBackground && nowPlaying?.playing && (
+            <button
+              type="button"
+              className="topbar-now-playing"
+              aria-label={`${t('media.nowPlaying')}: ${nowPlaying.title}`}
+              title={`${t('media.nowPlaying')}: ${nowPlaying.title}${nowPlaying.artist ? ` — ${nowPlaying.artist}` : ''}`}
+              onClick={() => showMedia('music')}
+            >
+              <span className="topbar-now-playing-eq" aria-hidden="true">
+                <span />
+                <span />
+                <span />
+              </span>
+              <span className="topbar-now-playing-copy">
+                <span className="topbar-now-playing-label">{t('media.nowPlaying')}:</span>
+                <strong>{nowPlaying.title}</strong>
+              </span>
+            </button>
+          )}
           {toolsView === 'tracker' && (
             <button
               className={`topbar-alarm ${toolsAlarm ? 'on' : ''}`}
@@ -818,6 +879,15 @@ export default function MemberApp({
                 </table>
               </div>
             </div>
+          )}
+
+          {(mediaView === 'music' || (musicBackground && musicVisited)) && (
+            <MediaMusic
+              active={mediaView === 'music'}
+              backgroundPlay={musicBackground}
+              onBackgroundChange={setMusicBackground}
+              onNowPlayingChange={setNowPlaying}
+            />
           )}
 
           {rosterView && (

@@ -9,6 +9,7 @@ import { deleteAvatarByUrl, prepareAvatar, storeAvatar } from './storage';
 import { BOSS_NAMES } from './bosses';
 import { listActivity, logEntries, makeCellEntry, snapshotValue } from './activity';
 import type { ActivityActor } from './activity';
+import { getMedia, streamMediaTrack } from './media';
 
 class ForbiddenRow extends Error {
   constructor(public row: number) {
@@ -322,6 +323,26 @@ api.get('/activity', requireAuth, requireAdmin, async (req, res) => {
     console.error('[activity] read failed:', err instanceof Error ? err.message : err);
     bad(res, 502, 'Could not load the activity log');
   }
+});
+
+api.get('/media', requireAuth, async (_req, res) => {
+  try {
+    const library = await getMedia();
+    res.json({
+      folder: library.folder,
+      folderUrl: library.folderUrl,
+      tracks: library.tracks,
+      fetchedAt: new Date(library.fetchedAt).toISOString(),
+    });
+  } catch (err) {
+    console.error('[media] library read failed:', err instanceof Error ? err.message : err);
+    bad(res, 502, 'Could not load the music library');
+  }
+});
+
+// Public audio proxy: only tracks from the cached public Drive folder are allowed.
+api.get('/media/:id/stream', (req, res) => {
+  void streamMediaTrack(req, res);
 });
 
 api.post('/profile/avatar', requireAuth, async (req, res) => {
