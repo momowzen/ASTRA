@@ -99,6 +99,41 @@ function IconChevronDown() {
   );
 }
 
+function IconExpand() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M4 9V4h5" />
+      <path d="M20 9V4h-5" />
+      <path d="M4 15v5h5" />
+      <path d="M20 15v5h-5" />
+    </svg>
+  );
+}
+
+function IconCompress() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M9 4v5H4" />
+      <path d="M15 4v5h5" />
+      <path d="M9 20v-5H4" />
+      <path d="M15 20v-5h5" />
+    </svg>
+  );
+}
+
+function IconList() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M9 6h11" />
+      <path d="M9 12h11" />
+      <path d="M9 18h11" />
+      <path d="M4 6h.01" />
+      <path d="M4 12h.01" />
+      <path d="M4 18h.01" />
+    </svg>
+  );
+}
+
 function formatTime(seconds: number): string {
   if (!Number.isFinite(seconds) || seconds < 0) return '--:--';
   const whole = Math.floor(seconds);
@@ -145,6 +180,10 @@ export default function MediaMusic({
   const [streamError, setStreamError] = useState(false);
   const [durations, setDurations] = useState<Record<string, number>>({});
   const [mobileListOpen, setMobileListOpen] = useState(false);
+  const [fs, setFs] = useState(false);
+  const [fsList, setFsList] = useState(false);
+  const [fsChrome, setFsChrome] = useState(true);
+  const fsChromeTimer = useRef<number | null>(null);
   const audioRef = useRef<HTMLAudioElement>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
   const searchRef = useRef<HTMLDivElement>(null);
@@ -184,6 +223,25 @@ export default function MediaMusic({
       }) as CSSProperties,
     [],
   );
+
+  const enterFs = useCallback(() => {
+    setMobileListOpen(false);
+    setFs(true);
+    setFsList(false);
+    setFsChrome(true);
+  }, []);
+
+  const exitFs = useCallback(() => {
+    setMobileListOpen(false);
+    setFs(false);
+    setFsList(false);
+    setFsChrome(true);
+  }, []);
+
+  const toggleFsList = useCallback(() => {
+    setFsList((value) => !value);
+    setFsChrome(true);
+  }, []);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -243,8 +301,46 @@ export default function MediaMusic({
     setMobileListOpen(false);
     setSearchOpen(false);
     setQuery('');
+    setFs(false);
+    setFsList(false);
+    setFsChrome(true);
     searchInputRef.current?.blur();
   }, [active]);
+
+  useEffect(() => {
+    if (!fs) {
+      setFsChrome(true);
+      return;
+    }
+
+    const armHide = () => {
+      setFsChrome(true);
+      if (fsChromeTimer.current !== null) window.clearTimeout(fsChromeTimer.current);
+      fsChromeTimer.current = window.setTimeout(() => setFsChrome(false), 2600);
+    };
+
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key !== 'Escape') return;
+      // Let an open search field swallow the first Escape.
+      if (searchOpen) return;
+      event.preventDefault();
+      exitFs();
+    };
+
+    armHide();
+    document.addEventListener('pointermove', armHide, { passive: true });
+    document.addEventListener('pointerdown', armHide, { passive: true });
+    document.addEventListener('keydown', onKeyDown);
+    return () => {
+      document.removeEventListener('pointermove', armHide);
+      document.removeEventListener('pointerdown', armHide);
+      document.removeEventListener('keydown', onKeyDown);
+      if (fsChromeTimer.current !== null) {
+        window.clearTimeout(fsChromeTimer.current);
+        fsChromeTimer.current = null;
+      }
+    };
+  }, [fs, searchOpen, exitFs]);
 
   useEffect(() => {
     if (!searchOpen) return;
@@ -554,13 +650,14 @@ export default function MediaMusic({
 
   function hideTracks() {
     setMobileListOpen(false);
+    setFsList(false);
     setSearchOpen(false);
     setQuery('');
     searchInputRef.current?.blur();
   }
 
   function onPlayerTouchStart(e: TouchEvent<HTMLDivElement>) {
-    if (window.innerWidth > 900) return;
+    if (fs || window.innerWidth > 900) return;
     const touch = e.touches[0];
     if (!touch) return;
     const target = e.target as HTMLElement;
@@ -623,12 +720,27 @@ export default function MediaMusic({
 
   return (
     <section className={`music-view${active ? '' : ' is-hidden'}`} aria-hidden={active ? undefined : true}>
-      <div className={`panel-card music-shell${mobileListOpen ? ' is-list-open' : ''}`}>
+      <div
+        className={`panel-card music-shell${mobileListOpen ? ' is-list-open' : ''}${fs ? ' is-fs' : ''}${
+          fs && !fsChrome ? ' is-idle' : ''
+        }${fs && fsList ? ' is-fs-list' : ''}`}
+      >
         {active && <MusicStarfield analyserRef={analyserRef} playing={playing} />}
         <header className="music-head">
           <div className="music-head-copy">
             <h2>ASTRA MUSIC</h2>
           </div>
+          {tracks.length > 0 && !fs && (
+            <button
+              type="button"
+              className="music-fs-btn"
+              aria-label={t('media.fullscreen')}
+              title={t('media.fullscreen')}
+              onClick={enterFs}
+            >
+              <IconExpand />
+            </button>
+          )}
         </header>
 
         {loading ? (
@@ -677,13 +789,15 @@ export default function MediaMusic({
                 </div>
               </div>
 
-              <div className="music-track-copy">
-                <span className="music-kicker">{t('media.nowPlaying')}</span>
-                <h3>{current?.title || '—'}</h3>
-                <div className="music-track-meta">
-                  <span>{current?.artist || 'ASTRA'}</span>
-                  <span className="music-dot" aria-hidden="true" />
-                  <span>{current?.modified || t('media.drive')}</span>
+              <div className="music-now-info">
+                <div className="music-track-copy">
+                  <span className="music-kicker">{t('media.nowPlaying')}</span>
+                  <h3>{current?.title || '—'}</h3>
+                  <div className="music-track-meta">
+                    <span>{current?.artist || 'ASTRA'}</span>
+                    <span className="music-dot" aria-hidden="true" />
+                    <span>{current?.modified || t('media.drive')}</span>
+                  </div>
                 </div>
               </div>
 
@@ -709,7 +823,7 @@ export default function MediaMusic({
               <div className="music-controls">
                 <button
                   type="button"
-                  className={`music-control${shuffle ? ' is-on' : ''}`}
+                  className={`music-control music-control--shuffle${shuffle ? ' is-on' : ''}`}
                   aria-label={t('media.shuffle')}
                   aria-pressed={shuffle}
                   title={t('media.shuffle')}
@@ -717,7 +831,7 @@ export default function MediaMusic({
                 >
                   <IconShuffle />
                 </button>
-                <button type="button" className="music-control" aria-label={t('media.prev')} title={t('media.prev')} onClick={goPrev}>
+                <button type="button" className="music-control music-control--prev" aria-label={t('media.prev')} title={t('media.prev')} onClick={goPrev}>
                   <IconPrev />
                 </button>
                 <button
@@ -729,12 +843,12 @@ export default function MediaMusic({
                 >
                   {buffering ? <span className="music-spinner" aria-hidden="true" /> : playing ? <IconPause /> : <IconPlay />}
                 </button>
-                <button type="button" className="music-control" aria-label={t('media.next')} title={t('media.next')} onClick={() => goNext(false)}>
+                <button type="button" className="music-control music-control--next" aria-label={t('media.next')} title={t('media.next')} onClick={() => goNext(false)}>
                   <IconNext />
                 </button>
                 <button
                   type="button"
-                  className={`music-control${repeat !== 'off' ? ' is-on' : ''}`}
+                  className={`music-control music-control--repeat${repeat !== 'off' ? ' is-on' : ''}`}
                   aria-label={repeat === 'one' ? t('media.repeatOne') : t('media.repeat')}
                   aria-pressed={repeat !== 'off'}
                   title={repeat === 'one' ? t('media.repeatOne') : t('media.repeat')}
@@ -788,6 +902,30 @@ export default function MediaMusic({
                   BG
                 </button>
               </div>
+
+              {fs && (
+                <>
+                  <button
+                    type="button"
+                    className="music-fs-btn music-fs-btn--icon music-fs-btn--list"
+                    aria-pressed={fsList}
+                    aria-label={fsList ? t('media.hideTracks') : t('media.showTracks')}
+                    title={fsList ? t('media.hideTracks') : t('media.showTracks')}
+                    onClick={toggleFsList}
+                  >
+                    <IconList />
+                  </button>
+                  <button
+                    type="button"
+                    className="music-fs-btn music-fs-btn--icon music-fs-btn--exit"
+                    aria-label={t('media.exitFullscreen')}
+                    title={t('media.exitFullscreen')}
+                    onClick={exitFs}
+                  >
+                    <IconCompress />
+                  </button>
+                </>
+              )}
 
               {streamError && <div className="music-alert">{t('media.streamError')}</div>}
 
@@ -920,17 +1058,31 @@ export default function MediaMusic({
           </div>
         )}
 
-        {!loading && !error && tracks.length > 0 && !mobileListOpen && (
+        {!loading && !error && tracks.length > 0 && (
           <button
             type="button"
-            className="music-list-fab"
+            className={`music-list-fab${mobileListOpen ? ' is-off' : ''}`}
             aria-label={t('media.showTracks')}
             aria-controls="music-track-list"
+            aria-hidden={mobileListOpen || undefined}
             title={t('media.showTracks')}
             style={fabBounceStyle}
+            disabled={mobileListOpen}
             onClick={showTracks}
           >
             <IconChevronUp />
+          </button>
+        )}
+
+        {fs && (
+          <button
+            type="button"
+            className="music-fs-btn music-fs-btn--icon music-fs-float"
+            aria-label={t('media.exitFullscreen')}
+            title={t('media.exitFullscreen')}
+            onClick={exitFs}
+          >
+            <IconCompress />
           </button>
         )}
       </div>

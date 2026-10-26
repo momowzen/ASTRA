@@ -22,6 +22,8 @@ const DICT: Record<string, { en: string; ko: string; ja: string; zh: string }> =
     zh: '电子表格没有可见的标签页，或服务账号已失去访问权限。',
   },
 
+  'intro.skip': { en: 'Skip', ko: '건너뛰기', ja: "スキップ", zh: '跳过' },
+
   'common.signOut': { en: 'Sign out', ko: '로그아웃', ja: "ログアウト", zh: '退出登录' },
   'common.settings': { en: 'Settings', ko: '설정', ja: "設定", zh: '设置' },
   'common.cancel': { en: 'Cancel', ko: '취소', ja: "キャンセル", zh: '取消' },
@@ -256,6 +258,8 @@ const DICT: Record<string, { en: string; ko: string; ja: string; zh: string }> =
   'media.searchPh': { en: 'Search tracks…', ko: '트랙 검색…', ja: "曲を検索…", zh: '搜索曲目…' },
   'media.closeSearch': { en: 'Close search', ko: '검색 닫기', ja: "検索を閉じる", zh: '关闭搜索' },
   'media.backgroundPlay': { en: 'Background play', ko: '백그라운드 재생', ja: "バックグラウンド再生", zh: '后台播放' },
+  'media.fullscreen': { en: 'Fullscreen', ko: '전체 화면', ja: "全画面", zh: '全屏' },
+  'media.exitFullscreen': { en: 'Exit fullscreen', ko: '전체 화면 종료', ja: "全画面を終了", zh: '退出全屏' },
   'media.noResults': {
     en: 'No tracks match your search.',
     ko: '검색과 일치하는 트랙이 없습니다.',

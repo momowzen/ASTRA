@@ -1,5 +1,6 @@
-import { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import type { CSSProperties } from 'react';
+import { useLang } from '../i18n';
 
 const STROKES = [
   'M55 40 L9 160',
@@ -32,10 +33,34 @@ interface Setup {
 }
 
 export default function LoadingScreen({ onDone }: { onDone: () => void }) {
+  const { t } = useLang();
   const svgRef = useRef<SVGSVGElement>(null);
   const [setup, setSetup] = useState<Setup | null>(null);
   const [timing, setTiming] = useState<{ delay: number; dur: number }[] | null>(null);
   const [armed, setArmed] = useState(false);
+  const [skipping, setSkipping] = useState(false);
+  const doneRef = useRef(false);
+  const skippingRef = useRef(false);
+  const skipTimerRef = useRef<number | null>(null);
+
+  const finish = useCallback(() => {
+    if (doneRef.current) return;
+    doneRef.current = true;
+    onDone();
+  }, [onDone]);
+
+  const skip = useCallback(() => {
+    if (doneRef.current || skippingRef.current) return;
+    skippingRef.current = true;
+    setSkipping(true);
+    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (reduce) {
+      finish();
+      return;
+    }
+    // Short cinematic fade-out so the cut to the login screen feels intentional.
+    skipTimerRef.current = window.setTimeout(finish, 340);
+  }, [finish]);
 
   useLayoutEffect(() => {
     const svg = svgRef.current;
@@ -129,18 +154,34 @@ export default function LoadingScreen({ onDone }: { onDone: () => void }) {
 
   useEffect(() => {
     const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    const id = window.setTimeout(onDone, reduce ? REDUCED_DONE : INTRO_DONE);
+    const id = window.setTimeout(finish, reduce ? REDUCED_DONE : INTRO_DONE);
     return () => window.clearTimeout(id);
-  }, [onDone]);
+  }, [finish]);
+
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key !== 'Escape') return;
+      event.preventDefault();
+      skip();
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => {
+      window.removeEventListener('keydown', onKeyDown);
+      if (skipTimerRef.current !== null) {
+        window.clearTimeout(skipTimerRef.current);
+        skipTimerRef.current = null;
+      }
+    };
+  }, [skip]);
 
   return (
-    <div className={`intro${armed ? ' armed' : ''}`} aria-hidden="true">
-      <div className="intro-halo" />
-      <div className="intro-frame" />
-      <div className="intro-stars intro-stars--far" />
-      <div className="intro-stars intro-stars--mid" />
-      <div className="intro-stars intro-stars--near" />
-      <svg ref={svgRef} className="intro-word" viewBox="0 0 576 200" preserveAspectRatio="xMidYMid meet">
+    <div className={`intro${armed ? ' armed' : ''}${skipping ? ' is-skipping' : ''}`}>
+      <div className="intro-halo" aria-hidden="true" />
+      <div className="intro-frame" aria-hidden="true" />
+      <div className="intro-stars intro-stars--far" aria-hidden="true" />
+      <div className="intro-stars intro-stars--mid" aria-hidden="true" />
+      <div className="intro-stars intro-stars--near" aria-hidden="true" />
+      <svg ref={svgRef} className="intro-word" viewBox="0 0 576 200" preserveAspectRatio="xMidYMid meet" aria-hidden="true">
         {setup && (
           <g className="constellation">
             {setup.edges.map((e, i) => {
@@ -191,6 +232,13 @@ export default function LoadingScreen({ onDone }: { onDone: () => void }) {
         <span>GUILD MANAGER</span>
         <span className="intro-meta-rule" />
       </div>
+
+      <button type="button" className="intro-skip" onClick={skip} aria-label={t('intro.skip')}>
+        <span className="intro-skip-key" aria-hidden="true">
+          ESC
+        </span>
+        <span className="intro-skip-text">{t('intro.skip')}</span>
+      </button>
     </div>
   );
 }
