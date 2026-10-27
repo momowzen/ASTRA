@@ -133,7 +133,7 @@ export default function ProfileCompletion({ data }: Props) {
                   <Avatar
                     ign={m.ign}
                     src={data.avatars?.[m.ign.trim().toLowerCase()]}
-                    className={`mini-avatar tone-${i % 5}`}
+                    className="mini-avatar"
                   />
                   <button
                     type="button"

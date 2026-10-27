@@ -204,7 +204,7 @@ export default function CpUpdate({ data, toast }: Props) {
                 <Avatar
                   ign={r.ign}
                   src={data.avatars?.[r.ign.trim().toLowerCase()]}
-                  className={`mini-avatar tone-${i % 5}`}
+                  className="mini-avatar"
                 />
                 <button
                   type="button"

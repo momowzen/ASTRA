@@ -857,7 +857,7 @@ export default function MemberApp({
                               <Avatar
                                 ign={x.ign}
                                 src={data.avatars?.[x.ign.trim().toLowerCase()]}
-                                className={`mini-avatar tone-${i % 5}`}
+                                className="mini-avatar"
                               />
                               {x.ign}
                             </div>
@@ -955,7 +955,7 @@ export default function MemberApp({
                             <Avatar
                               ign={m.ign}
                               src={data.avatars?.[m.ign.trim().toLowerCase()]}
-                              className={`mini-avatar tone-${i % 5}`}
+                              className="mini-avatar"
                             />
                             {m.ign}
                           </div>

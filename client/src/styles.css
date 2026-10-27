@@ -2367,27 +2367,46 @@ table.grid .labels.single th {
   }
 }
 
+/* Fallback avatar tones — chosen by IGN hash (utils.avatarTone), applied
+   automatically by <Avatar>, so the same member keeps one colour on every
+   screen: overview, roster, sheets, attendance picker, podium, profile card. */
+.mini-avatar.tone-0,
+.podium-avatar.tone-0,
+.att-avatar.tone-0,
+.avatar.tone-0,
+.roster-profile-avatar.tone-0 {
+  background: linear-gradient(140deg, #e8b88f, #9a6847);
+}
+
 .mini-avatar.tone-1,
 .podium-avatar.tone-1,
-.att-avatar.tone-1 {
+.att-avatar.tone-1,
+.avatar.tone-1,
+.roster-profile-avatar.tone-1 {
   background: linear-gradient(140deg, #b9c8e8, #7487ad);
 }
 
 .mini-avatar.tone-2,
 .podium-avatar.tone-2,
-.att-avatar.tone-2 {
+.att-avatar.tone-2,
+.avatar.tone-2,
+.roster-profile-avatar.tone-2 {
   background: linear-gradient(140deg, #c9b7e8, #8471a8);
 }
 
 .mini-avatar.tone-3,
 .podium-avatar.tone-3,
-.att-avatar.tone-3 {
+.att-avatar.tone-3,
+.avatar.tone-3,
+.roster-profile-avatar.tone-3 {
   background: linear-gradient(140deg, #a8d8c8, #5e8f7f);
 }
 
 .mini-avatar.tone-4,
 .podium-avatar.tone-4,
-.att-avatar.tone-4 {
+.att-avatar.tone-4,
+.avatar.tone-4,
+.roster-profile-avatar.tone-4 {
   background: linear-gradient(140deg, #e2b7ae, #a06b61);
 }
 
@@ -2710,6 +2729,13 @@ table.grid .labels.single th {
   display: block;
   object-fit: cover;
   border-radius: inherit;
+}
+
+/* Uploaded pictures render as-is: the fallback fill (base gradient or IGN
+   tone) is dropped while an image is shown, so PNGs with a transparent
+   background reveal the panel behind the avatar instead of a colour blob. */
+.avatar-media.has-img {
+  background: transparent;
 }
 
 .avatar-input {

@@ -661,7 +661,7 @@ function DashboardView({ attendanceTab, avatars }: { attendanceTab: TabData | un
                         <Avatar
                           ign={x.ign}
                           src={avatars?.[x.ign.trim().toLowerCase()]}
-                          className={`mini-avatar tone-${i % 5}`}
+                          className="mini-avatar"
                         />
                         {x.ign}
                       </div>

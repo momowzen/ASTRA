@@ -32,7 +32,7 @@ export default function AttendancePodium({ entries, avatars }: Props) {
                 <Avatar
                   ign={entry.ign}
                   src={avatars?.[entry.ign.trim().toLowerCase()]}
-                  className={`podium-avatar attendance-podium-avatar tone-${(rank - 1) % 5}`}
+                  className="podium-avatar attendance-podium-avatar"
                 />
                 <span className="attendance-podium-rank" aria-hidden="true">
                   <IconTrophy />

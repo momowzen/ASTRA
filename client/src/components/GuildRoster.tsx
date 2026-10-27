@@ -351,7 +351,7 @@ export default function GuildRoster({ data }: Props) {
                       <Avatar
                         ign={m.ign}
                         src={data.avatars?.[m.ign.trim().toLowerCase()]}
-                        className={`mini-avatar tone-${i % 5}`}
+                        className="mini-avatar"
                       />
                       {m.ign}
                     </div>

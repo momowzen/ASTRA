@@ -73,6 +73,20 @@ export function initials(name: string): string {
   return (first + second) || '?';
 }
 
+/**
+ * Stable fallback-avatar tone (0..4) derived from the IGN, so the same
+ * member always gets the same initial-picture colour everywhere in the app.
+ * Case/whitespace insensitive so "Astra" and " astra " match.
+ */
+export function avatarTone(ign: string): number {
+  const key = ign.trim().toLowerCase();
+  let h = 5381;
+  for (let i = 0; i < key.length; i++) {
+    h = ((h * 33) ^ key.charCodeAt(i)) >>> 0;
+  }
+  return h % 5;
+}
+
 export function isSupportedAvatar(file: File): boolean {
   return ['image/png', 'image/jpeg', 'image/webp'].includes(file.type.toLowerCase());
 }
