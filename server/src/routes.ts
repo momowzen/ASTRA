@@ -376,7 +376,7 @@ api.post('/profile/avatar', requireAuth, async (req, res) => {
     stored = await storeAvatar(processed, requestOrigin(req));
   } catch (err) {
     console.error('[avatar] upload failed:', err instanceof Error ? err.message : err);
-    return bad(res, 500, 'Could not store the profile picture');
+    return bad(res, 500, `Could not store the profile picture: ${err instanceof Error ? err.message : 'unknown error'}`);
   }
 
   const result = await setAvatar(target, stored.url).catch(async (err) => {
