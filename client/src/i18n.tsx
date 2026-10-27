@@ -203,6 +203,7 @@ const DICT: Record<string, { en: string; ko: string; ja: string; zh: string }> =
   'member.music': { en: 'Music', ko: '음악', ja: "音楽", zh: '音乐' },
   'member.toolAttendance': { en: 'Boss Attendance', ko: '보스 출석', ja: "ボス出席", zh: '首领出勤' },
   'member.topContributors': { en: 'Top Contributors', ko: '상위 기여자', ja: "トップコントリビューター", zh: '顶级贡献者' },
+  'member.rank': { en: 'Rank', ko: '순위', ja: "順位", zh: '排名' },
   'member.toolBossTracker': { en: 'Boss Tracker', ko: '보스 추적기', ja: "ボストラッカー", zh: '首领追踪' },
   'member.toolHiddenClass': { en: 'Hidden Class', ko: '히든 클래스', ja: "隠しクラス", zh: '隐藏职业' },
   'member.toolRelic': { en: 'Relic Calculator', ko: '유물 계산기', ja: "レリック計算機", zh: '遗物计算器' },

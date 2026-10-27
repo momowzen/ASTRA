@@ -595,6 +595,7 @@ export default function MemberApp({
   const lbThreshold = lbTop > 0 ? Math.max(1, Math.round(lbTop * 0.3)) : 0;
   const inBand = (p: number) => lbThreshold > 0 && p >= lbThreshold;
   const myPoints = leaderboard.find((x) => x.ign.trim().toLowerCase() === session.ign.trim().toLowerCase())?.points ?? 0;
+  const myRankIndex = leaderboard.findIndex((x) => x.ign.trim().toLowerCase() === session.ign.trim().toLowerCase());
 
   const liveState = viewerTool ? (toolsOnline ? 'live' : 'error') : live;
   const liveText = viewerTool ? (toolsOnline ? t('app.live') : t('app.offline')) : liveNote;
@@ -876,6 +877,10 @@ export default function MemberApp({
                 </div>
               </div>
               <div className="hero-stats">
+                <div className="hero-stat">
+                  <span>{t('member.rank')}</span>
+                  <strong>{myRankIndex >= 0 ? (myRankIndex + 1).toLocaleString('en-US') : '—'}</strong>
+                </div>
                 <div className="hero-stat">
                   <span>{t('boss.points')}</span>
                   <strong>{myPoints.toLocaleString('en-US')}</strong>
