@@ -1519,10 +1519,9 @@ select option {
 }
 
 .topbar-alarm.on {
-  color: #16110c;
-  background: linear-gradient(135deg, #e8b88f, #c98a5f);
-  border-color: transparent;
-  box-shadow: 0 0 22px rgba(201, 138, 95, 0.38);
+  color: var(--accent-2);
+  border-color: var(--accent);
+  box-shadow: 0 0 12px rgba(201, 138, 95, 0.25);
 }
 
 /* ---------- Topbar overflow (narrow viewports) ---------- */

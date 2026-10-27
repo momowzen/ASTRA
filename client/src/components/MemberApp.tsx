@@ -341,7 +341,6 @@ export default function MemberApp({
   const [activeTitle, setActiveTitle] = useState('');
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
-  const [topbarOverflowOpen, setTopbarOverflowOpen] = useState(false);
   const [jump, setJump] = useState<{ tab: string; col: number } | null>(null);
   const [rosterView, setRosterView] = useState(false);
   const [rosterCol, setRosterCol] = useState(-1);
@@ -744,113 +743,52 @@ export default function MemberApp({
             </span>
           </div>
           <div className="grow" />
-          <div className="topbar-inline-extras">
-            {mediaView !== 'music' && musicBackground && nowPlaying?.playing && (
-              <button
-                type="button"
-                className="topbar-now-playing"
-                aria-label={`${t('media.nowPlaying')}: ${nowPlaying.title}`}
-                title={`${t('media.nowPlaying')}: ${nowPlaying.title}${nowPlaying.artist ? ` — ${nowPlaying.artist}` : ''}`}
-                onClick={() => showMedia('music')}
-              >
-                <span className="topbar-now-playing-eq" aria-hidden="true">
-                  <span />
-                  <span />
-                  <span />
-                </span>
-                <span className="topbar-now-playing-copy">
-                  <span className="topbar-now-playing-label">{t('media.nowPlaying')}:</span>
-                  <strong>{nowPlaying.title}</strong>
-                </span>
-              </button>
-            )}
-            {toolsView === 'tracker' && (
-              <button
-                className={`topbar-alarm ${toolsAlarm ? 'on' : ''}`}
-                aria-label={t('member.alarm')}
-                title={t('member.alarm')}
-                aria-pressed={toolsAlarm}
-                onClick={() => toolsApi()?.toggleAlarm()}
-              >
-                {toolsAlarm ? (
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
-                    <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07" />
-                  </svg>
-                ) : (
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
-                    <line x1="23" y1="9" x2="17" y2="15" />
-                    <line x1="17" y1="9" x2="23" y2="15" />
-                  </svg>
-                )}
-              </button>
-            )}
-            <span className={`live ${liveState === 'live' ? '' : liveState}`}>
-              <span className="dot" />
-              <span className="live-text">{liveText}</span>
-            </span>
-          </div>
-          <LangToggle />
-          <button
-            className="topbar-overflow-btn"
-            aria-label={t('common.more') || 'More'}
-            title={t('common.more') || 'More'}
-            onClick={() => setTopbarOverflowOpen((o) => !o)}
-          >
-            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-              <circle cx="5" cy="12" r="1.5" />
-              <circle cx="12" cy="12" r="1.5" />
-              <circle cx="19" cy="12" r="1.5" />
-            </svg>
-          </button>
-          {topbarOverflowOpen && (
-            <>
-              <div className="topbar-overflow-backdrop" onClick={() => setTopbarOverflowOpen(false)} />
-              <div className="topbar-overflow-menu">
-                {mediaView !== 'music' && musicBackground && nowPlaying?.playing && (
-                  <button
-                    type="button"
-                    className="topbar-now-playing"
-                    onClick={() => { showMedia('music'); setTopbarOverflowOpen(false); }}
-                  >
-                    <span className="topbar-now-playing-eq" aria-hidden="true">
-                      <span /><span /><span />
-                    </span>
-                    <span className="topbar-now-playing-copy">
-                      <span className="topbar-now-playing-label">{t('media.nowPlaying')}:</span>
-                      <strong>{nowPlaying.title}</strong>
-                    </span>
-                  </button>
-                )}
-                {toolsView === 'tracker' && (
-                  <button
-                    className={`topbar-alarm ${toolsAlarm ? 'on' : ''}`}
-                    aria-pressed={toolsAlarm}
-                    onClick={() => { toolsApi()?.toggleAlarm(); setTopbarOverflowOpen(false); }}
-                  >
-                    {toolsAlarm ? (
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
-                        <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07" />
-                      </svg>
-                    ) : (
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
-                        <line x1="23" y1="9" x2="17" y2="15" />
-                        <line x1="17" y1="9" x2="23" y2="15" />
-                      </svg>
-                    )}
-                    <span>{t('member.alarm')}</span>
-                  </button>
-                )}
-                <span className={`live ${liveState === 'live' ? '' : liveState}`}>
-                  <span className="dot" />
-                  <span className="live-text">{liveText}</span>
-                </span>
-              </div>
-            </>
+          {mediaView !== 'music' && musicBackground && nowPlaying?.playing && (
+            <button
+              type="button"
+              className="topbar-now-playing"
+              aria-label={`${t('media.nowPlaying')}: ${nowPlaying.title}`}
+              title={`${t('media.nowPlaying')}: ${nowPlaying.title}${nowPlaying.artist ? ` — ${nowPlaying.artist}` : ''}`}
+              onClick={() => showMedia('music')}
+            >
+              <span className="topbar-now-playing-eq" aria-hidden="true">
+                <span />
+                <span />
+                <span />
+              </span>
+              <span className="topbar-now-playing-copy">
+                <span className="topbar-now-playing-label">{t('media.nowPlaying')}:</span>
+                <strong>{nowPlaying.title}</strong>
+              </span>
+            </button>
           )}
+          {toolsView === 'tracker' && (
+            <button
+              className={`topbar-alarm ${toolsAlarm ? 'on' : ''}`}
+              aria-label={t('member.alarm')}
+              title={t('member.alarm')}
+              aria-pressed={toolsAlarm}
+              onClick={() => toolsApi()?.toggleAlarm()}
+            >
+              {toolsAlarm ? (
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
+                  <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07" />
+                </svg>
+              ) : (
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
+                  <line x1="23" y1="9" x2="17" y2="15" />
+                  <line x1="17" y1="9" x2="23" y2="15" />
+                </svg>
+              )}
+            </button>
+          )}
+          <span className={`live ${liveState === 'live' ? '' : liveState}`}>
+            <span className="dot" />
+            <span className="live-text">{liveText}</span>
+          </span>
+          <LangToggle />
         </header>
 
         <div className="content">
