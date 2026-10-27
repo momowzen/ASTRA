@@ -554,7 +554,10 @@
   }
 
   .question-text {
-    font-size: var(--fs-micro);
+    white-space: normal;
+    font-size: clamp(7px, 3vw, var(--fs-micro));
+    letter-spacing: 0.06em;
+    line-height: 1.35;
   }
 
   .stat-row {
