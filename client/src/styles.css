@@ -4577,7 +4577,7 @@ table.grid.roster-grid td .roster-name {
 .attendance-podium-slot.rank-5 {
   --pa: #8fa3c8;
   --pa-soft: rgba(143, 163, 200, 0.24);
-  --base-h: 18px;
+  --base-h: 20px;
 }
 
 .attendance-podium-card {
@@ -4734,6 +4734,9 @@ table.grid.roster-grid td .roster-name {
 .attendance-podium-base span {
   font-family: var(--display);
   font-size: 24px;
+  /* Keep the digit's line box inside the step so short bases (rank 4/5)
+     never spill over the step's top border. */
+  line-height: 1;
   font-weight: 700;
   color: var(--pa);
   opacity: 0.72;
@@ -4741,6 +4744,14 @@ table.grid.roster-grid td .roster-name {
 
 .attendance-podium-slot.rank-1 .attendance-podium-base span {
   font-size: 32px;
+}
+
+.attendance-podium-slot.rank-4 .attendance-podium-base span {
+  font-size: 20px;
+}
+
+.attendance-podium-slot.rank-5 .attendance-podium-base span {
+  font-size: 14px;
 }
 
 /* Attendance picker */
@@ -8823,6 +8834,14 @@ table.grid.dist-table thead th.ign-col {
   .attendance-podium-slot.rank-1 .attendance-podium-base span {
     font-size: 24px;
   }
+
+  .attendance-podium-slot.rank-4 .attendance-podium-base span {
+    font-size: 15px;
+  }
+
+  .attendance-podium-slot.rank-5 .attendance-podium-base span {
+    font-size: 11px;
+  }
 }
 
 @media (max-width: 560px) {
@@ -8976,7 +8995,7 @@ table.grid.dist-table thead th.ign-col {
   }
 
   .attendance-podium-base {
-    height: calc(var(--base-h) * 0.42);
+    height: calc(var(--base-h) * 0.62);
   }
 
   .attendance-podium-base span {
@@ -8985,6 +9004,14 @@ table.grid.dist-table thead th.ign-col {
 
   .attendance-podium-slot.rank-1 .attendance-podium-base span {
     font-size: 16px;
+  }
+
+  .attendance-podium-slot.rank-4 .attendance-podium-base span {
+    font-size: 11px;
+  }
+
+  .attendance-podium-slot.rank-5 .attendance-podium-base span {
+    font-size: 9px;
   }
 }
 
