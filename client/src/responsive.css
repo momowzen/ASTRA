@@ -1038,3 +1038,29 @@
     display: inline-flex;
   }
 }
+
+/* Long collection group labels (e.g. legendary cloak/accessory questions)
+   must wrap instead of overflowing the card or overlapping the dropdown. */
+@media (max-width: 768px) {
+  .coll-card-title {
+    font-size: var(--fs-micro);
+    letter-spacing: 0.04em;
+    line-height: 1.3;
+  }
+
+  .coll-sub {
+    font-size: var(--fs-micro);
+    letter-spacing: 0.02em;
+  }
+
+  .coll-item {
+    min-width: 0;
+  }
+}
+
+@media (max-width: 480px) {
+  .coll-card-title {
+    font-size: 10px;
+    letter-spacing: 0.02em;
+  }
+}
