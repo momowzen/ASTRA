@@ -37,7 +37,7 @@ export default function Avatar({ ign, src, className = '', alt, title, onClick }
         <img
           src={url}
           alt={alt ?? ign}
-          loading="lazy"
+          loading="eager"
           decoding="async"
           referrerPolicy="no-referrer"
           onError={() => setBroken(true)}
