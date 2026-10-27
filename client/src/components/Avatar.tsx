@@ -39,8 +39,11 @@ export default function Avatar({ ign, src, className = '', alt, title, onClick }
           alt={alt ?? ign}
           loading="eager"
           decoding="async"
-          referrerPolicy="no-referrer"
-          onError={() => setBroken(true)}
+          referrerPolicy="strict-origin-when-cross-origin"
+          onError={(e) => {
+            console.warn('[avatar] failed to load:', url, e);
+            setBroken(true);
+          }}
         />
       ) : (
         initials(ign)
