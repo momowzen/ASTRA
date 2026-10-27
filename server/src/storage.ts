@@ -4,7 +4,6 @@ import path from 'node:path';
 import { Storage } from '@google-cloud/storage';
 import sharp from 'sharp';
 import { config } from './config';
-import { isDriveConfigured, storeAvatar as storeDriveAvatar, deleteAvatarByUrl as deleteDriveAvatar } from './driveStorage';
 
 const AVATAR_SIZE = 512;
 const LOCAL_DIR = path.resolve(process.cwd(), 'uploads', 'avatars');
@@ -49,10 +48,6 @@ export async function storeAvatar(
   buffer: Buffer,
   origin: string,
 ): Promise<{ url: string; key: string }> {
-  if (isDriveConfigured()) {
-    return storeDriveAvatar(buffer);
-  }
-
   const fileName = localFileName();
 
   if (config.storageBucket) {
@@ -75,11 +70,6 @@ export async function storeAvatar(
 export async function deleteAvatarByUrl(url: string): Promise<void> {
   const value = (url || '').trim();
   if (!value) return;
-
-  if (value.includes('lh3.googleusercontent.com/d/')) {
-    await deleteDriveAvatar(value);
-    return;
-  }
 
   if (config.storageBucket) {
     const base = `${publicBase()}/`;

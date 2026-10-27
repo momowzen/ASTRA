@@ -1,7 +1,7 @@
 import { JWT } from 'google-auth-library';
 import { config } from './config';
 
-const SCOPES = ['https://www.googleapis.com/auth/spreadsheets', 'https://www.googleapis.com/auth/drive.file'];
+const SCOPES = ['https://www.googleapis.com/auth/spreadsheets'];
 const BASE = 'https://sheets.googleapis.com/v4';
 
 let client: JWT | null = null;
@@ -53,7 +53,7 @@ async function getClient(): Promise<JWT> {
   return client;
 }
 
-export async function getToken(): Promise<string> {
+async function getToken(): Promise<string> {
   if (cachedToken && Date.now() < cachedToken.expiresAt - 60_000) {
     return cachedToken.value;
   }

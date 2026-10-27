@@ -47,7 +47,6 @@ export const config = {
   googleProjectId: (process.env.GOOGLE_CLOUD_PROJECT || '').trim(),
   storageBucket: (process.env.GOOGLE_STORAGE_BUCKET || '').trim(),
   storagePublicBase: (process.env.GOOGLE_STORAGE_PUBLIC_BASE || '').trim(),
-  storageDriveFolderId: (process.env.GOOGLE_DRIVE_FOLDER_ID || '').trim(),
   jwtSecret,
   tokenTtl: process.env.TOKEN_TTL || '7d',
   corsOrigins: originList(process.env.CORS_ORIGINS, [
