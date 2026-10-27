@@ -40,10 +40,7 @@ export default function Avatar({ ign, src, className = '', alt, title, onClick }
           loading="eager"
           decoding="async"
           referrerPolicy="strict-origin-when-cross-origin"
-          onError={(e) => {
-            console.warn('[avatar] failed to load:', url, e);
-            setBroken(true);
-          }}
+          onError={() => setBroken(true)}
         />
       ) : (
         initials(ign)
