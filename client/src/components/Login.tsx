@@ -54,7 +54,7 @@ export default function Login({ onDone }: { onDone: (session: Session) => void }
           <div className="auth-crest-halo" />
           <div className="auth-crest-ring auth-crest-ring--outer" />
           <div className="auth-crest-ring auth-crest-ring--inner" />
-          <img className="auth-crest" src="./assets/logo.png" alt="" />
+          <img className="auth-crest" src="./assets/logo.webp" alt="" />
         </div>
         <div className="auth-scene-copy">
           <span className="eyebrow">
@@ -63,14 +63,14 @@ export default function Login({ onDone }: { onDone: (session: Session) => void }
           </span>
           <p className="auth-scene-line">{t('login.sub')}</p>
           <div className="auth-scene-tags">
-            <span>ROSTER</span>
-            <span>ATTENDANCE</span>
-            <span>DISTRIBUTION</span>
+            <span>{t('login.roster')}</span>
+            <span>{t('login.attendance')}</span>
+            <span>{t('login.distribution')}</span>
           </div>
         </div>
         <div className="auth-scene-foot">
-          <span className="mono">ASTRA // GUILD MANAGER</span>
-          <span className="mono">SECURE CHANNEL</span>
+          <span className="mono">ASTRA // {t('login.tag')}</span>
+          <span className="mono">{t('login.secureChannel')}</span>
         </div>
       </section>
 
@@ -80,14 +80,14 @@ export default function Login({ onDone }: { onDone: (session: Session) => void }
         </div>
 
         <div className="auth-mobile-brand">
-          <img src="./assets/logo.png" alt="" />
+          <img src="./assets/logo.webp" alt="" />
           <span>ASTRA</span>
         </div>
 
         <div className="auth-card-body">
           <span className="eyebrow">
             <span className="eyebrow-rule" />
-            SECURE ACCESS
+            {t('login.secureAccess')}
           </span>
           <h1>{t('login.welcome')}</h1>
           <p className="sub">{t('login.sub')}</p>
@@ -141,7 +141,7 @@ export default function Login({ onDone }: { onDone: (session: Session) => void }
         <div className="auth-card-foot">
           <span className={`auth-foot-status${online === false ? ' offline' : ''}`} aria-live="polite">
             <span className="status-dot" />
-            {online === false ? 'SYSTEMS OFFLINE' : 'SYSTEMS ONLINE'}
+            {online === false ? t('login.systemsOffline') : t('login.systemsOnline')}
           </span>
           <span className="mono" title={`commit ${APP_COMMIT}`}>
             v{APP_VERSION}

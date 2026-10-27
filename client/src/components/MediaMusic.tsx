@@ -779,7 +779,7 @@ export default function MediaMusic({
             >
               <div className="music-cover-wrap">
                 <div className="music-cover" style={coverStyle}>
-                  <img src="./assets/logo.png" alt="" />
+                  <img src="./assets/logo.webp" alt="" />
                   <span className="music-cover-label">ASTRA</span>
                   <span className="music-cover-sub">SONGS</span>
                 </div>

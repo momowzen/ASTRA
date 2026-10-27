@@ -229,7 +229,7 @@ export default function LoadingScreen({ onDone }: { onDone: () => void }) {
       </svg>
       <div className="intro-meta">
         <span className="intro-meta-rule" />
-        <span>GUILD MANAGER</span>
+        <span>{t('login.tag')}</span>
         <span className="intro-meta-rule" />
       </div>
 

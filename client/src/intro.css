@@ -1,0 +1,507 @@
+/* ============================================================
+   Cinematic intro
+   ============================================================ */
+
+.intro {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-intro);
+  display: grid;
+  place-items: center;
+  background: radial-gradient(circle at 50% 48%, #0a100d 0%, #050807 58%, #000 100%);
+  animation: intro-bg-out 0.5s ease 5.1s both;
+  overflow: hidden;
+}
+
+.intro-halo {
+  position: absolute;
+  width: 88vmin;
+  height: 88vmin;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(109, 156, 140, 0.13), rgba(201, 138, 95, 0.04) 42%, transparent 68%);
+  filter: blur(30px);
+  animation: crest-breathe 6s ease-in-out infinite;
+}
+
+.intro-frame {
+  position: absolute;
+  inset: 26px;
+  border: 1px solid rgba(201, 138, 95, 0.1);
+  pointer-events: none;
+}
+
+.intro-frame::before,
+.intro-frame::after {
+  content: '';
+  position: absolute;
+  width: 34px;
+  height: 34px;
+  border-color: rgba(201, 138, 95, 0.4);
+  border-style: solid;
+}
+
+.intro-frame::before {
+  top: -1px;
+  left: -1px;
+  border-width: 1px 0 0 1px;
+}
+
+.intro-frame::after {
+  bottom: -1px;
+  right: -1px;
+  border-width: 0 1px 1px 0;
+}
+
+.intro-stars {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background-repeat: repeat;
+  pointer-events: none;
+  will-change: background-position, opacity;
+}
+
+.intro-stars--far {
+  opacity: 0.55;
+  background-size: 320px 320px;
+  animation: star-drift-a 190s linear infinite, star-shine-a 5.5s ease-in-out -2s infinite;
+  background-image:
+    radial-gradient(1px 1px at 30px 40px, rgba(255, 245, 220, 0.9), transparent),
+    radial-gradient(1px 1px at 150px 90px, rgba(255, 255, 255, 0.7), transparent),
+    radial-gradient(1px 1px at 260px 30px, rgba(200, 215, 255, 0.6), transparent),
+    radial-gradient(1px 1px at 80px 200px, rgba(255, 255, 255, 0.8), transparent),
+    radial-gradient(1px 1px at 220px 250px, rgba(200, 215, 255, 0.65), transparent),
+    radial-gradient(1px 1px at 290px 170px, rgba(255, 245, 220, 0.55), transparent),
+    radial-gradient(1px 1px at 40px 290px, rgba(255, 255, 255, 0.7), transparent),
+    radial-gradient(1px 1px at 180px 310px, rgba(200, 215, 255, 0.6), transparent),
+    radial-gradient(1px 1px at 300px 300px, rgba(255, 245, 220, 0.75), transparent);
+}
+
+.intro-stars--mid {
+  opacity: 0.78;
+  background-size: 520px 520px;
+  animation: star-drift-b 140s linear infinite, star-shine-b 7s ease-in-out -4s infinite;
+  background-image:
+    radial-gradient(1px 1px at 70px 60px, rgba(255, 255, 255, 0.85), transparent),
+    radial-gradient(1.3px 1.3px at 210px 120px, #fff, transparent),
+    radial-gradient(1px 1px at 380px 70px, rgba(255, 245, 220, 0.7), transparent),
+    radial-gradient(1px 1px at 470px 220px, rgba(200, 215, 255, 0.75), transparent),
+    radial-gradient(1.2px 1.2px at 120px 300px, rgba(255, 255, 255, 0.9), transparent),
+    radial-gradient(1px 1px at 320px 340px, rgba(255, 245, 220, 0.6), transparent),
+    radial-gradient(1px 1px at 440px 420px, rgba(200, 215, 255, 0.8), transparent),
+    radial-gradient(1.4px 1.4px at 200px 470px, #fff, transparent),
+    radial-gradient(1px 1px at 360px 520px, rgba(255, 245, 220, 0.65), transparent),
+    radial-gradient(1px 1px at 60px 500px, rgba(200, 215, 255, 0.7), transparent);
+}
+
+.intro-stars--near {
+  opacity: 1;
+  background-size: 780px 780px;
+  animation: star-drift-c 110s linear infinite, star-shine-c 4.5s ease-in-out infinite;
+  background-image:
+    radial-gradient(1px 1px at 60px 80px, rgba(255, 255, 255, 0.95), transparent),
+    radial-gradient(1.6px 1.6px at 240px 130px, #fff, transparent),
+    radial-gradient(1px 1px at 420px 60px, rgba(255, 245, 220, 0.8), transparent),
+    radial-gradient(1px 1px at 640px 210px, rgba(200, 215, 255, 0.7), transparent),
+    radial-gradient(1.9px 1.9px at 120px 340px, #fff, transparent),
+    radial-gradient(1px 1px at 360px 300px, rgba(255, 245, 220, 0.85), transparent),
+    radial-gradient(1.4px 1.4px at 560px 400px, rgba(255, 255, 255, 0.9), transparent),
+    radial-gradient(1px 1px at 720px 340px, rgba(200, 215, 255, 0.6), transparent),
+    radial-gradient(1px 1px at 220px 560px, rgba(255, 245, 220, 0.75), transparent),
+    radial-gradient(1.7px 1.7px at 440px 600px, #fff, transparent),
+    radial-gradient(1px 1px at 680px 560px, rgba(200, 215, 255, 0.7), transparent),
+    radial-gradient(1px 1px at 60px 700px, rgba(255, 245, 220, 0.8), transparent),
+    radial-gradient(1.5px 1.5px at 340px 720px, #fff, transparent);
+}
+
+@keyframes star-drift-a {
+  from {
+    background-position: 0 0;
+  }
+  to {
+    background-position: -320px -320px;
+  }
+}
+@keyframes star-drift-b {
+  from {
+    background-position: 0 0;
+  }
+  to {
+    background-position: -520px -520px;
+  }
+}
+@keyframes star-drift-c {
+  from {
+    background-position: 0 0;
+  }
+  to {
+    background-position: -780px -780px;
+  }
+}
+@keyframes star-shine-a {
+  0%,
+  100% {
+    opacity: 0.35;
+  }
+  50% {
+    opacity: 0.85;
+  }
+}
+@keyframes star-shine-b {
+  0%,
+  100% {
+    opacity: 0.6;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+@keyframes star-shine-c {
+  0%,
+  100% {
+    opacity: 0.3;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+.intro-word {
+  position: relative;
+  z-index: 2;
+  display: block;
+  width: min(82vw, 760px);
+  height: auto;
+  overflow: visible;
+  animation: intro-word-out 0.4s ease 4.9s both;
+}
+
+.intro .constellation {
+  pointer-events: none;
+}
+
+.intro .con-link {
+  stroke: rgba(201, 138, 95, 0.5);
+  stroke-width: 0.8;
+  stroke-linecap: round;
+  stroke-dasharray: 0.9 4.5;
+  opacity: 0;
+  animation: con-link-in 0.8s ease-out 0.4s both, con-link-dim 2.6s ease 2s forwards;
+}
+
+.intro .con-star {
+  fill: #f2e6d8;
+  opacity: 0;
+  transform-box: fill-box;
+  transform-origin: center;
+  filter: drop-shadow(0 0 3px rgba(255, 248, 226, 0.95)) drop-shadow(0 0 10px rgba(109, 156, 140, 0.9));
+  animation: con-star-pop 0.7s ease-out var(--d, 0s) both,
+    con-star-twinkle 3.2s ease-in-out calc(var(--d, 0s) + 0.7s) infinite;
+}
+
+@keyframes con-star-pop {
+  0% {
+    opacity: 0;
+    transform: scale(0.2);
+  }
+  60% {
+    opacity: 1;
+    transform: scale(1.4);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+@keyframes con-star-twinkle {
+  0%,
+  100% {
+    opacity: 0.55;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+@keyframes con-link-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 0.4;
+  }
+}
+@keyframes con-link-dim {
+  from {
+    opacity: 0.4;
+  }
+  to {
+    opacity: 0.12;
+  }
+}
+
+.intro .trace {
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.intro .stroke {
+  opacity: 0;
+}
+
+/* Referenced via animation-name (not the animation shorthand), which is
+   why this looks unused - it flips the intro strokes from opacity 0. */
+@keyframes appear {
+  to {
+    opacity: 1;
+  }
+}
+
+.intro.armed .stroke {
+  animation-name: appear;
+  animation-duration: 0.001s;
+  animation-timing-function: step-end;
+  animation-fill-mode: forwards;
+}
+
+.intro .trace-glow {
+  stroke: #6d9c8c;
+  stroke-width: 9;
+  opacity: 0.5;
+  filter: blur(7px);
+}
+
+.intro .trace-core {
+  stroke: #f2e6d8;
+  stroke-width: 2.4;
+  filter: drop-shadow(0 0 5px rgba(255, 250, 236, 0.9)) drop-shadow(0 0 15px rgba(109, 156, 140, 0.85));
+}
+
+.intro .trace-beam {
+  stroke: #fff;
+  stroke-width: 3.3;
+  stroke-linecap: round;
+  stroke-dasharray: 0.05 0.95;
+  stroke-dashoffset: 1.05;
+  filter: drop-shadow(0 0 6px #fff) drop-shadow(0 0 18px rgba(201, 138, 95, 0.9));
+}
+
+.intro .trace-glow,
+.intro .trace-core {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1.05;
+}
+
+.intro.armed .trace-glow,
+.intro.armed .trace-core {
+  animation-name: trace-draw;
+  animation-timing-function: linear;
+  animation-fill-mode: forwards;
+}
+
+.intro.armed .trace-beam {
+  animation-name: beam-run;
+  animation-timing-function: linear;
+  animation-fill-mode: forwards;
+}
+
+@keyframes trace-draw {
+  from {
+    stroke-dashoffset: 1.05;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+@keyframes beam-run {
+  from {
+    stroke-dashoffset: 0.1;
+  }
+  to {
+    stroke-dashoffset: -0.95;
+  }
+}
+@keyframes intro-word-out {
+  to {
+    opacity: 0;
+  }
+}
+@keyframes intro-bg-out {
+  to {
+    opacity: 0;
+  }
+}
+
+.intro-meta {
+  position: absolute;
+  bottom: 12vh;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: var(--sp-4);
+  font-family: var(--mono);
+  font-size: var(--fs-micro);
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: rgba(232, 184, 143, 0.75);
+  opacity: 0;
+  animation: intro-meta-in 0.9s ease 3.7s both, intro-word-out 0.4s ease 4.9s both;
+}
+
+.intro-meta-rule {
+  width: 34px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(201, 138, 95, 0.7));
+}
+
+.intro-meta-rule:last-child {
+  transform: scaleX(-1);
+}
+
+@keyframes intro-meta-in {
+  to {
+    opacity: 1;
+  }
+}
+
+/* Skip prompt â€” MMORPG cinematic-style (top right) */
+.intro-skip {
+  position: absolute;
+  top: 44px;
+  right: 44px;
+  z-index: 5;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-3);
+  padding: 7px 16px 7px 8px;
+  border: 1px solid rgba(201, 138, 95, 0.45);
+  background: linear-gradient(180deg, rgba(14, 20, 18, 0.86), rgba(6, 10, 9, 0.92));
+  color: #f2e6d8;
+  font-family: var(--mono);
+  font-size: var(--fs-micro);
+  line-height: 1;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  cursor: pointer;
+  opacity: 0;
+  box-shadow:
+    var(--elev-1),
+    var(--bevel);
+  animation: intro-skip-in 0.7s ease 0.45s both;
+  transition: border-color var(--dur-1) ease, background var(--dur-1) ease,
+    color var(--dur-1) ease, box-shadow var(--dur-1) ease;
+}
+
+.intro-skip::before,
+.intro-skip::after {
+  content: '';
+  position: absolute;
+  width: 9px;
+  height: 9px;
+  border-color: rgba(232, 184, 143, 0.85);
+  border-style: solid;
+}
+
+.intro-skip::before {
+  top: -1px;
+  left: -1px;
+  border-width: 1px 0 0 1px;
+}
+
+.intro-skip::after {
+  right: -1px;
+  bottom: -1px;
+  border-width: 0 1px 1px 0;
+}
+
+.intro-skip-key {
+  display: inline-grid;
+  place-items: center;
+  min-width: 36px;
+  padding: 5px 7px 4px;
+  border: 1px solid rgba(232, 184, 143, 0.55);
+  background: linear-gradient(180deg, rgba(201, 138, 95, 0.24), rgba(201, 138, 95, 0.07));
+  color: #ffe6cd;
+  font-size: var(--fs-micro);
+  letter-spacing: 0.14em;
+  box-shadow:
+    inset 0 -2px 0 rgba(0, 0, 0, 0.55),
+    0 0 14px rgba(201, 138, 95, 0.16);
+  animation: intro-key-pulse 2.6s ease-in-out infinite;
+}
+
+.intro-skip-text {
+  padding-right: 2px;
+}
+
+.intro-skip:hover,
+.intro-skip:focus-visible {
+  border-color: rgba(232, 184, 143, 0.85);
+  background: linear-gradient(180deg, rgba(34, 28, 22, 0.92), rgba(10, 13, 12, 0.95));
+  color: #fff4e6;
+  outline: none;
+  box-shadow:
+    var(--elev-2),
+    0 0 24px rgba(201, 138, 95, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+.intro-skip:active {
+  transform: translateY(1px);
+}
+
+.intro.is-skipping {
+  animation: intro-skip-out 0.34s ease forwards;
+}
+
+@keyframes intro-skip-in {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes intro-skip-out {
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes intro-key-pulse {
+  0%,
+  100% {
+    box-shadow:
+      inset 0 -2px 0 rgba(0, 0, 0, 0.55),
+      0 0 0 rgba(201, 138, 95, 0);
+  }
+  50% {
+    box-shadow:
+      inset 0 -2px 0 rgba(0, 0, 0, 0.55),
+      0 0 16px rgba(201, 138, 95, 0.45);
+  }
+}
+
+@media (max-width: 640px) {
+  .intro-skip {
+    top: 34px;
+    right: 22px;
+    padding: 6px 13px 6px 7px;
+    font-size: var(--fs-micro);
+    letter-spacing: 0.22em;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .intro-skip {
+    animation-duration: 0.01s;
+    animation-delay: 0s;
+  }
+
+  .intro-skip-key {
+    animation: none;
+  }
+}

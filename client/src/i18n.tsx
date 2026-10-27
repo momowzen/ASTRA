@@ -54,6 +54,13 @@ const DICT: Record<string, { en: string; ko: string; ja: string; zh: string }> =
     zh: '用户名和初始密码都是你的 IGN。登录后可在个人资料设置中修改密码。',
   },
   'login.failed': { en: 'Login failed', ko: '로그인에 실패했습니다', ja: "ログインに失敗しました", zh: '登录失败' },
+  'login.roster': { en: 'Roster', ko: '로스터', ja: "名簿", zh: '名册' },
+  'login.attendance': { en: 'Attendance', ko: '출석', ja: "出席", zh: '出勤' },
+  'login.distribution': { en: 'Distribution', ko: '분배', ja: "配布", zh: '分配' },
+  'login.secureAccess': { en: 'Secure Access', ko: '보안 접속', ja: "セキュアアクセス", zh: '安全访问' },
+  'login.secureChannel': { en: 'Secure Channel', ko: '보안 채널', ja: "セキュアチャンネル", zh: '安全通道' },
+  'login.systemsOnline': { en: 'Systems Online', ko: '시스템 온라인', ja: "システムオンライン", zh: '系统在线' },
+  'login.systemsOffline': { en: 'Systems Offline', ko: '시스템 오프라인', ja: "システムオフライン", zh: '系统离线' },
 
   'admin.trackerSection': { en: 'Boss Attendance Tracker', ko: '보스 출석 트래커', ja: "ボス出席トラッカー", zh: '首领出勤追踪' },
   'admin.rosterSection': { en: 'Guild Roster', ko: '길드 로스터', ja: "ギルドロスター", zh: '公会名单' },

@@ -444,7 +444,7 @@ export default function AdminApp({
       >
         <div className="brand">
           <span className="brand-crest">
-            <img className="mark" src="./assets/logo.png" alt="" />
+            <img className="mark" src="./assets/logo.webp" alt="" />
           </span>
           <div className="brand-text">
             <div className="name">ASTRA</div>
@@ -614,16 +614,16 @@ export default function AdminApp({
         </div>
 
         <div className="userbox">
-          <div className="section-label" style={{ paddingTop: 0 }}>
+          <div className="section-label flush">
             {t('admin.signedInAs', { user: session.username })}
           </div>
-          <button className="nav-item" onClick={() => setSettingsOpen(true)}>
+          <button className="nav-item" onClick={() => setSettingsOpen(true)} title={t('common.settings')}>
             <span className="ico">
               <IconGear />
             </span>
             {t('common.settings')}
           </button>
-          <button className="nav-item" onClick={onLogout}>
+          <button className="nav-item" onClick={onLogout} title={t('common.signOut')}>
             <span className="ico">
               <IconLogout />
             </span>

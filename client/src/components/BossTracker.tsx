@@ -169,7 +169,7 @@ function ConfigView({
             {seeding ? t('boss.seeding') : t('boss.noBosses')}
           </div>
           {!seeding && (
-            <div style={{ display: 'flex', justifyContent: 'center', marginTop: 12 }}>
+            <div className="empty-actions">
               <button
                 className="btn btn-primary"
                 onClick={() => {
@@ -457,7 +457,7 @@ function AttendanceView({
           </div>
         </div>
         <div className="att-toolbar">
-          <div className="field" style={{ minWidth: 220 }}>
+          <div className="field field-min220">
             <label>{custom ? t('boss.customPoints') : t('boss.boss')}</label>
             {custom ? (
               <input
@@ -593,7 +593,7 @@ function AttendanceView({
             );
           })}
           {ordered.length === 0 && (
-            <div className="empty" style={{ gridColumn: '1 / -1' }}>
+            <div className="empty empty-span">
               {t('boss.noMembersMatch')}
             </div>
           )}

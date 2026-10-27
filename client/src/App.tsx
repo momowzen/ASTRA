@@ -199,7 +199,7 @@ export default function App() {
         <div className="auth-card">
           <h1>{t('app.connectionProblem')}</h1>
           <p className="sub">{error}</p>
-          <div style={{ display: 'flex', gap: 10 }}>
+          <div className="auth-actions">
             <button className="btn btn-primary" onClick={() => void loadFull()}>
               {t('app.retry')}
             </button>

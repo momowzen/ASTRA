@@ -192,11 +192,10 @@ function Field({
 
   return (
     <div className={fieldCls} data-tab={dataTab} data-col={dataCol}>
-      <label style={{ display: 'flex', justifyContent: 'space-between', gap: 8 }}>
+      <label className="label-row">
         {longLabel ? <span className="question-text">{label}</span> : <FitLabel text={label} />}
         <span
           className={`save-note ${status === 'saved' ? 'ok' : status === 'error' ? 'err' : ''}`}
-          style={{ textTransform: 'none', letterSpacing: 0 }}
         >
           {status === 'saving' && t('common.saving')}
           {status === 'saved' && t('common.saved')}
@@ -342,6 +341,7 @@ export default function MemberApp({
   const [activeTitle, setActiveTitle] = useState('');
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [topbarOverflowOpen, setTopbarOverflowOpen] = useState(false);
   const [jump, setJump] = useState<{ tab: string; col: number } | null>(null);
   const [rosterView, setRosterView] = useState(false);
   const [rosterCol, setRosterCol] = useState(-1);
@@ -609,7 +609,7 @@ export default function MemberApp({
       >
         <div className="brand">
           <span className="brand-crest">
-            <img className="mark" src="./assets/logo.png" alt="" />
+            <img className="mark" src="./assets/logo.webp" alt="" />
           </span>
           <div className="brand-text">
             <div className="name">ASTRA</div>
@@ -631,6 +631,7 @@ export default function MemberApp({
         <button
           className={`nav-item ${isDashboard ? 'active' : ''}`}
           onClick={() => selectTab('')}
+          title={t('member.profile')}
         >
           <span className="ico">
             <IconUser />
@@ -642,6 +643,7 @@ export default function MemberApp({
             key={t.meta.title}
             className={`nav-item ${t.meta.title === activeTitle ? 'active' : ''}`}
             onClick={() => selectTab(t.meta.title)}
+            title={tabText(t.meta.title)}
           >
             <span className="ico">
               <IconSheet />
@@ -651,7 +653,7 @@ export default function MemberApp({
         ))}
 
         <div className="section-label">{t('member.tools')}</div>
-        <button className={`nav-item ${rosterView ? 'active' : ''}`} onClick={showRoster}>
+        <button className={`nav-item ${rosterView ? 'active' : ''}`} onClick={showRoster} title={t('member.roster')}>
           <span className="ico">
             <IconUsers />
           </span>
@@ -660,6 +662,7 @@ export default function MemberApp({
         <button
           className={`nav-item ${toolsView === 'attendance' ? 'active' : ''}`}
           onClick={() => showTool('attendance')}
+          title={t('member.toolAttendance')}
         >
           <span className="ico">
             <IconTrophy />
@@ -669,6 +672,7 @@ export default function MemberApp({
         <button
           className={`nav-item ${toolsView === 'tracker' ? 'active' : ''}`}
           onClick={() => showTool('tracker')}
+          title={t('member.toolBossTracker')}
         >
           <span className="ico">
             <IconTimer />
@@ -678,6 +682,7 @@ export default function MemberApp({
         <button
           className={`nav-item ${toolsView === 'hidden' ? 'active' : ''}`}
           onClick={() => showTool('hidden')}
+          title={t('member.toolHiddenClass')}
         >
           <span className="ico">
             <IconSparkles />
@@ -687,6 +692,7 @@ export default function MemberApp({
         <button
           className={`nav-item ${toolsView === 'relic' ? 'active' : ''}`}
           onClick={() => showTool('relic')}
+          title={t('member.toolRelic')}
         >
           <span className="ico">
             <IconGem />
@@ -698,6 +704,7 @@ export default function MemberApp({
         <button
           className={`nav-item ${mediaView === 'music' ? 'active' : ''}`}
           onClick={() => showMedia('music')}
+          title={t('member.music')}
         >
           <span className="ico">
             <IconMusic />
@@ -707,13 +714,13 @@ export default function MemberApp({
 
         <div className="spacer" />
         <div className="userbox">
-          <button className="nav-item" onClick={() => setSettingsOpen(true)}>
+          <button className="nav-item" onClick={() => setSettingsOpen(true)} title={t('common.settings')}>
             <span className="ico">
               <IconGear />
             </span>
             {t('common.settings')}
           </button>
-          <button className="nav-item" onClick={onLogout}>
+          <button className="nav-item" onClick={onLogout} title={t('common.signOut')}>
             <span className="ico">
               <IconLogout />
             </span>
@@ -731,57 +738,118 @@ export default function MemberApp({
           </button>
           <div className="topbar-heading">
             <span className="topbar-brand">
-              <img className="topbar-logo" src="./assets/logo.png" alt="" />
+              <img className="topbar-logo" src="./assets/logo.webp" alt="" />
               ASTRA
             </span>
           </div>
           <div className="grow" />
-          {mediaView !== 'music' && musicBackground && nowPlaying?.playing && (
-            <button
-              type="button"
-              className="topbar-now-playing"
-              aria-label={`${t('media.nowPlaying')}: ${nowPlaying.title}`}
-              title={`${t('media.nowPlaying')}: ${nowPlaying.title}${nowPlaying.artist ? ` — ${nowPlaying.artist}` : ''}`}
-              onClick={() => showMedia('music')}
-            >
-              <span className="topbar-now-playing-eq" aria-hidden="true">
-                <span />
-                <span />
-                <span />
-              </span>
-              <span className="topbar-now-playing-copy">
-                <span className="topbar-now-playing-label">{t('media.nowPlaying')}:</span>
-                <strong>{nowPlaying.title}</strong>
-              </span>
-            </button>
-          )}
-          {toolsView === 'tracker' && (
-            <button
-              className={`topbar-alarm ${toolsAlarm ? 'on' : ''}`}
-              aria-label={t('member.alarm')}
-              title={t('member.alarm')}
-              aria-pressed={toolsAlarm}
-              onClick={() => toolsApi()?.toggleAlarm()}
-            >
-              {toolsAlarm ? (
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
-                  <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07" />
-                </svg>
-              ) : (
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
-                  <line x1="23" y1="9" x2="17" y2="15" />
-                  <line x1="17" y1="9" x2="23" y2="15" />
-                </svg>
-              )}
-            </button>
-          )}
-          <span className={`live ${liveState === 'live' ? '' : liveState}`}>
-            <span className="dot" />
-            <span className="live-text">{liveText}</span>
-          </span>
+          <div className="topbar-inline-extras">
+            {mediaView !== 'music' && musicBackground && nowPlaying?.playing && (
+              <button
+                type="button"
+                className="topbar-now-playing"
+                aria-label={`${t('media.nowPlaying')}: ${nowPlaying.title}`}
+                title={`${t('media.nowPlaying')}: ${nowPlaying.title}${nowPlaying.artist ? ` — ${nowPlaying.artist}` : ''}`}
+                onClick={() => showMedia('music')}
+              >
+                <span className="topbar-now-playing-eq" aria-hidden="true">
+                  <span />
+                  <span />
+                  <span />
+                </span>
+                <span className="topbar-now-playing-copy">
+                  <span className="topbar-now-playing-label">{t('media.nowPlaying')}:</span>
+                  <strong>{nowPlaying.title}</strong>
+                </span>
+              </button>
+            )}
+            {toolsView === 'tracker' && (
+              <button
+                className={`topbar-alarm ${toolsAlarm ? 'on' : ''}`}
+                aria-label={t('member.alarm')}
+                title={t('member.alarm')}
+                aria-pressed={toolsAlarm}
+                onClick={() => toolsApi()?.toggleAlarm()}
+              >
+                {toolsAlarm ? (
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
+                    <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07" />
+                  </svg>
+                ) : (
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
+                    <line x1="23" y1="9" x2="17" y2="15" />
+                    <line x1="17" y1="9" x2="23" y2="15" />
+                  </svg>
+                )}
+              </button>
+            )}
+            <span className={`live ${liveState === 'live' ? '' : liveState}`}>
+              <span className="dot" />
+              <span className="live-text">{liveText}</span>
+            </span>
+          </div>
           <LangToggle />
+          <button
+            className="topbar-overflow-btn"
+            aria-label={t('common.more') || 'More'}
+            title={t('common.more') || 'More'}
+            onClick={() => setTopbarOverflowOpen((o) => !o)}
+          >
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+              <circle cx="5" cy="12" r="1.5" />
+              <circle cx="12" cy="12" r="1.5" />
+              <circle cx="19" cy="12" r="1.5" />
+            </svg>
+          </button>
+          {topbarOverflowOpen && (
+            <>
+              <div className="topbar-overflow-backdrop" onClick={() => setTopbarOverflowOpen(false)} />
+              <div className="topbar-overflow-menu">
+                {mediaView !== 'music' && musicBackground && nowPlaying?.playing && (
+                  <button
+                    type="button"
+                    className="topbar-now-playing"
+                    onClick={() => { showMedia('music'); setTopbarOverflowOpen(false); }}
+                  >
+                    <span className="topbar-now-playing-eq" aria-hidden="true">
+                      <span /><span /><span />
+                    </span>
+                    <span className="topbar-now-playing-copy">
+                      <span className="topbar-now-playing-label">{t('media.nowPlaying')}:</span>
+                      <strong>{nowPlaying.title}</strong>
+                    </span>
+                  </button>
+                )}
+                {toolsView === 'tracker' && (
+                  <button
+                    className={`topbar-alarm ${toolsAlarm ? 'on' : ''}`}
+                    aria-pressed={toolsAlarm}
+                    onClick={() => { toolsApi()?.toggleAlarm(); setTopbarOverflowOpen(false); }}
+                  >
+                    {toolsAlarm ? (
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
+                        <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07" />
+                      </svg>
+                    ) : (
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
+                        <line x1="23" y1="9" x2="17" y2="15" />
+                        <line x1="17" y1="9" x2="23" y2="15" />
+                      </svg>
+                    )}
+                    <span>{t('member.alarm')}</span>
+                  </button>
+                )}
+                <span className={`live ${liveState === 'live' ? '' : liveState}`}>
+                  <span className="dot" />
+                  <span className="live-text">{liveText}</span>
+                </span>
+              </div>
+            </>
+          )}
         </header>
 
         <div className="content">
@@ -801,7 +869,7 @@ export default function MemberApp({
                     </span>
                   ))}
                   {!rosterRow && (
-                    <span className="badge" style={{ color: 'var(--accent-2)' }}>
+                    <span className="badge badge-accent">
                       {t('member.notOnRoster')}
                     </span>
                   )}
