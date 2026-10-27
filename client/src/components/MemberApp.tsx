@@ -1200,7 +1200,7 @@ export default function MemberApp({
                 <div className={`coll-grid${activeTab.meta.title.trim().toUpperCase() === 'BOSS COLLECTION' ? ' coll-grid--boss' : ''}`}>
                   {collectionGroups.map((g) => (
                     <section className="coll-card" key={g.label}>
-                      <div className="coll-card-title">{colLabel(g.label, t, lang)}</div>
+                      <div className="coll-card-title"><FitLabel text={colLabel(g.label, t, lang)} /></div>
                       <div className="coll-items">
                         {g.cols.map((c) => {
                           const sub = colLabel(
@@ -1215,7 +1215,7 @@ export default function MemberApp({
                               data-tab={activeTab.meta.title}
                               data-col={c.index}
                             >
-                              <span className="coll-sub">{sub}</span>
+                              <span className="coll-sub"><FitLabel text={sub} /></span>
                               <CollectionCell
                                 value={row.cells[c.index] ?? ''}
                                 options={activeTab.meta.options?.[c.index]}

@@ -143,12 +143,12 @@
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--gold-bright);
-  overflow-wrap: anywhere;
-  word-break: break-word;
-  white-space: normal;
-  line-height: 1.35;
+  display: flex;
+  align-items: center;
   min-width: 0;
   max-width: 100%;
+  overflow: hidden;
+  white-space: nowrap;
 }
 
 .coll-sub {
@@ -157,12 +157,11 @@
   font-weight: 600;
   letter-spacing: 0.03em;
   color: var(--muted);
-  white-space: normal;
-  overflow: hidden;
-  overflow-wrap: anywhere;
-  word-break: break-word;
+  display: flex;
+  align-items: center;
   min-width: 0;
-  line-height: 1.35;
+  overflow: hidden;
+  white-space: nowrap;
 }
 
 .cell-btn {
