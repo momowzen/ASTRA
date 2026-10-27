@@ -10,6 +10,7 @@ import MemberApp from './components/MemberApp';
 import Background from './components/Background';
 import LoadingScreen from './components/LoadingScreen';
 import CursorFX from './components/CursorFX';
+import { startVersionSync } from './versionSync';
 
 const POLL_MS = 4000;
 const WRITE_QUIET_MS = 12000;
@@ -139,6 +140,9 @@ export default function App() {
     const i = setInterval(() => setTick((t) => t + 1), 1000);
     return () => clearInterval(i);
   }, []);
+
+  // Reload the tab automatically when a new release is deployed.
+  useEffect(() => startVersionSync(), []);
 
   const onPatch = useCallback(
     (tabTitle: string, updates: { row: number; col: number; value: string }[]) => {

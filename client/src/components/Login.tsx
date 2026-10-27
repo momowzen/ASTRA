@@ -2,7 +2,7 @@ import { FormEvent, useEffect, useState } from 'react';
 import { login, ApiError, apiBase } from '../api';
 import type { Session } from '../types';
 import { LangToggle, useLang } from '../i18n';
-import { version } from '../../package.json';
+import { APP_COMMIT, APP_VERSION } from 'virtual:astra-release';
 
 export default function Login({ onDone }: { onDone: (session: Session) => void }) {
   const { t } = useLang();
@@ -143,7 +143,9 @@ export default function Login({ onDone }: { onDone: (session: Session) => void }
             <span className="status-dot" />
             {online === false ? 'SYSTEMS OFFLINE' : 'SYSTEMS ONLINE'}
           </span>
-          <span className="mono">v{version}</span>
+          <span className="mono" title={`commit ${APP_COMMIT}`}>
+            v{APP_VERSION}
+          </span>
         </div>
       </section>
     </div>
