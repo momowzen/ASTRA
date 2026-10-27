@@ -4998,6 +4998,57 @@ table.grid.roster-grid td .roster-name {
   box-shadow: 0 0 12px rgba(201, 138, 95, 0.35);
 }
 
+/* Matched by a screenshot scan: pinned above the list and marked with a
+   pulsing signal dot plus a green left accent (on top of the "on" look). */
+.att-row.scanned {
+  border-left: 2px solid rgba(127, 184, 155, 0.9);
+  animation: att-scan-flash 0.65s ease-out;
+}
+
+.att-row.scanned:not(.on) {
+  border-color: rgba(109, 156, 140, 0.4);
+  background: linear-gradient(120deg, rgba(109, 156, 140, 0.1), rgba(7, 9, 15, 0.4));
+}
+
+.att-row.scanned::after {
+  content: '';
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #8fc9ac;
+  box-shadow: 0 0 8px rgba(127, 184, 155, 0.85);
+  animation: att-scan-pulse 2.2s ease-in-out infinite;
+}
+
+@keyframes att-scan-flash {
+  0% {
+    box-shadow: 0 0 0 0 rgba(127, 184, 155, 0.55);
+  }
+  100% {
+    box-shadow: 0 0 0 12px rgba(127, 184, 155, 0);
+  }
+}
+
+@keyframes att-scan-pulse {
+  0%,
+  100% {
+    opacity: 0.35;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .att-row.scanned,
+  .att-row.scanned::after {
+    animation: none;
+  }
+}
+
 /* Boss config */
 
 .config-view {

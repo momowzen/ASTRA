@@ -290,6 +290,8 @@ function AttendanceView({
   const [recording, setRecording] = useState(false);
   const [scanning, setScanning] = useState(false);
   const [unmatched, setUnmatched] = useState<string[]>([]);
+  /** Names matched by screenshots, kept in the order they were read. */
+  const [scanOrder, setScanOrder] = useState<string[]>([]);
   const [dragOver, setDragOver] = useState(false);
   const dragDepth = useRef(0);
   const scanRef = useRef<HTMLInputElement>(null);
@@ -333,6 +335,31 @@ function AttendanceView({
       )
     : memberNames;
 
+  /** Rank of each scanned name so matched rows keep their screenshot order. */
+  const scanRank = useMemo(() => {
+    const m = new Map<string, number>();
+    scanOrder.forEach((n, i) => m.set(n, i));
+    return m;
+  }, [scanOrder]);
+
+  /**
+   * Selected (i.e. scan-matched) members float to the top of the list:
+   * scanned names first in read order, then any other selected names,
+   * with the rest staying alphabetical. Array.sort is stable, so the
+   * untouched rows keep their original relative order.
+   */
+  const ordered = [...filtered].sort((a, b) => {
+    const sa = selected.has(a);
+    const sb = selected.has(b);
+    if (sa !== sb) return sa ? -1 : 1;
+    if (sa) {
+      const ra = scanRank.get(a) ?? Number.MAX_SAFE_INTEGER;
+      const rb = scanRank.get(b) ?? Number.MAX_SAFE_INTEGER;
+      if (ra !== rb) return ra - rb;
+    }
+    return 0;
+  });
+
   function toggle(name: string) {
     setSelected((prev) => {
       const next = new Set(prev);
@@ -365,6 +392,7 @@ function AttendanceView({
         toast(scanErr || (missed.size > 0 ? t('boss.scanUnmatched', { n: missed.size }) : t('boss.scanNone')), missed.size > 0 ? 'ok' : 'err');
       } else {
         setSelected((prev) => new Set([...prev, ...found]));
+        setScanOrder((prev) => [...prev, ...[...found].filter((n) => !prev.includes(n))]);
         toast(t('boss.scanDone', { n: found.size }), 'ok');
       }
     } finally {
@@ -393,6 +421,7 @@ function AttendanceView({
       await recordAttendance(custom ? 'Custom' : bossName, effPoints, [...selected]);
       toast(t('boss.recordedToast', { n: selected.size, pts: effPoints }), 'ok');
       setSelected(new Set());
+      setScanOrder([]);
     } catch (err) {
       toast(err instanceof ApiError ? err.message : t('boss.couldNotRecord'), 'err');
     } finally {
@@ -500,7 +529,13 @@ function AttendanceView({
           <button className="btn btn-ghost btn-sm" onClick={() => setSelected(new Set(filtered))}>
             {t('boss.selectAll')}
           </button>
-          <button className="btn btn-ghost btn-sm" onClick={() => setSelected(new Set())}>
+          <button
+            className="btn btn-ghost btn-sm"
+            onClick={() => {
+              setSelected(new Set());
+              setScanOrder([]);
+            }}
+          >
             {t('boss.clear')}
           </button>
           <input
@@ -535,12 +570,13 @@ function AttendanceView({
         )}
 
         <div className="att-picker">
-          {filtered.map((name) => {
+          {ordered.map((name) => {
             const on = selected.has(name);
+            const scanned = scanRank.has(name);
             return (
               <div
                 key={name}
-                className={`att-row ${on ? 'on' : ''}`}
+                className={`att-row ${on ? 'on' : ''}${scanned ? ' scanned' : ''}`}
                 onClick={() => toggle(name)}
               >
                 <Avatar
@@ -556,7 +592,7 @@ function AttendanceView({
               </div>
             );
           })}
-          {filtered.length === 0 && (
+          {ordered.length === 0 && (
             <div className="empty" style={{ gridColumn: '1 / -1' }}>
               {t('boss.noMembersMatch')}
             </div>
