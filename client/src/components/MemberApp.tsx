@@ -66,7 +66,7 @@ interface AstraToolsApi {
  * Shrinks its font size until the text fits the available width on one line.
  * Used for long member-facing column labels such as the equipment questions.
  */
-function FitLabel({ text }: { text: string }) {
+function FitLabel({ text, className }: { text: string; className?: string }) {
   const ref = useRef<HTMLSpanElement>(null);
 
   useLayoutEffect(() => {
@@ -98,7 +98,7 @@ function FitLabel({ text }: { text: string }) {
   }, [text]);
 
   return (
-    <span ref={ref} className="fit-label" title={text}>
+    <span ref={ref} className={`fit-label${className ? ` ${className}` : ''}`} title={text}>
       {text}
     </span>
   );
@@ -177,7 +177,7 @@ function Field({
     return (
       <div className={fieldCls} data-tab={dataTab} data-col={dataCol}>
         <label>
-          {longLabel ? <span className="question-text">{label}</span> : <FitLabel text={label} />}
+          {longLabel ? <FitLabel text={label} className="question-text" /> : <FitLabel text={label} />}
         </label>
         <div className="field-ro" title={t('member.adminManaged')}>
           {shown.trim() || '—'}
@@ -193,7 +193,7 @@ function Field({
   return (
     <div className={fieldCls} data-tab={dataTab} data-col={dataCol}>
       <label className="label-row">
-        {longLabel ? <span className="question-text">{label}</span> : <FitLabel text={label} />}
+        {longLabel ? <FitLabel text={label} className="question-text" /> : <FitLabel text={label} />}
         <span
           className={`save-note ${status === 'saved' ? 'ok' : status === 'error' ? 'err' : ''}`}
         >

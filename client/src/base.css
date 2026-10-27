@@ -454,8 +454,8 @@ select option {
   display: block;
   min-width: 0;
   white-space: nowrap;
-  overflow: visible;
-  font-size: var(--fs-micro);
+  overflow: hidden;
+  font-size: clamp(7px, 2vw, var(--fs-micro));
   letter-spacing: 0.12em;
   line-height: 1.4;
 }
