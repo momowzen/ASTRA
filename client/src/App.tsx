@@ -144,6 +144,14 @@ export default function App() {
   // Reload the tab automatically when a new release is deployed.
   useEffect(() => startVersionSync(), []);
 
+  // Freeze CSS motion while the tab is in the background (see .anim-paused).
+  useEffect(() => {
+    const sync = () => document.documentElement.classList.toggle('anim-paused', document.hidden);
+    sync();
+    document.addEventListener('visibilitychange', sync);
+    return () => document.removeEventListener('visibilitychange', sync);
+  }, []);
+
   const onPatch = useCallback(
     (tabTitle: string, updates: { row: number; col: number; value: string }[]) => {
       lastWriteAt.current = Date.now();

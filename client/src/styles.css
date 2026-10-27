@@ -20,7 +20,9 @@
 
   --text: #ece9df;
   --muted: #a3aa9f;
-  --faint: #687268;
+  /* Tertiary text - was #687268, which measured 4.02:1 on --bg and failed AA
+     at the 6-9px sizes it was used for. 6.40:1 on --bg, 6.11:1 on --panel. */
+  --faint: #8a948a;
 
   --accent: #c98a5f;
   --accent-2: #e8b88f;
@@ -41,17 +43,86 @@
   --astra-blue: #6d9c8c;
   --astra-silver: #dfe4da;
 
-  --shadow: 0 30px 80px rgba(0, 0, 0, 0.55);
-  --shadow-soft: 0 16px 44px rgba(0, 0, 0, 0.36);
-  --radius: 8px;
-  --radius-sm: 5px;
+  /* Elevation - three heights. Depth only; colour lives in the glows.
+     Elevation says "how far off the surface", nothing else. */
+  --elev-1: 0 16px 44px rgba(0, 0, 0, 0.36);   /* cards, panels, rows */
+  --elev-2: 0 30px 80px rgba(0, 0, 0, 0.55);   /* menus, modals, toasts */
+  --elev-3: 0 30px 90px rgba(0, 0, 0, 0.7);    /* lightbox, intro - top of stack */
+
+  /* Colour glows - light, not depth. Component-specific intensities
+     (status dots, scanned rows, alarm states) stay literal on purpose:
+     they encode per-component meaning, not a shared step. */
+  --glow-gold: 0 0 14px rgba(201, 138, 95, 0.35);
+  --glow-gold-soft: 0 0 16px rgba(201, 138, 95, 0.2);
+  --glow-green: 0 0 10px rgba(127, 191, 155, 0.85);
+  --glow-danger: 0 0 10px rgba(217, 104, 95, 0.85);
+
+  /* The 1px top highlight that makes glass read as glass. */
+  --bevel: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  /* Spacing scale - six steps. Hairlines (0-3px) stay literal by rule:
+     they are optical nudges and cell separators, not rhythm. */
+  --sp-1: 4px;
+  --sp-2: 8px;
+  --sp-3: 12px;
+  --sp-4: 16px;
+  --sp-5: 24px;
+  --sp-6: 32px;
+
+  /* Control padding is deliberately off the spacing scale: it sets control
+     height, so it is pinned here to keep every footprint stable. */
+  --pad-control: 10px 13px;
+  --pad-btn: 10px 18px;
+  --pad-btn-sm: 7px 11px;
+
+  /* Radius scale - five steps: control/card, panel, pill, circle, none. */
+  --r-sm: 4px;
+  --r-md: 8px;
+  --r-pill: 999px;
 
   --font: 'Manrope', system-ui, -apple-system, 'Segoe UI', sans-serif;
   --display: 'Cinzel', 'Manrope', Georgia, serif;
   --mono: 'JetBrains Mono', 'SFMono-Regular', Consolas, monospace;
   --ease: cubic-bezier(0.2, 0.75, 0.2, 1);
 
+  /* Type scale - nine steps, nothing invents a size.
+     Fluid display type keeps its clamp(); see the clamp() sites. */
+  --fs-micro: 10px;
+  --fs-xs: 11px;
+  --fs-sm: 12px;
+  --fs-base: 14px;
+  --fs-md: 16px;
+  --fs-lg: 20px;
+  --fs-xl: 24px;
+  --fs-2xl: 32px;
+  --fs-display: 64px;
+
+  /* Motion scale - nothing may invent its own duration.
+     micro = hover/tint/focus, fast = press/toggle,
+     mid = panels/drawers, slow = view transitions/cinematic entrances. */
+  --dur-1: 140ms;
+  --dur-2: 200ms;
+  --dur-3: 300ms;
+  --dur-4: 560ms;
+
+  /* Layering scale - keeps overlays in a predictable stacking order. */
+  --z-topbar: 35;
+  --z-sidebar: 40;
+  --z-backdrop: 80;
+  --z-rail: 90;
+  --z-overlay: 120;
+  --z-sheet: 220;
+  --z-popover: 400;
+  --z-fs: 470;
+  --z-toast: 500;
+  --z-lightbox: 700;
+  --z-cursor: 900;
+  --z-intro: 1000;
+
   --glass: linear-gradient(158deg, rgba(16, 23, 19, 0.76), rgba(5, 8, 7, 0.86));
+  /* Solid stand-in for --glass where backdrop blur is switched off
+     (small screens / reduced transparency). The blur was carrying
+     legibility over the animated canvas, so the surface goes opaque. */
+  --glass-solid: rgba(7, 11, 9, 0.97);
   --glass-soft: linear-gradient(158deg, rgba(17, 25, 20, 0.5), rgba(6, 10, 8, 0.6));
   --edge: linear-gradient(
     135deg,
@@ -81,7 +152,7 @@ body {
   font-family: var(--font);
   background: var(--bg);
   color: var(--text);
-  font-size: 14px;
+  font-size: var(--fs-base);
   line-height: 1.55;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
@@ -116,7 +187,7 @@ select option {
 }
 ::-webkit-scrollbar-thumb {
   background: rgba(201, 138, 95, 0.4);
-  border-radius: 99px;
+  border-radius: var(--r-pill);
   border: 0;
   background-clip: padding-box;
 }
@@ -150,7 +221,7 @@ select option {
   pointer-events: none;
   background:
     radial-gradient(120% 90% at 50% 42%, transparent 38%, rgba(0, 0, 0, 0.55) 100%),
-    linear-gradient(180deg, rgba(3, 4, 8, 0.42), transparent 22%, transparent 74%, rgba(3, 4, 8, 0.65));
+    linear-gradient(180deg, rgba(3, 6, 4, 0.42), transparent 22%, transparent 74%, rgba(3, 6, 4, 0.65));
 }
 
 .grain {
@@ -172,6 +243,7 @@ select option {
 .mono {
   font-family: var(--mono);
   letter-spacing: 0.06em;
+  font-variant-numeric: tabular-nums;
 }
 
 .muted {
@@ -183,7 +255,7 @@ select option {
   height: 6px;
   border-radius: 50%;
   background: var(--green);
-  box-shadow: 0 0 10px rgba(127, 191, 155, 0.9);
+  box-shadow: var(--glow-green);
   display: inline-block;
   flex: none;
 }
@@ -191,9 +263,9 @@ select option {
 .eyebrow {
   display: inline-flex;
   align-items: center;
-  gap: 10px;
+  gap: var(--sp-2);
   font-family: var(--mono);
-  font-size: 9.5px;
+  font-size: var(--fs-micro);
   font-weight: 500;
   letter-spacing: 0.24em;
   text-transform: uppercase;
@@ -213,27 +285,27 @@ select option {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
-  padding: 10px 18px;
-  border-radius: var(--radius-sm);
+  gap: var(--sp-2);
+  padding: var(--pad-btn);
+  border-radius: var(--r-sm);
   border: 1px solid var(--line-soft);
-  background: linear-gradient(160deg, rgba(23, 28, 40, 0.9), rgba(13, 16, 24, 0.9));
+  background: linear-gradient(160deg, rgba(23, 30, 26, 0.9), rgba(13, 17, 14, 0.9));
   color: var(--text);
   cursor: pointer;
   font-weight: 700;
-  font-size: 12px;
+  font-size: var(--fs-sm);
   letter-spacing: 0.04em;
-  transition: transform 0.18s var(--ease), border-color 0.18s, background 0.18s, box-shadow 0.18s,
-    color 0.18s;
+  transition: transform var(--dur-1) var(--ease), border-color var(--dur-1),
+    background var(--dur-1), box-shadow var(--dur-1), color var(--dur-1);
   white-space: nowrap;
   position: relative;
 }
 
 .btn:hover {
   border-color: var(--line-strong);
-  background: linear-gradient(160deg, rgba(30, 36, 50, 0.95), rgba(16, 20, 29, 0.95));
+  background: linear-gradient(160deg, rgba(31, 40, 34, 0.95), rgba(16, 22, 18, 0.95));
   transform: translateY(-1px);
-  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.32);
+  box-shadow: var(--elev-1);
 }
 
 .btn:active {
@@ -290,23 +362,22 @@ select option {
 }
 
 .btn-sm {
-  padding: 7px 11px;
-  font-size: 11px;
+  padding: var(--pad-btn-sm);
+  font-size: var(--fs-xs);
 }
 
 /* ---------- Form controls ---------- */
 
 .input,
 .select {
-  background: rgba(5, 7, 12, 0.72);
+  background: rgba(5, 9, 7, 0.72);
   border: 1px solid var(--line-soft);
-  border-radius: var(--radius-sm);
-  padding: 10px 13px;
+  border-radius: var(--r-sm);
+  padding: var(--pad-control);
   color: var(--text);
-  outline: none;
-  transition: border-color 0.18s, box-shadow 0.18s, background 0.18s;
+  transition: border-color var(--dur-1), box-shadow var(--dur-1), background var(--dur-1);
   width: 100%;
-  font-size: 13px;
+  font-size: var(--fs-base);
 }
 
 .input::placeholder {
@@ -322,7 +393,7 @@ select option {
 .select:focus {
   border-color: rgba(201, 138, 95, 0.65);
   box-shadow: 0 0 0 3px rgba(201, 138, 95, 0.1), 0 0 26px rgba(201, 138, 95, 0.06);
-  background: rgba(7, 9, 15, 0.92);
+  background: rgba(7, 11, 9, 0.92);
 }
 
 .select {
@@ -336,25 +407,25 @@ select option {
 .lang-toggle {
   width: auto;
   padding: 7px 28px 7px 12px;
-  font-size: 11px;
+  font-size: var(--fs-xs);
   font-weight: 600;
   font-family: var(--mono);
   letter-spacing: 0.08em;
-  background-color: rgba(8, 10, 16, 0.7);
+  background-color: rgba(8, 12, 10, 0.7);
   background-position: right 10px center;
 }
 
 .field {
   display: flex;
   flex-direction: column;
-  gap: 7px;
+  gap: var(--sp-2);
   min-width: 0;
 }
 
 .field label {
   display: block;
   font-family: var(--mono);
-  font-size: 9px;
+  font-size: var(--fs-micro);
   font-weight: 500;
   color: var(--muted);
   text-transform: uppercase;
@@ -380,7 +451,7 @@ select option {
   display: grid;
   grid-template-columns: 370px 180px;
   justify-content: start;
-  gap: 6px 14px;
+  gap: var(--sp-2) var(--sp-4);
   align-items: center;
 }
 
@@ -394,26 +465,26 @@ select option {
   min-width: 0;
   white-space: nowrap;
   overflow: visible;
-  font-size: 9px;
+  font-size: var(--fs-micro);
   letter-spacing: 0.12em;
   line-height: 1.4;
 }
 
 .field-ro {
-  background: rgba(5, 7, 12, 0.4);
+  background: rgba(5, 9, 7, 0.4);
   border: 1px dashed rgba(167, 184, 173, 0.14);
-  border-radius: var(--radius-sm);
+  border-radius: var(--r-sm);
   padding: 10px 13px;
   color: var(--muted);
   min-height: 39px;
   display: flex;
   align-items: center;
-  font-size: 13px;
+  font-size: var(--fs-base);
 }
 
 .save-note {
   font-family: var(--mono);
-  font-size: 9.5px;
+  font-size: var(--fs-micro);
   color: var(--faint);
   white-space: nowrap;
 }
@@ -454,15 +525,15 @@ select option {
 .roster-panel {
   position: relative;
   border: 1px solid transparent;
-  border-radius: var(--radius);
+  border-radius: var(--r-md);
   background: var(--glass) padding-box, var(--edge) border-box;
-  box-shadow: var(--shadow-soft), inset 0 1px 0 rgba(255, 255, 255, 0.035);
+  box-shadow: var(--elev-1), var(--bevel);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
 }
 
 .panel-card {
-  padding: 22px;
+  padding: var(--sp-5);
   overflow: hidden;
 }
 
@@ -483,6 +554,12 @@ select option {
 
 .table-card {
   overflow: hidden;
+  /* Tables repaint their own box only: 91 shadows elsewhere stop
+     invalidating layout outside this card. paint containment matches the
+     clipping overflow: hidden already imposed, so nothing new is cut off.
+     .panel-card is deliberately NOT contained - it doubles as .music-shell,
+     which hosts fixed-position fullscreen controls. */
+  contain: layout paint;
   display: flex;
   flex-direction: column;
 }
@@ -495,7 +572,7 @@ select option {
 .table-card h3,
 .announce-head h2 {
   font-family: var(--display);
-  font-size: 18px;
+  font-size: var(--fs-lg);
   font-weight: 600;
   letter-spacing: 0.035em;
   margin: 0;
@@ -506,7 +583,7 @@ select option {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  gap: 18px;
+  gap: var(--sp-4);
   margin-bottom: 18px;
   flex-wrap: wrap;
 }
@@ -514,7 +591,7 @@ select option {
 .panel-kicker {
   display: block;
   font-family: var(--mono);
-  font-size: 9px;
+  font-size: var(--fs-micro);
   font-weight: 500;
   letter-spacing: 0.22em;
   text-transform: uppercase;
@@ -527,11 +604,12 @@ select option {
   flex: none;
   margin-left: auto;
   font-family: var(--mono);
-  font-size: 10.5px;
+  font-variant-numeric: tabular-nums;
+  font-size: var(--fs-micro);
   color: var(--gold-bright);
   border: 1px solid rgba(201, 138, 95, 0.22);
   background: rgba(201, 138, 95, 0.07);
-  border-radius: 999px;
+  border-radius: var(--r-pill);
   padding: 4px 10px;
   letter-spacing: 0.06em;
 }
@@ -539,12 +617,12 @@ select option {
 .panel-tip {
   display: flex;
   align-items: center;
-  gap: 8px;
-  font-size: 11.5px;
+  gap: var(--sp-2);
+  font-size: var(--fs-xs);
   color: var(--muted);
   border: 1px solid rgba(201, 138, 95, 0.18);
   background: rgba(201, 138, 95, 0.05);
-  border-radius: var(--radius-sm);
+  border-radius: var(--r-sm);
   padding: 8px 11px;
   max-width: none;
   white-space: nowrap;
@@ -561,16 +639,16 @@ select option {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 10px;
+  gap: var(--sp-2);
   padding: 40px 18px;
   text-align: center;
   color: var(--faint);
-  font-size: 13px;
+  font-size: var(--fs-base);
 }
 
 .empty .big {
   font-family: var(--display);
-  font-size: 24px;
+  font-size: var(--fs-xl);
   color: var(--gold);
   opacity: 0.6;
   display: flex;
@@ -600,7 +678,7 @@ select option {
 .auth.auth-solo {
   grid-template-columns: 1fr;
   place-items: center;
-  padding: 24px;
+  padding: var(--sp-5);
 }
 
 .auth-scene {
@@ -662,7 +740,7 @@ select option {
 
 .auth-crest-ring--inner {
   inset: 9%;
-  border-color: rgba(223, 228, 239, 0.12);
+  border-color: rgba(236, 233, 223, 0.12);
 }
 
 .auth-crest {
@@ -684,7 +762,7 @@ select option {
 .auth-scene-line {
   max-width: 480px;
   color: var(--muted);
-  font-size: 14px;
+  font-size: var(--fs-base);
   line-height: 1.7;
   margin: 0;
 }
@@ -692,18 +770,18 @@ select option {
 .auth-scene-tags {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: var(--sp-2);
   margin-top: 26px;
 }
 
 .auth-scene-tags span {
   font-family: var(--mono);
-  font-size: 8.5px;
+  font-size: var(--fs-micro);
   letter-spacing: 0.16em;
   color: rgba(232, 184, 143, 0.72);
   border: 1px solid rgba(201, 138, 95, 0.16);
   padding: 5px 9px;
-  border-radius: 999px;
+  border-radius: var(--r-pill);
   background: rgba(201, 138, 95, 0.04);
 }
 
@@ -716,10 +794,10 @@ select option {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 16px;
+  gap: var(--sp-4);
   padding-top: 14px;
   border-top: 1px solid rgba(167, 184, 173, 0.08);
-  font-size: 9px;
+  font-size: var(--fs-micro);
   letter-spacing: 0.18em;
   color: var(--faint);
 }
@@ -731,7 +809,7 @@ select option {
   justify-content: center;
   padding: clamp(30px, 6vw, 88px);
   background:
-    linear-gradient(180deg, rgba(8, 10, 16, 0.55), rgba(5, 6, 11, 0.82)),
+    linear-gradient(180deg, rgba(8, 12, 10, 0.55), rgba(5, 7, 6, 0.82)),
     radial-gradient(600px 400px at 90% 8%, rgba(201, 138, 95, 0.05), transparent 70%);
   backdrop-filter: blur(6px);
   border-left: 1px solid rgba(201, 138, 95, 0.06);
@@ -744,9 +822,9 @@ select option {
   min-height: 0;
   padding: clamp(26px, 5vw, 42px);
   border: 1px solid transparent;
-  border-radius: var(--radius);
+  border-radius: var(--r-md);
   background: var(--glass) padding-box, var(--edge) border-box;
-  box-shadow: var(--shadow);
+  box-shadow: var(--elev-2);
 }
 
 .auth-solo .loading-card {
@@ -757,7 +835,7 @@ select option {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 16px;
+  gap: var(--sp-4);
   text-align: center;
 }
 
@@ -797,7 +875,7 @@ select option {
 
 .auth-card .sub {
   color: var(--muted);
-  font-size: 13.5px;
+  font-size: var(--fs-base);
   line-height: 1.65;
   margin: 0 0 30px;
 }
@@ -805,16 +883,16 @@ select option {
 .auth form {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: var(--sp-4);
 }
 
 .auth .field {
-  gap: 8px;
+  gap: var(--sp-2);
 }
 
 .auth .field .input {
   padding: 12px 14px;
-  background: rgba(4, 6, 11, 0.7);
+  background: rgba(4, 7, 6, 0.7);
 }
 
 .auth .error,
@@ -822,16 +900,16 @@ select option {
   background: rgba(217, 104, 95, 0.08);
   border: 1px solid rgba(217, 104, 95, 0.32);
   color: #ffb0b4;
-  border-radius: var(--radius-sm);
+  border-radius: var(--r-sm);
   padding: 10px 12px;
-  font-size: 12.5px;
+  font-size: var(--fs-sm);
 }
 
 .auth-submit {
   margin-top: 8px;
   width: 100%;
   padding: 13px 18px;
-  font-size: 12px;
+  font-size: var(--fs-sm);
   letter-spacing: 0.12em;
   text-transform: uppercase;
 }
@@ -840,10 +918,10 @@ select option {
   margin-top: 24px;
   padding: 13px 15px;
   border: 1px solid rgba(167, 184, 173, 0.1);
-  border-radius: var(--radius-sm);
+  border-radius: var(--r-sm);
   background: rgba(167, 184, 173, 0.03);
   color: var(--faint);
-  font-size: 11.5px;
+  font-size: var(--fs-xs);
   line-height: 1.6;
 }
 
@@ -860,11 +938,11 @@ select option {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 14px;
+  gap: var(--sp-4);
   padding-top: 14px;
   border-top: 1px solid rgba(167, 184, 173, 0.08);
   font-family: var(--mono);
-  font-size: 8.5px;
+  font-size: var(--fs-micro);
   letter-spacing: 0.18em;
   color: var(--faint);
 }
@@ -877,7 +955,7 @@ select option {
 .auth-foot-status {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--sp-2);
 }
 
 .auth-foot-status.offline {
@@ -886,7 +964,7 @@ select option {
 
 .auth-foot-status.offline .status-dot {
   background: var(--red);
-  box-shadow: 0 0 10px rgba(217, 104, 95, 0.85);
+  box-shadow: var(--glow-danger);
 }
 
 .auth-mobile-brand {
@@ -915,11 +993,11 @@ select option {
   background:
     radial-gradient(520px 300px at 0% 0%, rgba(201, 138, 95, 0.07), transparent 65%),
     radial-gradient(420px 300px at 100% 100%, rgba(109, 156, 140, 0.06), transparent 70%),
-    linear-gradient(180deg, rgba(8, 10, 17, 0.78), rgba(5, 6, 11, 0.87));
+    linear-gradient(180deg, rgba(8, 13, 10, 0.78), rgba(5, 7, 6, 0.87));
   border-right: 1px solid rgba(201, 138, 95, 0.13);
   backdrop-filter: blur(9px);
   -webkit-backdrop-filter: blur(9px);
-  z-index: 40;
+  z-index: var(--z-sidebar);
 }
 
 .sidebar::after {
@@ -936,7 +1014,7 @@ select option {
 .brand {
   display: flex;
   align-items: center;
-  gap: 13px;
+  gap: var(--sp-3);
   padding: 2px 8px 18px;
   position: relative;
 }
@@ -951,11 +1029,11 @@ select option {
   margin-left: auto;
   padding: 0;
   border: 1px solid rgba(167, 184, 173, 0.14);
-  border-radius: 4px;
-  background: rgba(10, 13, 20, 0.55);
+  border-radius: var(--r-sm);
+  background: rgba(10, 14, 11, 0.55);
   color: var(--faint);
   cursor: pointer;
-  transition: color 0.16s, border-color 0.16s, background 0.16s;
+  transition: color var(--dur-1), border-color var(--dur-1), background var(--dur-1);
 }
 
 .sidebar-toggle:hover {
@@ -974,11 +1052,9 @@ select option {
     order: 70;
     justify-content: flex-end;
   }
-}
 
-@media (min-width: 901px) {
   .shell {
-    transition: grid-template-columns 0.22s var(--ease);
+    transition: grid-template-columns var(--dur-2) var(--ease);
   }
 
   .shell.sidebar-collapsed {
@@ -991,7 +1067,7 @@ select option {
 
   .sidebar-collapsed .brand {
     justify-content: center;
-    gap: 6px;
+    gap: var(--sp-2);
     padding: 2px 0 14px;
   }
 
@@ -1059,7 +1135,7 @@ select option {
   place-items: center;
   border-radius: 50%;
   border: 1px solid rgba(201, 138, 95, 0.25);
-  background: radial-gradient(circle at 50% 40%, rgba(109, 156, 140, 0.18), rgba(6, 8, 14, 0.4));
+  background: radial-gradient(circle at 50% 40%, rgba(109, 156, 140, 0.18), rgba(6, 10, 8, 0.4));
   box-shadow: 0 0 26px rgba(109, 156, 140, 0.14), inset 0 0 16px rgba(0, 0, 0, 0.4);
 }
 
@@ -1076,7 +1152,7 @@ select option {
 
 .brand .name {
   font-family: var(--display);
-  font-size: 21px;
+  font-size: var(--fs-lg);
   font-weight: 700;
   letter-spacing: 0.22em;
   line-height: 1;
@@ -1086,7 +1162,7 @@ select option {
 .brand .tag {
   margin-top: 4px;
   font-family: var(--mono);
-  font-size: 8px;
+  font-size: var(--fs-micro);
   letter-spacing: 0.16em;
   text-transform: uppercase;
   color: var(--faint);
@@ -1098,12 +1174,12 @@ select option {
 .side-identity {
   display: flex;
   align-items: center;
-  gap: 11px;
+  gap: var(--sp-3);
   margin: 0 4px 16px;
   padding: 10px 11px;
   border: 1px solid rgba(167, 184, 173, 0.09);
-  border-radius: var(--radius-sm);
-  background: linear-gradient(135deg, rgba(23, 28, 41, 0.65), rgba(10, 12, 19, 0.55));
+  border-radius: var(--r-sm);
+  background: linear-gradient(135deg, rgba(23, 30, 26, 0.65), rgba(10, 14, 11, 0.55));
 }
 
 .side-avatar {
@@ -1114,11 +1190,11 @@ select option {
   place-items: center;
   border-radius: 50%;
   font-family: var(--display);
-  font-size: 12px;
+  font-size: var(--fs-sm);
   font-weight: 700;
   color: #16110c;
   background: linear-gradient(140deg, #f1dba2, #c98a5f 58%, #96703a);
-  box-shadow: 0 0 18px rgba(201, 138, 95, 0.18);
+  box-shadow: var(--glow-gold-soft);
 }
 
 .side-id-text {
@@ -1129,7 +1205,7 @@ select option {
 }
 
 .side-id-text strong {
-  font-size: 12.5px;
+  font-size: var(--fs-sm);
   font-weight: 700;
   letter-spacing: 0.03em;
   white-space: nowrap;
@@ -1139,7 +1215,7 @@ select option {
 
 .side-id-text span {
   font-family: var(--mono);
-  font-size: 8px;
+  font-size: var(--fs-micro);
   letter-spacing: 0.14em;
   text-transform: uppercase;
   color: var(--faint);
@@ -1151,7 +1227,7 @@ select option {
   height: 6px;
   border-radius: 50%;
   background: var(--green);
-  box-shadow: 0 0 10px rgba(127, 191, 155, 0.85);
+  box-shadow: var(--glow-green);
   margin-left: auto;
   flex: none;
 }
@@ -1159,18 +1235,18 @@ select option {
 .side-role {
   margin-left: auto;
   font-family: var(--mono);
-  font-size: 7.5px;
+  font-size: var(--fs-micro);
   letter-spacing: 0.14em;
   color: var(--gold);
   border: 1px solid rgba(201, 138, 95, 0.24);
   padding: 3px 6px;
-  border-radius: 3px;
+  border-radius: var(--r-sm);
 }
 
 .sidebar .section-label {
   padding: 10px 12px 4px;
   font-family: var(--mono);
-  font-size: 8px;
+  font-size: var(--fs-micro);
   font-weight: 500;
   letter-spacing: 0.22em;
   text-transform: uppercase;
@@ -1181,19 +1257,19 @@ select option {
   position: relative;
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: var(--sp-2);
   width: 100%;
   padding: 6px 12px;
   border: 1px solid transparent;
-  border-radius: var(--radius-sm);
+  border-radius: var(--r-sm);
   background: transparent;
   color: var(--muted);
   cursor: pointer;
   text-align: left;
-  font-size: 12.5px;
+  font-size: var(--fs-sm);
   font-weight: 600;
   letter-spacing: 0.01em;
-  transition: background 0.16s, color 0.16s, border-color 0.16s;
+  transition: background var(--dur-1), color var(--dur-1), border-color var(--dur-1);
 }
 
 .nav-item::before {
@@ -1203,10 +1279,10 @@ select option {
   top: 50%;
   width: 2px;
   height: 0;
-  border-radius: 2px;
+  border-radius: var(--r-sm);
   background: linear-gradient(180deg, var(--gold-bright), var(--gold));
   transform: translateY(-50%);
-  transition: height 0.18s var(--ease);
+  transition: height var(--dur-1) var(--ease);
 }
 
 .nav-item:hover {
@@ -1232,7 +1308,7 @@ select option {
 .nav-caps {
   text-transform: uppercase;
   letter-spacing: 0.06em;
-  font-size: 10.5px;
+  font-size: var(--fs-micro);
 }
 
 .nav-item .ico {
@@ -1242,7 +1318,7 @@ select option {
   align-items: center;
   justify-content: center;
   color: var(--faint);
-  transition: color 0.16s;
+  transition: color var(--dur-1);
 }
 
 .nav-item:hover .ico {
@@ -1295,14 +1371,14 @@ select option {
 .topbar {
   position: sticky;
   top: 0;
-  z-index: 35;
+  z-index: var(--z-topbar);
   display: flex;
   align-items: center;
   flex-wrap: wrap;
-  gap: 12px 18px;
+  gap: var(--sp-3) var(--sp-4);
   padding: 15px 28px;
   min-height: 68px;
-  background: linear-gradient(180deg, rgba(5, 7, 12, 0.68), rgba(5, 7, 12, 0.42));
+  background: linear-gradient(180deg, rgba(5, 9, 7, 0.68), rgba(5, 9, 7, 0.42));
   border-bottom: 1px solid rgba(167, 184, 173, 0.08);
   backdrop-filter: blur(18px);
   -webkit-backdrop-filter: blur(18px);
@@ -1334,7 +1410,7 @@ select option {
 
 .topbar-kicker {
   font-family: var(--mono);
-  font-size: 8px;
+  font-size: var(--fs-micro);
   letter-spacing: 0.22em;
   text-transform: uppercase;
   color: var(--gold);
@@ -1344,7 +1420,7 @@ select option {
 
 .topbar h2 {
   font-family: var(--display);
-  font-size: 20px;
+  font-size: var(--fs-lg);
   font-weight: 600;
   letter-spacing: 0.04em;
   margin: 0;
@@ -1393,18 +1469,18 @@ select option {
   order: 45;
   display: inline-flex;
   align-items: center;
-  gap: 9px;
+  gap: var(--sp-2);
   min-width: 0;
   max-width: min(38vw, 380px);
   padding: 6px 11px 6px 9px;
   border: 1px solid rgba(201, 138, 95, 0.24);
-  border-radius: 999px;
+  border-radius: var(--r-pill);
   background: linear-gradient(135deg, rgba(201, 138, 95, 0.1), rgba(127, 168, 143, 0.05));
   color: var(--accent-2);
   font-family: var(--mono);
   text-align: left;
   cursor: pointer;
-  transition: color 0.16s, background 0.16s, border-color 0.16s;
+  transition: color var(--dur-1), background var(--dur-1), border-color var(--dur-1);
 }
 
 .topbar-now-playing:hover {
@@ -1424,7 +1500,7 @@ select option {
 .topbar-now-playing-eq span {
   width: 2.5px;
   height: 35%;
-  border-radius: 2px;
+  border-radius: var(--r-sm);
   background: linear-gradient(180deg, var(--accent-2), var(--accent));
   animation: topbar-eq 0.8s ease-in-out infinite;
 }
@@ -1441,13 +1517,13 @@ select option {
   min-width: 0;
   display: flex;
   align-items: baseline;
-  gap: 6px;
+  gap: var(--sp-2);
 }
 
 .topbar-now-playing-label {
   flex: none;
   color: var(--faint);
-  font-size: 7.5px;
+  font-size: var(--fs-micro);
   letter-spacing: 0.12em;
   text-transform: uppercase;
   white-space: nowrap;
@@ -1460,7 +1536,7 @@ select option {
   white-space: nowrap;
   color: var(--text);
   font-family: var(--font);
-  font-size: 11px;
+  font-size: var(--fs-xs);
   font-weight: 600;
 }
 
@@ -1478,8 +1554,8 @@ select option {
   height: 38px;
   padding: 0;
   border: 1px solid var(--line-soft);
-  border-radius: var(--radius-sm);
-  background: rgba(10, 12, 19, 0.6);
+  border-radius: var(--r-sm);
+  background: rgba(10, 14, 11, 0.6);
   color: var(--muted);
   cursor: pointer;
 }
@@ -1492,7 +1568,7 @@ select option {
 .toolbar {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--sp-2);
   flex-wrap: wrap;
 }
 
@@ -1500,13 +1576,13 @@ select option {
 .toolbar .select {
   min-height: 39px;
   padding: 7px 10px;
-  font-size: 12px;
+  font-size: var(--fs-sm);
 }
 
 .toolbar-add {
   min-height: 34px;
   padding: 7px 12px;
-  font-size: 11px;
+  font-size: var(--fs-xs);
 }
 
 .val-filter.is-empty,
@@ -1544,7 +1620,7 @@ select option {
   height: 26px;
   padding: 0;
   border: none;
-  border-radius: 5px;
+  border-radius: var(--r-sm);
   background: transparent;
   color: var(--muted);
   cursor: pointer;
@@ -1557,7 +1633,7 @@ select option {
 
 .col-filter {
   display: flex;
-  gap: 6px;
+  gap: var(--sp-2);
   align-items: center;
 }
 
@@ -1568,16 +1644,16 @@ select option {
 .live {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--sp-2);
   font-family: var(--mono);
-  font-size: 9px;
+  font-size: var(--fs-micro);
   font-weight: 500;
   letter-spacing: 0.14em;
   text-transform: uppercase;
   color: var(--muted);
   padding: 7px 11px;
   border: 1px solid rgba(127, 191, 155, 0.18);
-  border-radius: 999px;
+  border-radius: var(--r-pill);
   background: rgba(127, 191, 155, 0.04);
   white-space: nowrap;
 }
@@ -1656,12 +1732,12 @@ select option {
   background: transparent;
   color: var(--faint);
   font-family: var(--mono);
-  font-size: 9.5px;
+  font-size: var(--fs-micro);
   font-weight: 500;
   letter-spacing: 0.13em;
   text-transform: uppercase;
   cursor: pointer;
-  transition: color 0.18s, border-color 0.18s;
+  transition: color var(--dur-1), border-color var(--dur-1);
   white-space: nowrap;
 }
 
@@ -1684,11 +1760,11 @@ select option {
   flex: none;
   padding: 0;
   border: 1px solid var(--line-soft);
-  border-radius: 999px;
-  background: rgba(10, 13, 20, 0.7);
+  border-radius: var(--r-pill);
+  background: rgba(10, 14, 11, 0.7);
   color: var(--muted);
   cursor: pointer;
-  transition: 0.16s ease;
+  transition: var(--dur-1) ease;
 }
 
 .topbar-alarm svg {
@@ -1854,7 +1930,7 @@ select option {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 16px;
+  gap: var(--sp-4);
   flex-wrap: wrap;
   padding: 16px 20px;
   border-bottom: 1px solid rgba(167, 184, 173, 0.07);
@@ -1866,7 +1942,7 @@ select option {
   flex-direction: column;
   gap: 3px;
   min-width: 0;
-  font-size: 12px;
+  font-size: var(--fs-sm);
   color: var(--muted);
 }
 
@@ -1878,21 +1954,21 @@ select option {
 .table-meta-right {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: var(--sp-2);
   flex-wrap: wrap;
-  font-size: 11.5px;
+  font-size: var(--fs-xs);
   color: var(--faint);
 }
 
 .table-meta .tip-btn {
   min-height: 0;
   padding: 1px 6px;
-  gap: 4px;
-  font-size: 9px;
+  gap: var(--sp-1);
+  font-size: var(--fs-micro);
   line-height: 1.4;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  border-radius: 3px;
+  border-radius: var(--r-sm);
 }
 
 .table-meta .tip-btn svg {
@@ -1912,7 +1988,7 @@ table.grid {
   width: 100%;
   border-collapse: separate;
   border-spacing: 0;
-  font-size: 12.5px;
+  font-size: var(--fs-sm);
   font-variant-numeric: tabular-nums;
 }
 
@@ -1965,9 +2041,9 @@ table.grid.admin-grid td .dd-trigger.dd-cell {
   padding: 0 2px;
   border: 0;
   background: transparent;
-  font-size: 12.5px;
+  font-size: var(--fs-sm);
   text-align: center;
-  border-radius: 3px;
+  border-radius: var(--r-sm);
 }
 
 table.grid.admin-grid td .dd-trigger.dd-cell:hover,
@@ -1983,7 +2059,7 @@ table.grid.admin-grid td .dd-trigger.dd-cell .dd-label {
 
 table.grid.admin-grid td .dd-trigger.dd-cell .dd-chevron {
   opacity: 0;
-  transition: opacity 0.14s, transform 0.18s, color 0.18s;
+  transition: opacity var(--dur-1), transform var(--dur-1), color var(--dur-1);
 }
 
 table.grid.admin-grid td .dd-trigger.dd-cell:hover .dd-chevron,
@@ -1998,7 +2074,7 @@ table.grid.admin-grid td.align-left .dd-trigger.dd-cell .dd-label {
 .th-sort-btn {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
+  gap: var(--sp-2);
   padding: 0;
   border: 0;
   background: transparent;
@@ -2015,11 +2091,11 @@ table.grid.admin-grid td.align-left .dd-trigger.dd-cell .dd-label {
 
 .th-sort-arrow {
   font-family: var(--mono);
-  font-size: 9px;
+  font-size: var(--fs-micro);
   line-height: 1;
   color: var(--faint);
   opacity: 0.75;
-  transition: color 0.15s, opacity 0.15s;
+  transition: color var(--dur-1), opacity var(--dur-1);
 }
 
 .th-sort-btn:hover .th-sort-arrow,
@@ -2050,7 +2126,7 @@ table.grid thead th {
   background: #0a100d;
   color: #c7cdc1;
   font-family: var(--mono);
-  font-size: 10.5px;
+  font-size: var(--fs-micro);
   font-weight: 600;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -2062,7 +2138,7 @@ table.grid thead th {
 table.grid thead tr.groups th {
   background: #0b100d;
   color: var(--gold-bright);
-  font-size: 9.5px;
+  font-size: var(--fs-micro);
   font-weight: 600;
   border-bottom-color: rgba(167, 184, 173, 0.08);
 }
@@ -2081,7 +2157,7 @@ table.grid .rownum {
   text-align: center;
   color: var(--faint);
   font-family: var(--mono);
-  font-size: 10px;
+  font-size: var(--fs-micro);
 }
 
 table.grid th.rownum,
@@ -2126,7 +2202,7 @@ table.grid td.ign-col {
 }
 
 table.grid tbody tr {
-  transition: background 0.15s;
+  transition: background var(--dur-1);
 }
 
 table.grid tbody tr:hover td {
@@ -2154,7 +2230,7 @@ table.grid td .cell {
   min-height: 20px;
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--sp-2);
   overflow: hidden;
   text-overflow: ellipsis;
   max-width: 360px;
@@ -2170,11 +2246,10 @@ table.grid td .cell-input {
   min-width: 90px;
   padding: 4px 7px;
   border: 1px solid rgba(201, 138, 95, 0.5);
-  border-radius: 3px;
-  background: rgba(4, 6, 11, 0.9);
+  border-radius: var(--r-sm);
+  background: rgba(4, 7, 6, 0.9);
   color: var(--text);
-  outline: none;
-  font-size: 12.5px;
+  font-size: var(--fs-sm);
 }
 
 table.grid td.readonly .cell {
@@ -2189,7 +2264,7 @@ table.grid .actions {
 
 table.grid .time-col {
   color: var(--faint);
-  font-size: 11px;
+  font-size: var(--fs-xs);
 }
 
 table.grid .labels.single th {
@@ -2200,7 +2275,7 @@ table.grid .labels.single th {
 .rownum.rank-2,
 .rownum.rank-3 {
   font-weight: 700;
-  font-size: 11px;
+  font-size: var(--fs-xs);
 }
 
 .rownum.rank-1 {
@@ -2225,7 +2300,7 @@ table.grid .labels.single th {
 .cell.cp-value {
   color: var(--gold-bright);
   font-family: var(--mono);
-  font-size: 12px;
+  font-size: var(--fs-sm);
   letter-spacing: 0.02em;
 }
 
@@ -2242,11 +2317,11 @@ table.grid .labels.single th {
   height: 30px;
   padding: 0;
   border: 1px solid transparent;
-  border-radius: var(--radius-sm);
+  border-radius: var(--r-sm);
   background: transparent;
   color: var(--faint);
   cursor: pointer;
-  transition: 0.15s ease;
+  transition: var(--dur-1) ease;
 }
 
 .icon-btn:hover {
@@ -2263,7 +2338,7 @@ table.grid .labels.single th {
   place-items: center;
   border-radius: 50%;
   font-family: var(--display);
-  font-size: 9px;
+  font-size: var(--fs-micro);
   font-weight: 700;
   color: #14110a;
   background: linear-gradient(140deg, #e8d3a0, #b58a49);
@@ -2272,7 +2347,7 @@ table.grid .labels.single th {
 
 .admin-avatar {
   cursor: pointer;
-  transition: box-shadow 0.16s, transform 0.16s;
+  transition: box-shadow var(--dur-1), transform var(--dur-1);
 }
 
 .admin-avatar:hover {
@@ -2283,26 +2358,28 @@ table.grid .labels.single th {
 .avatar-lightbox {
   position: fixed;
   inset: 0;
-  z-index: 700;
+  z-index: var(--z-lightbox);
   display: grid;
   place-items: center;
-  padding: 24px;
+  padding: var(--sp-5);
   background: rgba(3, 5, 4, 0.74);
   backdrop-filter: blur(7px);
   -webkit-backdrop-filter: blur(7px);
-  animation: avatar-lightbox-in 0.18s ease both;
+    animation: enter-fade var(--dur-1) ease both;
 }
 
 .avatar-lightbox-card {
   position: relative;
   width: min(420px, calc(100vw - 40px));
-  padding: 12px;
+  padding: var(--sp-3);
   border: 1px solid rgba(201, 138, 95, 0.28);
-  border-radius: var(--radius);
+  border-radius: var(--r-md);
   background: linear-gradient(150deg, rgba(20, 26, 20, 0.98), rgba(7, 10, 8, 0.99));
-  box-shadow: 0 30px 90px rgba(0, 0, 0, 0.7), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  box-shadow: var(--elev-3), var(--bevel);
   transform-origin: var(--avatar-origin-x, 50%) var(--avatar-origin-y, 50%);
-  animation: avatar-lightbox-pop 0.26s cubic-bezier(0.2, 0.8, 0.25, 1) both;
+    --travel: 0px;
+  --enter-scale: 0.16;
+  animation: enter var(--dur-2) var(--ease) both;
 }
 
 .avatar-lightbox-image {
@@ -2310,9 +2387,9 @@ table.grid .labels.single th {
   aspect-ratio: 1;
   display: grid;
   place-items: center;
-  border-radius: var(--radius-sm);
+  border-radius: var(--r-sm);
   font-family: var(--display);
-  font-size: 64px;
+  font-size: var(--fs-display);
   font-weight: 700;
   color: #14110a;
   background: linear-gradient(140deg, #e8d3a0, #b58a49);
@@ -2322,7 +2399,7 @@ table.grid .labels.single th {
   margin-top: 10px;
   text-align: center;
   font-family: var(--display);
-  font-size: 18px;
+  font-size: var(--fs-lg);
   font-weight: 600;
   letter-spacing: 0.04em;
   color: var(--text);
@@ -2350,24 +2427,11 @@ table.grid .labels.single th {
   border-color: rgba(201, 138, 95, 0.6);
 }
 
-@keyframes avatar-lightbox-in {
-  from {
-    opacity: 0;
-  }
-}
 
-@keyframes avatar-lightbox-pop {
-  from {
-    opacity: 0;
-    transform: scale(0.16);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1);
-  }
-}
 
-/* Fallback avatar tones — chosen by IGN hash (utils.avatarTone), applied
+
+
+/* Fallback avatar tones â€” chosen by IGN hash (utils.avatarTone), applied
    automatically by <Avatar>, so the same member keeps one colour on every
    screen: overview, roster, sheets, attendance picker, podium, profile card. */
 .mini-avatar.tone-0,
@@ -2413,13 +2477,13 @@ table.grid .labels.single th {
 .roster-name {
   display: flex;
   align-items: center;
-  gap: 9px;
+  gap: var(--sp-2);
 }
 
 .roster-ign-click {
   cursor: pointer;
-  border-radius: 3px;
-  transition: color 0.15s, background 0.15s;
+  border-radius: var(--r-sm);
+  transition: color var(--dur-1), background var(--dur-1);
 }
 
 .roster-ign-click:hover {
@@ -2435,7 +2499,7 @@ table.grid .labels.single th {
 /* ---------- Roster member profile card ---------- */
 
 .roster-profile-overlay {
-  z-index: 220;
+  z-index: var(--z-sheet);
   background:
     radial-gradient(600px 420px at 50% 40%, rgba(109, 156, 140, 0.07), transparent 70%),
     rgba(3, 5, 4, 0.72);
@@ -2450,12 +2514,14 @@ table.grid .labels.single th {
   overflow-y: auto;
   padding: 0 22px 22px;
   border: 1px solid transparent;
-  border-radius: var(--radius);
+  border-radius: var(--r-md);
   background:
     linear-gradient(158deg, rgba(18, 24, 19, 0.96), rgba(6, 9, 7, 0.98)) padding-box,
     var(--edge) border-box;
-  box-shadow: 0 30px 100px rgba(0, 0, 0, 0.65), 0 0 50px rgba(201, 138, 95, 0.08);
-  animation: roster-profile-pop 0.22s var(--ease) both;
+  box-shadow: var(--elev-3), 0 0 50px rgba(201, 138, 95, 0.08);
+    --travel: 8px;
+  --enter-scale: 0.97;
+  animation: enter var(--dur-2) var(--ease) both;
 }
 
 .roster-profile-banner {
@@ -2495,7 +2561,7 @@ table.grid .labels.single th {
   z-index: 1;
   display: flex;
   align-items: flex-end;
-  gap: 16px;
+  gap: var(--sp-4);
   margin-top: -38px;
 }
 
@@ -2507,11 +2573,11 @@ table.grid .labels.single th {
   place-items: center;
   border-radius: 50%;
   font-family: var(--display);
-  font-size: 32px;
+  font-size: var(--fs-2xl);
   font-weight: 700;
   color: #16110c;
   background: linear-gradient(145deg, #f2c9a6 0%, #b87754 44%, #8c5a3d 100%);
-  box-shadow: 0 0 0 3px var(--bg-2), 0 0 0 4px rgba(201, 138, 95, 0.35), 0 16px 36px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 0 0 3px var(--bg-2), 0 0 0 4px rgba(201, 138, 95, 0.35), var(--elev-1);
 }
 
 .roster-profile-id {
@@ -2522,7 +2588,7 @@ table.grid .labels.single th {
 
 .roster-profile-kicker {
   font-family: var(--mono);
-  font-size: 8px;
+  font-size: var(--fs-micro);
   letter-spacing: 0.2em;
   text-transform: uppercase;
   color: var(--gold);
@@ -2531,7 +2597,7 @@ table.grid .labels.single th {
 .roster-profile-id h2 {
   margin: 2px 0 0;
   font-family: var(--display);
-  font-size: 26px;
+  font-size: var(--fs-xl);
   font-weight: 600;
   letter-spacing: 0.02em;
   color: var(--text);
@@ -2543,17 +2609,17 @@ table.grid .labels.single th {
 .roster-profile-badges {
   display: flex;
   flex-wrap: wrap;
-  gap: 6px;
+  gap: var(--sp-2);
   margin-top: 7px;
 }
 
 .roster-profile-badge {
   padding: 3px 8px;
   border: 1px solid currentColor;
-  border-radius: 999px;
+  border-radius: var(--r-pill);
   background: rgba(255, 255, 255, 0.03);
   font-family: var(--mono);
-  font-size: 8px;
+  font-size: var(--fs-micro);
   font-weight: 500;
   letter-spacing: 0.1em;
   text-transform: uppercase;
@@ -2568,7 +2634,7 @@ table.grid .labels.single th {
 .roster-profile-cp span {
   display: block;
   font-family: var(--mono);
-  font-size: 8px;
+  font-size: var(--fs-micro);
   letter-spacing: 0.16em;
   text-transform: uppercase;
   color: var(--faint);
@@ -2578,7 +2644,7 @@ table.grid .labels.single th {
   display: block;
   margin-top: 2px;
   font-family: var(--display);
-  font-size: 24px;
+  font-size: var(--fs-xl);
   font-weight: 600;
   color: var(--gold-bright);
   font-variant-numeric: tabular-nums;
@@ -2588,7 +2654,7 @@ table.grid .labels.single th {
 .roster-profile-details {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 16px 24px;
+  gap: var(--sp-4) var(--sp-5);
   margin-top: 22px;
   padding-top: 18px;
   border-top: 1px solid rgba(167, 184, 173, 0.09);
@@ -2604,7 +2670,7 @@ table.grid .labels.single th {
 .roster-profile-details span,
 .roster-profile-notes > span {
   font-family: var(--mono);
-  font-size: 8px;
+  font-size: var(--fs-micro);
   font-weight: 500;
   letter-spacing: 0.14em;
   text-transform: uppercase;
@@ -2612,7 +2678,7 @@ table.grid .labels.single th {
 }
 
 .roster-profile-details strong {
-  font-size: 13px;
+  font-size: var(--fs-base);
   font-weight: 600;
   color: var(--text);
   overflow-wrap: anywhere;
@@ -2626,7 +2692,7 @@ table.grid .labels.single th {
   margin-top: 18px;
   padding: 13px 16px;
   border-left: 2px solid rgba(201, 138, 95, 0.48);
-  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+  border-radius: 0 var(--r-sm) var(--r-sm) 0;
   background: linear-gradient(90deg, rgba(201, 138, 95, 0.06), transparent);
 }
 
@@ -2634,21 +2700,12 @@ table.grid .labels.single th {
   margin: 6px 0 0;
   white-space: pre-wrap;
   overflow-wrap: anywhere;
-  font-size: 12px;
+  font-size: var(--fs-sm);
   line-height: 1.65;
   color: var(--muted);
 }
 
-@keyframes roster-profile-pop {
-  from {
-    opacity: 0;
-    transform: translateY(8px) scale(0.97);
-  }
-  to {
-    opacity: 1;
-    transform: none;
-  }
-}
+
 
 /* ---------- Member profile hero ---------- */
 
@@ -2657,15 +2714,15 @@ table.grid .labels.single th {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr) auto;
   align-items: center;
-  gap: 22px;
+  gap: var(--sp-5);
   padding: 26px 28px;
   margin-bottom: 18px;
   border: 1px solid transparent;
-  border-radius: var(--radius);
+  border-radius: var(--r-md);
   background:
-    linear-gradient(150deg, rgba(20, 25, 38, 0.82), rgba(7, 9, 15, 0.9)) padding-box,
+    linear-gradient(150deg, rgba(20, 28, 23, 0.82), rgba(7, 11, 9, 0.9)) padding-box,
     var(--edge) border-box;
-  box-shadow: var(--shadow-soft), inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  box-shadow: var(--elev-1), var(--bevel);
   overflow: hidden;
 }
 
@@ -2709,11 +2766,11 @@ table.grid .labels.single th {
   place-items: center;
   border-radius: 50%;
   font-family: var(--display);
-  font-size: 25px;
+  font-size: var(--fs-xl);
   font-weight: 700;
   color: #16110c;
   background: linear-gradient(145deg, #f2c9a6 0%, #b87754 44%, #8c5a3d 100%);
-  box-shadow: 0 0 0 1px rgba(232, 184, 143, 0.4), 0 14px 34px rgba(0, 0, 0, 0.38),
+  box-shadow: 0 0 0 1px rgba(232, 184, 143, 0.4), var(--elev-1),
     0 0 40px rgba(201, 138, 95, 0.18);
   position: relative;
   z-index: 2;
@@ -2745,7 +2802,7 @@ table.grid .labels.single th {
 .avatar-settings {
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: var(--sp-4);
 }
 
 .avatar-settings-title {
@@ -2768,7 +2825,7 @@ table.grid .labels.single th {
 .avatar-settings-avatar .avatar {
   width: 88px;
   height: 88px;
-  font-size: 28px;
+  font-size: var(--fs-2xl);
 }
 
 .avatar-settings-edit {
@@ -2786,8 +2843,8 @@ table.grid .labels.single th {
   background: rgba(8, 13, 10, 0.94);
   color: var(--gold-bright);
   cursor: pointer;
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.45);
-  transition: color 0.16s, border-color 0.16s, background 0.16s, transform 0.16s;
+  box-shadow: var(--elev-1);
+  transition: color var(--dur-1), border-color var(--dur-1), background var(--dur-1), transform var(--dur-1);
 }
 
 .avatar-settings-edit:hover {
@@ -2810,7 +2867,7 @@ table.grid .labels.single th {
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
-  gap: 8px;
+  gap: var(--sp-2);
 }
 
 .avatar-settings-actions .avatar-remove-btn {
@@ -2849,7 +2906,7 @@ table.grid .labels.single th {
 .hero-kicker {
   display: block;
   font-family: var(--mono);
-  font-size: 8.5px;
+  font-size: var(--fs-micro);
   letter-spacing: 0.2em;
   text-transform: uppercase;
   color: var(--gold);
@@ -2869,21 +2926,21 @@ table.grid .labels.single th {
 .badges {
   display: flex;
   flex-wrap: wrap;
-  gap: 6px;
+  gap: var(--sp-2);
   align-items: center;
 }
 
 .badge {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
+  gap: var(--sp-2);
   font-family: var(--mono);
-  font-size: 8.5px;
+  font-size: var(--fs-micro);
   font-weight: 500;
   letter-spacing: 0.1em;
   text-transform: uppercase;
   padding: 4px 9px;
-  border-radius: 3px;
+  border-radius: var(--r-sm);
   border: 1px solid rgba(167, 184, 173, 0.14);
   background: rgba(167, 184, 173, 0.05);
   color: var(--muted);
@@ -2924,7 +2981,7 @@ table.grid .labels.single th {
 
 .hero-stat span {
   font-family: var(--mono);
-  font-size: 8px;
+  font-size: var(--fs-micro);
   letter-spacing: 0.14em;
   text-transform: uppercase;
   color: var(--faint);
@@ -2933,7 +2990,7 @@ table.grid .labels.single th {
 
 .hero-stat strong {
   font-family: var(--display);
-  font-size: 23px;
+  font-size: var(--fs-xl);
   font-weight: 600;
   color: var(--gold-bright);
   line-height: 1.2;
@@ -2958,7 +3015,7 @@ table.grid .labels.single th {
 
 .hero-progress-label {
   font-family: var(--mono);
-  font-size: 8.5px;
+  font-size: var(--fs-micro);
   letter-spacing: 0.16em;
   text-transform: uppercase;
   color: var(--faint);
@@ -2966,7 +3023,8 @@ table.grid .labels.single th {
 
 .hero-progress-pct {
   font-family: var(--display);
-  font-size: 16px;
+  font-variant-numeric: tabular-nums;
+  font-size: var(--fs-md);
   font-weight: 600;
   color: var(--gold-bright);
 }
@@ -2974,7 +3032,7 @@ table.grid .labels.single th {
 .progress-track {
   display: block;
   height: 6px;
-  border-radius: 99px;
+  border-radius: var(--r-pill);
   background: rgba(167, 184, 173, 0.1);
   overflow: hidden;
   box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.4);
@@ -2984,10 +3042,10 @@ table.grid .labels.single th {
   display: block;
   height: 100%;
   min-width: 2px;
-  border-radius: 99px;
+  border-radius: var(--r-pill);
   background: linear-gradient(90deg, #7a4e34, #b87754 55%, #f2c9a6);
-  box-shadow: 0 0 14px rgba(201, 138, 95, 0.35);
-  transition: width 0.6s var(--ease);
+  box-shadow: var(--glow-gold);
+  transition: width var(--dur-4) var(--ease);
 }
 
 .progress-fill.done {
@@ -2999,15 +3057,15 @@ table.grid .labels.single th {
 .hero-progress-done {
   display: inline-flex;
   align-items: center;
-  gap: 7px;
+  gap: var(--sp-2);
   margin-top: 9px;
   padding: 0;
   border: 0;
   background: transparent;
   color: var(--faint);
-  font-size: 11px;
+  font-size: var(--fs-xs);
   cursor: pointer;
-  transition: color 0.16s;
+  transition: color var(--dur-1);
 }
 
 .hero-progress-tip:hover {
@@ -3015,7 +3073,7 @@ table.grid .labels.single th {
 }
 
 .hero-progress-tip .caret {
-  font-size: 10px;
+  font-size: var(--fs-micro);
 }
 
 .hero-progress-done {
@@ -3026,7 +3084,7 @@ table.grid .labels.single th {
 .missing-list {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: var(--sp-4);
 }
 
 .missing-group {
@@ -3036,7 +3094,7 @@ table.grid .labels.single th {
 
 .missing-tab {
   font-family: var(--display);
-  font-size: 14px;
+  font-size: var(--fs-base);
   font-weight: 600;
   color: var(--gold-bright);
   margin-bottom: 8px;
@@ -3045,7 +3103,7 @@ table.grid .labels.single th {
 .missing-items {
   display: flex;
   flex-wrap: wrap;
-  gap: 6px;
+  gap: var(--sp-2);
 }
 
 .missing-item {
@@ -3053,12 +3111,12 @@ table.grid .labels.single th {
   align-items: center;
   padding: 5px 9px;
   border: 1px solid rgba(167, 184, 173, 0.13);
-  border-radius: 3px;
+  border-radius: var(--r-sm);
   background: rgba(167, 184, 173, 0.04);
   color: var(--muted);
-  font-size: 11px;
+  font-size: var(--fs-xs);
   cursor: pointer;
-  transition: 0.15s;
+  transition: var(--dur-1);
 }
 
 .missing-item:hover {
@@ -3091,7 +3149,7 @@ table.grid .labels.single th {
 .dash-deck {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 12px;
+  gap: var(--sp-3);
   margin-bottom: 18px;
 }
 
@@ -3099,17 +3157,17 @@ table.grid .labels.single th {
   position: relative;
   display: flex;
   align-items: center;
-  gap: 13px;
+  gap: var(--sp-3);
   min-height: 74px;
   padding: 14px 16px;
   text-align: left;
   border: 1px solid transparent;
-  border-radius: var(--radius);
+  border-radius: var(--r-md);
   background: var(--glass-soft) padding-box, var(--edge) border-box;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
+  box-shadow: var(--bevel);
   cursor: pointer;
   overflow: hidden;
-  transition: transform 0.2s var(--ease), box-shadow 0.2s, background 0.2s;
+  transition: transform var(--dur-2) var(--ease), box-shadow var(--dur-2), background var(--dur-2);
 }
 
 .dash-tile::after {
@@ -3120,12 +3178,12 @@ table.grid .labels.single th {
   height: 130px;
   background: radial-gradient(circle, rgba(201, 138, 95, 0.11), transparent 65%);
   opacity: 0;
-  transition: opacity 0.2s;
+  transition: opacity var(--dur-2);
 }
 
 .dash-tile:hover {
   transform: translateY(-2px);
-  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.34), 0 0 0 1px rgba(201, 138, 95, 0.14);
+  box-shadow: var(--elev-1), 0 0 0 1px rgba(201, 138, 95, 0.14);
 }
 
 .dash-tile:hover::after {
@@ -3152,7 +3210,7 @@ table.grid .labels.single th {
 }
 
 .dash-tile-text strong {
-  font-size: 12.5px;
+  font-size: var(--fs-sm);
   font-weight: 700;
   letter-spacing: 0.02em;
   color: var(--text);
@@ -3163,7 +3221,7 @@ table.grid .labels.single th {
 
 .dash-tile-text span {
   font-family: var(--mono);
-  font-size: 8px;
+  font-size: var(--fs-micro);
   letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--faint);
@@ -3175,8 +3233,8 @@ table.grid .labels.single th {
 .dash-tile-arrow {
   margin-left: auto;
   color: var(--faint);
-  font-size: 15px;
-  transition: color 0.2s, transform 0.2s;
+  font-size: var(--fs-md);
+  transition: color var(--dur-2), transform var(--dur-2);
 }
 
 .dash-tile:hover .dash-tile-arrow {
@@ -3190,7 +3248,7 @@ table.grid .labels.single th {
   display: grid;
   grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr);
   grid-auto-rows: minmax(0, 1fr);
-  gap: 16px;
+  gap: var(--sp-4);
   flex: 1 1 0;
   min-height: 0;
 }
@@ -3239,7 +3297,7 @@ table.grid .labels.single th {
 
 .attendance-ranking-list {
   border: 1px solid rgba(167, 184, 173, 0.1);
-  border-radius: var(--radius-sm);
+  border-radius: var(--r-sm);
   background: rgba(5, 8, 7, 0.18);
 }
 
@@ -3252,7 +3310,7 @@ table.grid .labels.single th {
 .field-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
-  gap: 16px 14px;
+  gap: var(--sp-4) var(--sp-4);
 }
 
 .field-grid > .field-long {
@@ -3281,7 +3339,7 @@ table.grid .labels.single th {
 .coll-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 14px;
+  gap: var(--sp-4);
 }
 
 .coll-grid--boss {
@@ -3296,7 +3354,7 @@ table.grid .labels.single th {
   min-height: 30px;
   padding: 4px 8px;
   border-color: rgba(167, 184, 173, 0.14);
-  background: rgba(5, 7, 12, 0.55);
+  background: rgba(5, 9, 7, 0.55);
 }
 
 .coll-grid--boss .dd-trigger.dd-coll:hover,
@@ -3306,7 +3364,7 @@ table.grid .labels.single th {
 }
 
 .coll-grid--boss .dd-trigger.dd-coll .dd-label {
-  font-size: 12px;
+  font-size: var(--fs-sm);
   font-weight: 700;
 }
 
@@ -3316,8 +3374,8 @@ table.grid .labels.single th {
 
 .coll-card {
   border: 1px solid rgba(167, 184, 173, 0.1);
-  border-radius: var(--radius-sm);
-  background: rgba(7, 9, 15, 0.45);
+  border-radius: var(--r-sm);
+  background: rgba(7, 11, 9, 0.45);
   overflow: hidden;
 }
 
@@ -3326,7 +3384,7 @@ table.grid .labels.single th {
   border-bottom: 1px solid rgba(167, 184, 173, 0.08);
   background: linear-gradient(90deg, rgba(201, 138, 95, 0.07), transparent);
   font-family: var(--font);
-  font-size: 10.5px;
+  font-size: var(--fs-micro);
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -3342,7 +3400,7 @@ table.grid .labels.single th {
 .coll-item {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: var(--sp-2);
   padding: 9px 12px;
   border-right: 1px solid rgba(167, 184, 173, 0.05);
   border-bottom: 1px solid rgba(167, 184, 173, 0.05);
@@ -3352,7 +3410,7 @@ table.grid .labels.single th {
 
 .coll-sub {
   font-family: var(--font);
-  font-size: 10px;
+  font-size: var(--fs-micro);
   font-weight: 600;
   letter-spacing: 0.03em;
   color: var(--muted);
@@ -3367,12 +3425,12 @@ table.grid .labels.single th {
   display: inline-grid;
   place-items: center;
   border: 1px solid rgba(167, 184, 173, 0.15);
-  border-radius: 4px;
+  border-radius: var(--r-sm);
   background: rgba(167, 184, 173, 0.03);
   color: var(--faint);
   cursor: pointer;
-  font-size: 12px;
-  transition: 0.15s;
+  font-size: var(--fs-sm);
+  transition: var(--dur-1);
 }
 
 .cell-btn:hover {
@@ -3389,7 +3447,7 @@ table.grid .labels.single th {
 .cell-text {
   display: inline-block;
   cursor: pointer;
-  font-size: 12px;
+  font-size: var(--fs-sm);
   color: var(--silver);
   border-bottom: 1px dotted transparent;
 }
@@ -3417,7 +3475,7 @@ table.grid .labels.single th {
   flex: none;
   padding: 10px 0;
   border-bottom: 1px solid rgba(167, 184, 173, 0.07);
-  gap: 12px;
+  gap: var(--sp-3);
 }
 
 .roster-panel .roster-filter h3 {
@@ -3458,7 +3516,7 @@ table.grid.roster-grid td .roster-name {
 .roster-view {
   display: flex;
   flex-direction: column;
-  gap: 18px;
+  gap: var(--sp-4);
   min-width: 0;
 }
 
@@ -3466,7 +3524,7 @@ table.grid.roster-grid td .roster-name {
   display: flex;
   align-items: flex-end;
   justify-content: space-between;
-  gap: 20px;
+  gap: var(--sp-5);
   padding: 2px 2px 0;
 }
 
@@ -3483,7 +3541,7 @@ table.grid.roster-grid td .roster-name {
 .page-head-copy p {
   margin: 0;
   color: var(--faint);
-  font-size: 12px;
+  font-size: var(--fs-sm);
 }
 
 .page-head-mark {
@@ -3495,7 +3553,7 @@ table.grid.roster-grid td .roster-name {
   place-items: center;
   border-radius: 50%;
   border: 1px solid rgba(201, 138, 95, 0.24);
-  background: radial-gradient(circle, rgba(201, 138, 95, 0.12), rgba(8, 10, 16, 0.4));
+  background: radial-gradient(circle, rgba(201, 138, 95, 0.12), rgba(8, 12, 10, 0.4));
   color: var(--gold-bright);
   margin-bottom: 4px;
 }
@@ -3516,7 +3574,7 @@ table.grid.roster-grid td .roster-name {
 .stat-row {
   display: flex;
   flex-wrap: wrap;
-  gap: 12px;
+  gap: var(--sp-3);
   position: relative;
   z-index: 2;
 }
@@ -3528,11 +3586,11 @@ table.grid.roster-grid td .roster-name {
   padding: 17px 20px 18px;
   overflow: hidden;
   container-type: inline-size;
-  transition: transform 0.2s var(--ease), box-shadow 0.2s;
+  transition: transform var(--dur-2) var(--ease), box-shadow var(--dur-2);
 }
 
 .stat-card:hover {
-  box-shadow: 0 22px 54px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(201, 138, 95, 0.12);
+  box-shadow: var(--elev-1), 0 0 0 1px rgba(201, 138, 95, 0.12);
 }
 
 .stat-card::after {
@@ -3564,7 +3622,7 @@ table.grid.roster-grid td .roster-name {
 
 .stat-label {
   font-family: var(--mono);
-  font-size: 8.5px;
+  font-size: var(--fs-micro);
   letter-spacing: 0.16em;
   text-transform: uppercase;
   color: var(--faint);
@@ -3609,21 +3667,21 @@ table.grid.roster-grid td .roster-name {
 .roster-main {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: var(--sp-4);
   min-width: 0;
 }
 
 .roster-left {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: var(--sp-4);
   min-width: 0;
 }
 
 .roster-summaries {
   display: flex;
   flex-wrap: wrap;
-  gap: 16px;
+  gap: var(--sp-4);
 }
 
 .roster-summaries > .panel-card {
@@ -3634,7 +3692,7 @@ table.grid.roster-grid td .roster-name {
 .roster-split {
   display: flex;
   flex-wrap: wrap;
-  gap: 16px;
+  gap: var(--sp-4);
   align-items: stretch;
 }
 
@@ -3649,7 +3707,7 @@ table.grid.roster-grid td .roster-name {
 }
 
 .roster-summary-meta {
-  font-size: 10.5px;
+  font-size: var(--fs-micro);
   margin: -8px 0 14px;
   font-family: var(--mono);
   letter-spacing: 0.04em;
@@ -3658,15 +3716,15 @@ table.grid.roster-grid td .roster-name {
 .dist-list {
   display: flex;
   flex-direction: column;
-  gap: 9px;
+  gap: var(--sp-2);
 }
 
 .dist-row {
   display: grid;
   grid-template-columns: 128px minmax(40px, 1fr) 46px;
-  gap: 11px;
+  gap: var(--sp-3);
   align-items: center;
-  font-size: 11.5px;
+  font-size: var(--fs-xs);
 }
 
 .dist-label {
@@ -3678,7 +3736,7 @@ table.grid.roster-grid td .roster-name {
 
 .dist-track {
   height: 6px;
-  border-radius: 99px;
+  border-radius: var(--r-pill);
   background: rgba(167, 184, 173, 0.09);
   overflow: hidden;
 }
@@ -3687,17 +3745,17 @@ table.grid.roster-grid td .roster-name {
   display: block;
   height: 100%;
   min-width: 2px;
-  border-radius: 99px;
+  border-radius: var(--r-pill);
   background: linear-gradient(90deg, #6f4a32, #c98a5f 58%, #e8b88f);
-  box-shadow: 0 0 12px rgba(201, 138, 95, 0.18);
-  transition: width 0.55s var(--ease);
+  box-shadow: var(--glow-gold-soft);
+  transition: width var(--dur-4) var(--ease);
 }
 
 .dist-count {
   text-align: right;
   color: var(--silver);
   font-family: var(--mono);
-  font-size: 10.5px;
+  font-size: var(--fs-micro);
   font-variant-numeric: tabular-nums;
 }
 
@@ -3726,7 +3784,7 @@ table.grid.roster-grid td .roster-name {
   width: 100%;
   margin-top: -6px;
   font-family: var(--mono);
-  font-size: 8px;
+  font-size: var(--fs-micro);
   letter-spacing: 0.16em;
   text-transform: uppercase;
   color: var(--faint);
@@ -3760,7 +3818,7 @@ table.grid.roster-grid td .roster-name {
 .attendance-arc {
   stroke: url(#attendance-arc-grad);
   stroke-linecap: round;
-  transition: stroke-dashoffset 0.5s var(--ease);
+  transition: stroke-dashoffset var(--dur-4) var(--ease);
   animation: attendance-draw 0.9s var(--ease) 0.08s backwards;
 }
 
@@ -3793,7 +3851,7 @@ table.grid.roster-grid td .roster-name {
 
 .attendance-center span {
   font-family: var(--mono);
-  font-size: 7px;
+  font-size: var(--fs-micro);
   letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--faint);
@@ -3810,22 +3868,22 @@ table.grid.roster-grid td .roster-name {
   padding: 0;
   display: flex;
   flex-direction: column;
-  gap: 7px;
+  gap: var(--sp-2);
 }
 
 .attendance-legend li {
   display: grid;
   grid-template-columns: 8px minmax(0, 1fr) auto;
   align-items: center;
-  gap: 8px;
-  font-size: 11px;
+  gap: var(--sp-2);
+  font-size: var(--fs-xs);
   color: var(--muted);
 }
 
 .attendance-legend strong {
   color: var(--text);
   font-family: var(--mono);
-  font-size: 10.5px;
+  font-size: var(--fs-micro);
   font-variant-numeric: tabular-nums;
 }
 
@@ -3847,7 +3905,7 @@ table.grid.roster-grid td .roster-name {
 
 .attendance-empty {
   color: var(--faint);
-  font-size: 11px;
+  font-size: var(--fs-xs);
   margin: 4px 0 8px;
 }
 
@@ -3858,7 +3916,7 @@ table.grid.roster-grid td .roster-name {
   border-top: 1px solid rgba(167, 184, 173, 0.07);
   color: var(--faint);
   font-family: var(--mono);
-  font-size: 8px;
+  font-size: var(--fs-micro);
   letter-spacing: 0.1em;
   text-transform: uppercase;
 }
@@ -3866,7 +3924,7 @@ table.grid.roster-grid td .roster-name {
 .cp-rank-cell {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: var(--sp-3);
   min-width: 180px;
 }
 
@@ -3878,7 +3936,7 @@ table.grid.roster-grid td .roster-name {
 .cp-meter {
   flex: 1;
   height: 3px;
-  border-radius: 99px;
+  border-radius: var(--r-pill);
   background: rgba(167, 184, 173, 0.08);
   overflow: hidden;
 }
@@ -3886,7 +3944,7 @@ table.grid.roster-grid td .roster-name {
 .cp-meter span {
   display: block;
   height: 100%;
-  border-radius: 99px;
+  border-radius: var(--r-pill);
   background: linear-gradient(90deg, rgba(201, 138, 95, 0.35), var(--gold-bright));
 }
 
@@ -3898,7 +3956,7 @@ table.grid.roster-grid td .roster-name {
   min-width: 0;
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: var(--sp-4);
   overflow: hidden;
 }
 
@@ -3910,7 +3968,7 @@ table.grid.roster-grid td .roster-name {
 .activity-stats {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 12px;
+  gap: var(--sp-3);
 }
 
 .activity-stat {
@@ -3942,7 +4000,7 @@ table.grid.roster-grid td .roster-name {
 .activity-filters {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: var(--sp-2);
   flex-wrap: wrap;
   padding: 12px 14px;
 }
@@ -3981,7 +4039,7 @@ table.grid.roster-grid td .roster-name {
   place-items: center;
   padding: 0;
   border: 0;
-  border-radius: 4px;
+  border-radius: var(--r-sm);
   background: transparent;
   color: var(--faint);
   cursor: pointer;
@@ -4006,7 +4064,7 @@ table.grid.roster-grid td .roster-name {
 .activity-count {
   margin-left: auto;
   font-family: var(--mono);
-  font-size: 9px;
+  font-size: var(--fs-micro);
   letter-spacing: 0.03em;
   color: var(--faint);
   white-space: nowrap;
@@ -4019,11 +4077,11 @@ table.grid.roster-grid td .roster-name {
   height: 27px;
   padding: 0;
   border: 1px solid transparent;
-  border-radius: var(--radius-sm);
+  border-radius: var(--r-sm);
   background: transparent;
   color: var(--faint);
   cursor: pointer;
-  transition: color 0.16s ease, border-color 0.16s ease, background 0.16s ease;
+  transition: color var(--dur-1) ease, border-color var(--dur-1) ease, background var(--dur-1) ease;
 }
 
 .activity-refresh:hover:not(:disabled) {
@@ -4038,7 +4096,7 @@ table.grid.roster-grid td .roster-name {
 }
 
 .activity-refresh svg {
-  transition: transform 0.35s ease;
+  transition: transform var(--dur-3) ease;
 }
 
 .activity-refresh:hover:not(:disabled) svg {
@@ -4076,7 +4134,7 @@ table.grid.roster-grid td .roster-name {
   border-collapse: separate;
   border-spacing: 0;
   table-layout: fixed;
-  font-size: 12px;
+  font-size: var(--fs-sm);
 }
 
 .activity-table th {
@@ -4085,10 +4143,10 @@ table.grid.roster-grid td .roster-name {
   z-index: 2;
   padding: 10px 12px;
   border-bottom: 1px solid rgba(201, 138, 95, 0.16);
-  background: rgba(9, 12, 17, 0.96);
+  background: rgba(9, 14, 12, 0.96);
   color: var(--faint);
   font-family: var(--mono);
-  font-size: 8px;
+  font-size: var(--fs-micro);
   font-weight: 500;
   letter-spacing: 0.16em;
   text-align: left;
@@ -4116,7 +4174,7 @@ table.grid.roster-grid td .roster-name {
 .activity-time {
   color: var(--faint);
   font-family: var(--mono);
-  font-size: 9.5px;
+  font-size: var(--fs-micro);
   line-height: 1.55;
 }
 
@@ -4126,11 +4184,11 @@ table.grid.roster-grid td .roster-name {
   min-height: 18px;
   padding: 2px 7px;
   border: 1px solid rgba(167, 184, 173, 0.16);
-  border-radius: 99px;
+  border-radius: var(--r-pill);
   background: rgba(167, 184, 173, 0.055);
   color: var(--muted);
   font-family: var(--mono);
-  font-size: 8px;
+  font-size: var(--fs-micro);
   letter-spacing: 0.05em;
   white-space: nowrap;
 }
@@ -4159,7 +4217,7 @@ table.grid.roster-grid td .roster-name {
   overflow: hidden;
   color: var(--faint);
   font-family: var(--mono);
-  font-size: 8.5px;
+  font-size: var(--fs-micro);
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -4182,7 +4240,7 @@ table.grid.roster-grid td .roster-name {
 .activity-tab {
   color: var(--faint);
   font-family: var(--mono);
-  font-size: 7.5px;
+  font-size: var(--fs-micro);
   letter-spacing: 0.1em;
   text-transform: uppercase;
   overflow: hidden;
@@ -4192,7 +4250,7 @@ table.grid.roster-grid td .roster-name {
 
 .activity-field-name {
   color: var(--text);
-  font-size: 11px;
+  font-size: var(--fs-xs);
   line-height: 1.4;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -4203,18 +4261,18 @@ table.grid.roster-grid td .roster-name {
   margin-left: 6px;
   color: var(--faint);
   font-family: var(--mono);
-  font-size: 7.5px;
+  font-size: var(--fs-micro);
 }
 
 .activity-action {
   align-self: flex-start;
   margin-top: 2px;
   padding: 1px 5px;
-  border-radius: 3px;
+  border-radius: var(--r-sm);
   background: rgba(140, 166, 201, 0.09);
   color: #b9cbe2;
   font-family: var(--mono);
-  font-size: 7px;
+  font-size: var(--fs-micro);
   letter-spacing: 0.04em;
 }
 
@@ -4224,7 +4282,7 @@ table.grid.roster-grid td .roster-name {
   overflow: hidden;
   color: #d7b09a;
   font-family: var(--mono);
-  font-size: 10px;
+  font-size: var(--fs-micro);
   line-height: 1.5;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -4244,10 +4302,10 @@ table.grid.roster-grid td .roster-name {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 12px;
+  gap: var(--sp-3);
   padding: 34px 20px;
   color: var(--faint);
-  font-size: 12px;
+  font-size: var(--fs-sm);
   text-align: center;
 }
 
@@ -4266,7 +4324,7 @@ table.grid.roster-grid td .roster-name {
 .boss-view {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: var(--sp-4);
   min-width: 0;
 }
 
@@ -4275,14 +4333,14 @@ table.grid.roster-grid td .roster-name {
   display: flex;
   align-items: flex-end;
   justify-content: space-between;
-  gap: 24px;
+  gap: var(--sp-5);
   padding: 22px 24px;
   border: 1px solid transparent;
-  border-radius: var(--radius);
+  border-radius: var(--r-md);
   background:
-    linear-gradient(140deg, rgba(18, 23, 36, 0.9), rgba(7, 9, 15, 0.92)) padding-box,
+    linear-gradient(140deg, rgba(18, 26, 21, 0.9), rgba(7, 11, 9, 0.92)) padding-box,
     var(--edge) border-box;
-  box-shadow: var(--shadow-soft);
+  box-shadow: var(--elev-1);
   overflow: hidden;
 }
 
@@ -4316,7 +4374,7 @@ table.grid.roster-grid td .roster-name {
 .boss-hero-copy p {
   margin: 0;
   color: var(--faint);
-  font-size: 11.5px;
+  font-size: var(--fs-xs);
 }
 
 .boss-hero-orbs {
@@ -4324,12 +4382,12 @@ table.grid.roster-grid td .roster-name {
   z-index: 1;
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: var(--sp-2);
   flex: none;
 }
 
 .attendance-orbs {
-  gap: 8px;
+  gap: var(--sp-2);
 }
 
 .attendance-orbs .boss-hero-orb {
@@ -4339,11 +4397,11 @@ table.grid.roster-grid td .roster-name {
 }
 
 .attendance-orbs .boss-hero-orb span {
-  font-size: 20px;
+  font-size: var(--fs-lg);
 }
 
 .attendance-orbs .boss-hero-orb small {
-  font-size: 6px;
+  font-size: var(--fs-micro);
 }
 
 .boss-hero-orb {
@@ -4358,13 +4416,13 @@ table.grid.roster-grid td .roster-name {
   justify-content: center;
   border-radius: 50%;
   border: 1px solid rgba(201, 138, 95, 0.32);
-  background: radial-gradient(circle at 50% 36%, rgba(201, 138, 95, 0.16), rgba(7, 9, 15, 0.7));
+  background: radial-gradient(circle at 50% 36%, rgba(201, 138, 95, 0.16), rgba(7, 11, 9, 0.7));
   box-shadow: 0 0 34px rgba(201, 138, 95, 0.12), inset 0 0 22px rgba(0, 0, 0, 0.4);
 }
 
 .boss-hero-orb--pts {
   border-color: rgba(109, 156, 140, 0.34);
-  background: radial-gradient(circle at 50% 36%, rgba(109, 156, 140, 0.16), rgba(7, 9, 15, 0.7));
+  background: radial-gradient(circle at 50% 36%, rgba(109, 156, 140, 0.16), rgba(7, 11, 9, 0.7));
   box-shadow: 0 0 34px rgba(109, 156, 140, 0.12), inset 0 0 22px rgba(0, 0, 0, 0.4);
 }
 
@@ -4374,7 +4432,7 @@ table.grid.roster-grid td .roster-name {
 
 .boss-hero-orb span {
   font-family: var(--display);
-  font-size: 26px;
+  font-size: var(--fs-xl);
   font-weight: 600;
   line-height: 1;
   color: var(--gold-bright);
@@ -4383,7 +4441,7 @@ table.grid.roster-grid td .roster-name {
 .boss-hero-orb small {
   margin-top: 2px;
   font-family: var(--mono);
-  font-size: 6.5px;
+  font-size: var(--fs-micro);
   letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--faint);
@@ -4408,7 +4466,7 @@ table.grid.roster-grid td .roster-name {
 
 .boss-hero-stats span {
   font-family: var(--mono);
-  font-size: 7.5px;
+  font-size: var(--fs-micro);
   letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--faint);
@@ -4417,7 +4475,7 @@ table.grid.roster-grid td .roster-name {
 
 .boss-hero-stats strong {
   font-family: var(--display);
-  font-size: 22px;
+  font-size: var(--fs-xl);
   font-weight: 600;
   color: var(--gold-bright);
   line-height: 1.25;
@@ -4427,7 +4485,7 @@ table.grid.roster-grid td .roster-name {
 .podium {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 12px;
+  gap: var(--sp-3);
   align-items: stretch;
 }
 
@@ -4437,13 +4495,13 @@ table.grid.roster-grid td .roster-name {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 4px;
+  gap: var(--sp-1);
   padding: 18px 14px 15px;
   border: 1px solid transparent;
-  border-radius: var(--radius);
-  background: linear-gradient(155deg, rgba(18, 22, 34, 0.86), rgba(7, 9, 15, 0.92)) padding-box,
+  border-radius: var(--r-md);
+  background: linear-gradient(155deg, rgba(18, 26, 21, 0.86), rgba(7, 11, 9, 0.92)) padding-box,
     var(--edge) border-box;
-  box-shadow: var(--shadow-soft);
+  box-shadow: var(--elev-1);
   overflow: hidden;
 }
 
@@ -4459,7 +4517,7 @@ table.grid.roster-grid td .roster-name {
 .podium-card.rank-1 {
   order: 2;
   border-color: rgba(232, 184, 143, 0.42);
-  box-shadow: 0 20px 54px rgba(0, 0, 0, 0.42), 0 0 34px rgba(201, 138, 95, 0.12);
+  box-shadow: var(--elev-1), 0 0 34px rgba(201, 138, 95, 0.12);
 }
 .podium-card.rank-2 {
   order: 1;
@@ -4470,7 +4528,7 @@ table.grid.roster-grid td .roster-name {
 
 .podium-rank {
   font-family: var(--mono);
-  font-size: 8.5px;
+  font-size: var(--fs-micro);
   letter-spacing: 0.16em;
   color: var(--faint);
 }
@@ -4486,7 +4544,7 @@ table.grid.roster-grid td .roster-name {
   place-items: center;
   border-radius: 50%;
   font-family: var(--display);
-  font-size: 14px;
+  font-size: var(--fs-base);
   font-weight: 700;
   color: #16110c;
   background: linear-gradient(140deg, #e8b88f, #c98a5f 60%, #8c5a3d);
@@ -4496,7 +4554,7 @@ table.grid.roster-grid td .roster-name {
 
 .podium-card strong {
   margin-top: 3px;
-  font-size: 12.5px;
+  font-size: var(--fs-sm);
   font-weight: 700;
   color: var(--text);
   max-width: 100%;
@@ -4507,7 +4565,7 @@ table.grid.roster-grid td .roster-name {
 
 .podium-points {
   font-family: var(--display);
-  font-size: 20px;
+  font-size: var(--fs-lg);
   font-weight: 600;
   color: var(--gold-bright);
   line-height: 1.2;
@@ -4516,7 +4574,7 @@ table.grid.roster-grid td .roster-name {
 
 .podium-label {
   font-family: var(--mono);
-  font-size: 6.5px;
+  font-size: var(--fs-micro);
   letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--faint);
@@ -4528,7 +4586,7 @@ table.grid.roster-grid td .roster-name {
   display: flex;
   align-items: flex-end;
   justify-content: center;
-  gap: 10px;
+  gap: var(--sp-2);
   flex: none;
   margin: 4px 0 20px;
   padding: 8px 4px 0;
@@ -4588,13 +4646,13 @@ table.grid.roster-grid td .roster-name {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 8px;
+  gap: var(--sp-2);
   padding: 16px 10px 14px;
   border: 1px solid rgba(167, 184, 173, 0.12);
   border-top: 3px solid var(--pa);
-  border-radius: var(--radius) var(--radius) 0 0;
-  background: linear-gradient(160deg, rgba(20, 25, 38, 0.86), rgba(7, 9, 15, 0.94));
-  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.38), inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  border-radius: var(--r-md) var(--r-md) 0 0;
+  background: linear-gradient(160deg, rgba(20, 28, 23, 0.86), rgba(7, 11, 9, 0.94));
+  box-shadow: var(--elev-1), var(--bevel);
   overflow: hidden;
 }
 
@@ -4610,7 +4668,7 @@ table.grid.roster-grid td .roster-name {
 .attendance-podium-slot.rank-1 .attendance-podium-card {
   min-height: 220px;
   border-color: rgba(245, 185, 66, 0.4);
-  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.45), 0 0 34px var(--pa-soft);
+  box-shadow: var(--elev-1), 0 0 34px var(--pa-soft);
 }
 
 .attendance-podium-avatar-wrap {
@@ -4629,14 +4687,14 @@ table.grid.roster-grid td .roster-name {
 .attendance-podium-avatar {
   width: 64px;
   height: 64px;
-  font-size: 20px;
+  font-size: var(--fs-lg);
   box-shadow: 0 0 0 2px var(--pa-soft), 0 0 26px var(--pa-soft);
 }
 
 .attendance-podium-slot.rank-1 .attendance-podium-avatar {
   width: 82px;
   height: 82px;
-  font-size: 26px;
+  font-size: var(--fs-xl);
 }
 
 .attendance-podium-rank {
@@ -4648,12 +4706,12 @@ table.grid.roster-grid td .roster-name {
   padding: 0 4px;
   display: grid;
   place-items: center;
-  border-radius: 999px;
+  border-radius: var(--r-pill);
   background: rgba(6, 9, 7, 0.86);
   color: var(--pa);
   border: 1px solid var(--pa);
   font-family: var(--mono);
-  font-size: 10px;
+  font-size: var(--fs-micro);
   font-weight: 700;
   box-shadow: 0 0 12px var(--pa-soft);
 }
@@ -4671,7 +4729,7 @@ table.grid.roster-grid td .roster-name {
 .attendance-podium-ign {
   max-width: 100%;
   font-family: var(--display);
-  font-size: 15px;
+  font-size: var(--fs-md);
   font-weight: 600;
   color: var(--text);
   text-align: center;
@@ -4681,14 +4739,14 @@ table.grid.roster-grid td .roster-name {
 }
 
 .attendance-podium-slot.rank-1 .attendance-podium-ign {
-  font-size: 18px;
+  font-size: var(--fs-lg);
   color: var(--gold-bright);
 }
 
 .attendance-podium-score {
   display: flex;
   align-items: baseline;
-  gap: 4px;
+  gap: var(--sp-1);
   font-family: var(--display);
   color: var(--pa);
   font-variant-numeric: tabular-nums;
@@ -4696,23 +4754,23 @@ table.grid.roster-grid td .roster-name {
 }
 
 .attendance-podium-score strong {
-  font-size: 20px;
+  font-size: var(--fs-lg);
   font-weight: 700;
 }
 
 .attendance-podium-slot.rank-1 .attendance-podium-score strong {
-  font-size: 26px;
+  font-size: var(--fs-xl);
 }
 
 .attendance-podium-score span {
   font-family: var(--mono);
-  font-size: 11px;
+  font-size: var(--fs-xs);
   color: var(--muted);
 }
 
 .attendance-podium-score-label {
   font-family: var(--mono);
-  font-size: 7px;
+  font-size: var(--fs-micro);
   letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--faint);
@@ -4726,14 +4784,14 @@ table.grid.roster-grid td .roster-name {
   justify-content: center;
   border: 1px solid rgba(167, 184, 173, 0.1);
   border-top: 1px solid var(--pa);
-  border-radius: 0 0 var(--radius) var(--radius);
+  border-radius: 0 0 var(--r-md) var(--r-md);
   background: linear-gradient(180deg, rgba(24, 30, 24, 0.84), rgba(6, 9, 7, 0.93));
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04), 0 14px 28px rgba(0, 0, 0, 0.3);
+  box-shadow: var(--bevel), var(--elev-1);
 }
 
 .attendance-podium-base span {
   font-family: var(--display);
-  font-size: 24px;
+  font-size: var(--fs-xl);
   /* Keep the digit's line box inside the step so short bases (rank 4/5)
      never spill over the step's top border. */
   line-height: 1;
@@ -4743,15 +4801,15 @@ table.grid.roster-grid td .roster-name {
 }
 
 .attendance-podium-slot.rank-1 .attendance-podium-base span {
-  font-size: 32px;
+  font-size: var(--fs-2xl);
 }
 
 .attendance-podium-slot.rank-4 .attendance-podium-base span {
-  font-size: 20px;
+  font-size: var(--fs-lg);
 }
 
 .attendance-podium-slot.rank-5 .attendance-podium-base span {
-  font-size: 14px;
+  font-size: var(--fs-base);
 }
 
 /* Attendance picker */
@@ -4766,7 +4824,7 @@ table.grid.roster-grid td .roster-name {
   display: flex;
   align-items: flex-end;
   flex-wrap: wrap;
-  gap: 16px;
+  gap: var(--sp-4);
   padding-bottom: 14px;
   border-bottom: 1px solid rgba(167, 184, 173, 0.07);
 }
@@ -4782,10 +4840,10 @@ table.grid.roster-grid td .roster-name {
   flex-direction: column;
   align-items: center;
   justify-content: flex-end;
-  gap: 4px;
+  gap: var(--sp-1);
   min-width: 58px;
   font-family: var(--mono);
-  font-size: 8px;
+  font-size: var(--fs-micro);
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--muted);
@@ -4812,7 +4870,7 @@ table.grid.roster-grid td .roster-name {
 .att-stats {
   display: grid;
   grid-template-columns: repeat(2, minmax(66px, 1fr));
-  gap: 8px;
+  gap: var(--sp-2);
   margin-left: 4px;
   flex: none;
 }
@@ -4829,7 +4887,7 @@ table.grid.roster-grid td .roster-name {
 
 .att-stat span {
   font-family: var(--display);
-  font-size: 17px;
+  font-size: var(--fs-md);
   font-weight: 600;
   line-height: 1;
   color: var(--gold-bright);
@@ -4838,11 +4896,11 @@ table.grid.roster-grid td .roster-name {
 .att-stat small {
   margin-top: 3px;
   font-family: var(--mono);
-  font-size: 6px;
+  font-size: var(--fs-micro);
   letter-spacing: 0.1em;
   text-transform: uppercase;
   color: var(--faint);
-  max-width: 66px;
+  max-width: 84px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -4856,7 +4914,7 @@ table.grid.roster-grid td .roster-name {
   display: flex;
   align-items: center;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: var(--sp-2);
   padding: 12px 0;
 }
 
@@ -4887,7 +4945,7 @@ table.grid.roster-grid td .roster-name {
   place-items: center;
   padding: 0;
   border: 0;
-  border-radius: 3px;
+  border-radius: var(--r-sm);
   background: transparent;
   color: var(--faint);
   cursor: pointer;
@@ -4906,7 +4964,7 @@ table.grid.roster-grid td .roster-name {
 .att-footer {
   display: flex;
   justify-content: flex-end;
-  gap: 10px;
+  gap: var(--sp-2);
   padding-top: 14px;
   border-top: 1px solid rgba(167, 184, 173, 0.07);
   margin-top: 4px;
@@ -4914,7 +4972,7 @@ table.grid.roster-grid td .roster-name {
 
 .att-unmatched {
   border: 1px solid rgba(201, 138, 95, 0.2);
-  border-radius: var(--radius-sm);
+  border-radius: var(--r-sm);
   background: rgba(201, 138, 95, 0.04);
   padding: 10px 12px;
   margin: 4px 0 10px;
@@ -4923,7 +4981,7 @@ table.grid.roster-grid td .roster-name {
 .att-unmatched-label {
   display: block;
   font-family: var(--mono);
-  font-size: 8px;
+  font-size: var(--fs-micro);
   letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--gold);
@@ -4933,15 +4991,15 @@ table.grid.roster-grid td .roster-name {
 .att-unmatched-list {
   display: flex;
   flex-wrap: wrap;
-  gap: 5px;
+  gap: var(--sp-2);
 }
 
 .att-unmatched-chip {
-  font-size: 10.5px;
+  font-size: var(--fs-micro);
   color: var(--muted);
   border: 1px solid rgba(167, 184, 173, 0.13);
   background: rgba(167, 184, 173, 0.04);
-  border-radius: 3px;
+  border-radius: var(--r-sm);
   padding: 3px 7px;
 }
 
@@ -4950,7 +5008,7 @@ table.grid.roster-grid td .roster-name {
   grid-template-columns: repeat(auto-fill, minmax(178px, 1fr));
   align-content: start;
   grid-auto-rows: min-content;
-  gap: 8px;
+  gap: var(--sp-2);
   max-height: clamp(220px, 40vh, 430px);
   overflow-y: auto;
   padding: 4px 8px 6px 2px;
@@ -4961,14 +5019,14 @@ table.grid.roster-grid td .roster-name {
   position: relative;
   display: flex;
   align-items: center;
-  gap: 9px;
+  gap: var(--sp-2);
   padding: 8px 10px;
   border: 1px solid rgba(167, 184, 173, 0.1);
-  border-radius: var(--radius-sm);
-  background: rgba(7, 9, 15, 0.4);
+  border-radius: var(--r-sm);
+  background: rgba(7, 11, 9, 0.4);
   cursor: pointer;
   user-select: none;
-  transition: border-color 0.15s, background 0.15s, transform 0.15s;
+  transition: border-color var(--dur-1), background var(--dur-1), transform var(--dur-1);
 }
 
 .att-row input {
@@ -4994,14 +5052,14 @@ table.grid.roster-grid td .roster-name {
   place-items: center;
   border-radius: 50%;
   font-family: var(--display);
-  font-size: 9px;
+  font-size: var(--fs-micro);
   font-weight: 700;
   color: #16110c;
   background: linear-gradient(140deg, #e8b88f, #9a6847);
 }
 
 .att-ign {
-  font-size: 11.5px;
+  font-size: var(--fs-xs);
   color: var(--muted);
   white-space: nowrap;
   overflow: hidden;
@@ -5023,16 +5081,16 @@ table.grid.roster-grid td .roster-name {
   place-items: center;
   border-radius: 50%;
   border: 1px solid rgba(167, 184, 173, 0.18);
-  font-size: 9px;
+  font-size: var(--fs-micro);
   color: transparent;
-  transition: 0.15s;
+  transition: var(--dur-1);
 }
 
 .att-row.on .att-check {
   border-color: transparent;
   background: linear-gradient(135deg, #e8b88f, #c98a5f);
   color: #16110c;
-  box-shadow: 0 0 12px rgba(201, 138, 95, 0.35);
+  box-shadow: var(--glow-gold);
 }
 
 /* Matched by a screenshot scan: pinned above the list and marked with a
@@ -5044,7 +5102,7 @@ table.grid.roster-grid td .roster-name {
 
 .att-row.scanned:not(.on) {
   border-color: rgba(109, 156, 140, 0.4);
-  background: linear-gradient(120deg, rgba(109, 156, 140, 0.1), rgba(7, 9, 15, 0.4));
+  background: linear-gradient(120deg, rgba(109, 156, 140, 0.1), rgba(7, 11, 9, 0.4));
 }
 
 .att-row.scanned::after {
@@ -5093,17 +5151,17 @@ table.grid.roster-grid td .roster-name {
 }
 
 .config-scroll {
-  padding: 14px;
+  padding: var(--sp-4);
 }
 
 .config-grid {
   display: grid;
-  gap: 12px;
+  gap: var(--sp-3);
 }
 
 table.grid.boss-config {
   border: 1px solid rgba(167, 184, 173, 0.08);
-  border-radius: var(--radius-sm);
+  border-radius: var(--r-sm);
   overflow: hidden;
 }
 
@@ -5141,10 +5199,10 @@ table.grid.boss-config td .cell-input {
 }
 
 .announce {
-  padding: 22px;
+  padding: var(--sp-5);
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: var(--sp-4);
   min-height: 0;
 }
 
@@ -5152,7 +5210,7 @@ table.grid.boss-config td .cell-input {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  gap: 18px;
+  gap: var(--sp-4);
   padding-bottom: 14px;
   border-bottom: 1px solid rgba(167, 184, 173, 0.08);
 }
@@ -5163,7 +5221,7 @@ table.grid.boss-config td .cell-input {
 }
 
 .announce-sub {
-  font-size: 11.5px;
+  font-size: var(--fs-xs);
   color: var(--faint);
 }
 
@@ -5181,7 +5239,7 @@ table.grid.boss-config td .cell-input {
 
 .announce-stats {
   display: flex;
-  gap: 10px;
+  gap: var(--sp-2);
   flex-wrap: wrap;
 }
 
@@ -5190,7 +5248,7 @@ table.grid.boss-config td .cell-input {
 }
 
 .announce-stats .stat-label {
-  font-size: 8px;
+  font-size: var(--fs-micro);
 }
 
 .announce-stats .stat-value {
@@ -5200,7 +5258,7 @@ table.grid.boss-config td .cell-input {
 
 .announce-table {
   border: 1px solid rgba(167, 184, 173, 0.08);
-  border-radius: var(--radius-sm);
+  border-radius: var(--r-sm);
   overflow: auto;
   min-height: 0;
   padding-right: 6px;
@@ -5209,7 +5267,7 @@ table.grid.boss-config td .cell-input {
 
 .dist-grid {
   display: grid;
-  gap: 12px;
+  gap: var(--sp-3);
 }
 
 table.grid.dist-table {
@@ -5264,7 +5322,7 @@ table.grid.dist-table thead th.ign-col {
   display: flex;
   align-items: center;
   justify-content: flex-end;
-  gap: 10px;
+  gap: var(--sp-2);
   flex-wrap: wrap;
   padding-top: 12px;
   border-top: 1px solid rgba(167, 184, 173, 0.07);
@@ -5280,7 +5338,7 @@ table.grid.dist-table thead th.ign-col {
   text-align: right;
   color: var(--green);
   font-family: var(--mono);
-  font-size: 9.5px;
+  font-size: var(--fs-micro);
   letter-spacing: 0.1em;
   text-transform: uppercase;
 }
@@ -5296,7 +5354,7 @@ table.grid.dist-table thead th.ign-col {
 .cp-layout {
   display: grid;
   grid-template-columns: minmax(280px, 0.9fr) minmax(340px, 1.1fr);
-  gap: 16px;
+  gap: var(--sp-4);
   min-height: 0;
   flex: 1;
 }
@@ -5323,7 +5381,7 @@ table.grid.dist-table thead th.ign-col {
 .cp-row {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--sp-2);
   padding: 6px 4px;
   border-bottom: 1px solid rgba(167, 184, 173, 0.045);
 }
@@ -5341,7 +5399,7 @@ table.grid.dist-table thead th.ign-col {
   border-bottom: 1px dotted transparent;
   background: transparent;
   color: var(--muted);
-  font-size: 11.5px;
+  font-size: var(--fs-xs);
   font-weight: 600;
   cursor: pointer;
   overflow: hidden;
@@ -5356,7 +5414,7 @@ table.grid.dist-table thead th.ign-col {
 
 .cp-val {
   font-family: var(--mono);
-  font-size: 10.5px;
+  font-size: var(--fs-micro);
   color: var(--gold);
   font-variant-numeric: tabular-nums;
   flex: none;
@@ -5372,14 +5430,14 @@ table.grid.dist-table thead th.ign-col {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 5px;
+  gap: var(--sp-2);
   padding: 24px 16px;
   border: 1px dashed rgba(201, 138, 95, 0.3);
-  border-radius: var(--radius-sm);
+  border-radius: var(--r-sm);
   background: linear-gradient(160deg, rgba(201, 138, 95, 0.045), rgba(109, 156, 140, 0.02));
   color: var(--muted);
   cursor: pointer;
-  transition: 0.18s;
+  transition: var(--dur-1);
 }
 
 .cp-dropzone:hover {
@@ -5401,7 +5459,7 @@ table.grid.dist-table thead th.ign-col {
 }
 
 .cp-dropzone-text {
-  font-size: 12px;
+  font-size: var(--fs-sm);
   font-weight: 700;
   color: var(--text);
   letter-spacing: 0.02em;
@@ -5409,14 +5467,14 @@ table.grid.dist-table thead th.ign-col {
 
 .cp-dropzone-hint {
   font-family: var(--mono);
-  font-size: 8px;
+  font-size: var(--fs-micro);
   letter-spacing: 0.14em;
   color: var(--faint);
 }
 
 .cp-thumbs {
   display: flex;
-  gap: 8px;
+  gap: var(--sp-2);
   flex-wrap: wrap;
   padding: 4px 0 12px;
 }
@@ -5426,7 +5484,7 @@ table.grid.dist-table thead th.ign-col {
   width: 72px;
   height: 72px;
   border: 1px solid rgba(167, 184, 173, 0.14);
-  border-radius: var(--radius-sm);
+  border-radius: var(--r-sm);
   overflow: hidden;
   background: #060a08;
 }
@@ -5449,9 +5507,9 @@ table.grid.dist-table thead th.ign-col {
   place-items: center;
   border: 0;
   border-radius: 50%;
-  background: rgba(5, 6, 10, 0.8);
+  background: rgba(5, 7, 6, 0.8);
   color: var(--muted);
-  font-size: 10px;
+  font-size: var(--fs-micro);
   cursor: pointer;
 }
 
@@ -5463,9 +5521,9 @@ table.grid.dist-table thead th.ign-col {
 .cp-reading {
   display: flex;
   align-items: center;
-  gap: 9px;
+  gap: var(--sp-2);
   font-family: var(--mono);
-  font-size: 9.5px;
+  font-size: var(--fs-micro);
   letter-spacing: 0.1em;
   text-transform: uppercase;
   color: var(--gold);
@@ -5484,7 +5542,7 @@ table.grid.dist-table thead th.ign-col {
 
 .cp-meta {
   font-family: var(--mono);
-  font-size: 9px;
+  font-size: var(--fs-micro);
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--faint);
@@ -5494,7 +5552,7 @@ table.grid.dist-table thead th.ign-col {
 .cp-read-list {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: var(--sp-2);
   overflow-y: auto;
   min-height: 0;
   flex: 1;
@@ -5503,7 +5561,7 @@ table.grid.dist-table thead th.ign-col {
 }
 
 .cp-read-list .cp-row {
-  gap: 6px;
+  gap: var(--sp-2);
   padding: 5px 0;
 }
 
@@ -5523,11 +5581,11 @@ table.grid.dist-table thead th.ign-col {
 .cp-badge {
   flex: none;
   font-family: var(--mono);
-  font-size: 6.5px;
+  font-size: var(--fs-micro);
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  border-radius: 3px;
-  padding: 3px 5px;
+  border-radius: var(--r-sm);
+  padding: 4px 7px;
   border: 1px solid;
 }
 
@@ -5575,7 +5633,7 @@ table.grid.dist-table thead th.ign-col {
 .completion-panels {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-  gap: 16px;
+  gap: var(--sp-4);
   align-items: start;
 }
 
@@ -5599,7 +5657,7 @@ table.grid.dist-table thead th.ign-col {
 .completion-row {
   display: flex;
   align-items: center;
-  gap: 9px;
+  gap: var(--sp-2);
   padding: 7px 0;
   border-bottom: 1px solid rgba(167, 184, 173, 0.045);
 }
@@ -5617,7 +5675,7 @@ table.grid.dist-table thead th.ign-col {
   border-bottom: 1px dotted transparent;
   background: transparent;
   color: var(--text);
-  font-size: 11.5px;
+  font-size: var(--fs-xs);
   font-weight: 600;
   cursor: pointer;
   white-space: nowrap;
@@ -5640,7 +5698,7 @@ table.grid.dist-table thead th.ign-col {
   flex: none;
   text-align: right;
   font-family: var(--mono);
-  font-size: 9.5px;
+  font-size: var(--fs-micro);
   color: var(--muted);
   font-variant-numeric: tabular-nums;
 }
@@ -5650,46 +5708,39 @@ table.grid.dist-table thead th.ign-col {
 .overlay {
   position: fixed;
   inset: 0;
-  z-index: 120;
+  z-index: var(--z-overlay);
   display: grid;
   place-items: center;
-  padding: 20px;
+  padding: var(--sp-5);
   background:
     radial-gradient(700px 460px at 50% 40%, rgba(109, 156, 140, 0.08), transparent 70%),
-    rgba(3, 4, 8, 0.76);
+    rgba(3, 6, 4, 0.76);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
-  animation: overlay-in 0.18s ease;
+    animation: enter-fade var(--dur-1) ease;
   overflow-y: auto;
 }
 
-@keyframes overlay-in {
-  from {
-    opacity: 0;
-  }
-}
+
 
 .modal {
   position: relative;
   width: min(540px, 100%);
   max-height: 88vh;
-  padding: 26px;
+  padding: var(--sp-5);
   border: 1px solid transparent;
-  border-radius: var(--radius);
-  background: linear-gradient(158deg, rgba(20, 24, 36, 0.98), rgba(7, 9, 15, 0.99)) padding-box,
+  border-radius: var(--r-md);
+  background: linear-gradient(158deg, rgba(20, 28, 23, 0.98), rgba(7, 11, 9, 0.99)) padding-box,
     var(--edge) border-box;
-  box-shadow: var(--shadow), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  box-shadow: var(--elev-2), var(--bevel);
   overflow-y: auto;
   scrollbar-gutter: stable;
-  animation: modal-in 0.22s var(--ease);
+    --travel: 10px;
+  --enter-scale: 0.99;
+  animation: enter var(--dur-2) var(--ease);
 }
 
-@keyframes modal-in {
-  from {
-    opacity: 0;
-    transform: translateY(10px) scale(0.99);
-  }
-}
+
 
 .modal::before {
   content: '';
@@ -5708,7 +5759,7 @@ table.grid.dist-table thead th.ign-col {
 
 .modal h3 {
   font-family: var(--display);
-  font-size: 23px;
+  font-size: var(--fs-xl);
   font-weight: 600;
   letter-spacing: 0.04em;
   margin: 0 0 10px;
@@ -5718,7 +5769,7 @@ table.grid.dist-table thead th.ign-col {
 .modal .desc {
   margin: 0 0 18px;
   color: var(--muted);
-  font-size: 12.5px;
+  font-size: var(--fs-sm);
   line-height: 1.65;
 }
 
@@ -5729,7 +5780,7 @@ table.grid.dist-table thead th.ign-col {
 .modal .row {
   display: flex;
   justify-content: flex-end;
-  gap: 9px;
+  gap: var(--sp-2);
   margin-top: 20px;
   padding-top: 16px;
   border-top: 1px solid rgba(167, 184, 173, 0.08);
@@ -5754,7 +5805,7 @@ table.grid.dist-table thead th.ign-col {
 
 .settings-section-title {
   font-family: var(--mono);
-  font-size: 9px;
+  font-size: var(--fs-micro);
   letter-spacing: 0.16em;
   text-transform: uppercase;
   color: var(--gold);
@@ -5768,7 +5819,7 @@ table.grid.dist-table thead th.ign-col {
 .form-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-  gap: 13px;
+  gap: var(--sp-3);
 }
 
 .modal.modal-fixed {
@@ -5796,15 +5847,15 @@ table.grid.dist-table thead th.ign-col {
 
 .tip-section {
   border: 1px solid rgba(167, 184, 173, 0.08);
-  border-radius: var(--radius-sm);
-  background: rgba(5, 7, 12, 0.4);
+  border-radius: var(--r-sm);
+  background: rgba(5, 9, 7, 0.4);
   padding: 4px 14px;
   margin-bottom: 12px;
 }
 
 .tip-section-title {
   font-family: var(--mono);
-  font-size: 8.5px;
+  font-size: var(--fs-micro);
   letter-spacing: 0.16em;
   text-transform: uppercase;
   color: var(--gold);
@@ -5815,10 +5866,10 @@ table.grid.dist-table thead th.ign-col {
 .tip-row {
   display: grid;
   grid-template-columns: 140px 1fr;
-  gap: 14px;
+  gap: var(--sp-4);
   padding: 8px 0;
   border-bottom: 1px solid rgba(167, 184, 173, 0.05);
-  font-size: 11.5px;
+  font-size: var(--fs-xs);
 }
 
 .tip-row:last-child {
@@ -5839,7 +5890,7 @@ table.grid.dist-table thead th.ign-col {
 .settings-menu {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: var(--sp-2);
   margin-top: 6px;
 }
 
@@ -5847,18 +5898,18 @@ table.grid.dist-table thead th.ign-col {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
+  gap: var(--sp-3);
   width: 100%;
   padding: 13px 14px;
   border: 1px solid rgba(167, 184, 173, 0.09);
-  border-radius: var(--radius-sm);
-  background: rgba(5, 7, 12, 0.4);
+  border-radius: var(--r-sm);
+  background: rgba(5, 9, 7, 0.4);
   color: var(--text);
-  font-size: 12.5px;
+  font-size: var(--fs-sm);
   font-weight: 600;
   text-align: left;
   cursor: pointer;
-  transition: 0.16s;
+  transition: var(--dur-1);
 }
 
 .settings-item:hover {
@@ -5873,14 +5924,14 @@ table.grid.dist-table thead th.ign-col {
 .settings-back {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: var(--sp-2);
   padding: 4px 0;
   margin-bottom: 10px;
   border: 0;
   background: transparent;
   color: var(--faint);
   font-family: var(--mono);
-  font-size: 9px;
+  font-size: var(--fs-micro);
   letter-spacing: 0.1em;
   text-transform: uppercase;
   cursor: pointer;
@@ -5894,21 +5945,21 @@ table.grid.dist-table thead th.ign-col {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 20px;
-  padding: 16px;
+  gap: var(--sp-5);
+  padding: var(--sp-4);
   border: 1px solid rgba(167, 184, 173, 0.09);
-  border-radius: var(--radius-sm);
-  background: rgba(5, 7, 12, 0.4);
+  border-radius: var(--r-sm);
+  background: rgba(5, 9, 7, 0.4);
 }
 
 .settings-toggle-label {
-  font-size: 12.5px;
+  font-size: var(--fs-sm);
   font-weight: 700;
   margin-bottom: 3px;
 }
 
 .settings-toggle-desc {
-  font-size: 11px;
+  font-size: var(--fs-xs);
   color: var(--faint);
 }
 
@@ -5931,11 +5982,11 @@ table.grid.dist-table thead th.ign-col {
   display: block;
   width: 38px;
   height: 21px;
-  border-radius: 99px;
+  border-radius: var(--r-pill);
   border: 1px solid rgba(167, 184, 173, 0.2);
   background: rgba(167, 184, 173, 0.08);
   padding: 2px;
-  transition: 0.2s;
+  transition: var(--dur-2);
 }
 
 .switch-thumb {
@@ -5944,13 +5995,13 @@ table.grid.dist-table thead th.ign-col {
   height: 15px;
   border-radius: 50%;
   background: var(--muted);
-  transition: transform 0.2s var(--ease), background 0.2s;
+  transition: transform var(--dur-2) var(--ease), background var(--dur-2);
 }
 
 .switch input:checked + .switch-track {
   background: linear-gradient(135deg, #b87754, #8c5a3d);
   border-color: rgba(232, 184, 143, 0.5);
-  box-shadow: 0 0 16px rgba(201, 138, 95, 0.2);
+  box-shadow: var(--glow-gold-soft);
 }
 
 .switch input:checked + .switch-track .switch-thumb {
@@ -5968,18 +6019,18 @@ table.grid.dist-table thead th.ign-col {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 8px;
+  gap: var(--sp-2);
   min-height: 39px;
   width: 100%;
   padding: 9px 12px;
   border: 1px solid var(--line-soft);
-  border-radius: var(--radius-sm);
-  background: rgba(5, 7, 12, 0.72);
+  border-radius: var(--r-sm);
+  background: rgba(5, 9, 7, 0.72);
   color: var(--text);
   cursor: pointer;
   text-align: left;
-  font-size: 12.5px;
-  transition: 0.16s;
+  font-size: var(--fs-sm);
+  transition: var(--dur-1);
 }
 
 .dd-trigger:hover {
@@ -6011,7 +6062,7 @@ table.grid.dist-table thead th.ign-col {
   flex: none;
   display: inline-flex;
   color: var(--faint);
-  transition: transform 0.18s, color 0.18s;
+  transition: transform var(--dur-1), color var(--dur-1);
 }
 
 .dd-chevron svg {
@@ -6029,7 +6080,7 @@ table.grid.dist-table thead th.ign-col {
   padding: 3px 5px;
   border-color: transparent;
   background: transparent;
-  font-size: 12.5px;
+  font-size: var(--fs-sm);
 }
 
 .dd-trigger.dd-cell:hover,
@@ -6049,8 +6100,8 @@ table.grid.dist-table thead th.ign-col {
   padding: 4px 6px;
   border-color: transparent;
   background: transparent;
-  font-size: 12px;
-  border-radius: 3px;
+  font-size: var(--fs-sm);
+  border-radius: var(--r-sm);
 }
 
 .dd-trigger.dd-coll:hover {
@@ -6062,41 +6113,37 @@ table.grid.dist-table thead th.ign-col {
   width: auto;
   min-height: 30px;
   padding: 5px 8px;
-  background: rgba(6, 8, 14, 0.7);
+  background: rgba(6, 10, 8, 0.7);
   font-family: var(--mono);
-  font-size: 9px;
+  font-size: var(--fs-micro);
   letter-spacing: 0.08em;
 }
 
 .dd-menu {
   position: fixed;
-  z-index: 400;
+  z-index: var(--z-popover);
   padding: 6px;
   border: 1px solid rgba(201, 138, 95, 0.22);
-  border-radius: var(--radius-sm);
-  background: linear-gradient(160deg, rgba(20, 24, 36, 0.99), rgba(8, 10, 16, 0.99));
-  box-shadow: 0 26px 70px rgba(0, 0, 0, 0.68), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  border-radius: var(--r-sm);
+  background: linear-gradient(160deg, rgba(20, 28, 23, 0.99), rgba(8, 12, 10, 0.99));
+  box-shadow: var(--elev-2), var(--bevel);
   overflow-y: auto;
-  animation: dd-in 0.14s ease;
+    --travel: 3px;
+  animation: enter-down var(--dur-1) ease;
   backdrop-filter: blur(16px);
 }
 
-@keyframes dd-in {
-  from {
-    opacity: 0;
-    transform: translateY(-3px);
-  }
-}
+
 
 .dd-item {
   display: flex;
   align-items: center;
   padding: 7px 9px;
-  border-radius: 3px;
+  border-radius: var(--r-sm);
   cursor: pointer;
-  font-size: 12px;
+  font-size: var(--fs-sm);
   color: var(--muted);
-  transition: 0.12s;
+  transition: var(--dur-1);
 }
 
 .dd-item:hover {
@@ -6131,10 +6178,9 @@ table.grid.dist-table thead th.ign-col {
   width: 100%;
   padding: 7px 9px;
   border: 1px solid rgba(167, 184, 173, 0.12);
-  border-radius: 3px;
-  background: rgba(5, 7, 12, 0.7);
-  outline: none;
-  font-size: 11.5px;
+  border-radius: var(--r-sm);
+  background: rgba(5, 9, 7, 0.7);
+  font-size: var(--fs-xs);
 }
 
 .dd-search input:focus {
@@ -6142,9 +6188,9 @@ table.grid.dist-table thead th.ign-col {
 }
 
 .dd-empty {
-  padding: 12px;
+  padding: var(--sp-3);
   text-align: center;
-  font-size: 11px;
+  font-size: var(--fs-xs);
   color: var(--faint);
 }
 
@@ -6152,13 +6198,14 @@ table.grid.dist-table thead th.ign-col {
 
 .cal-menu {
   position: fixed;
-  z-index: 400;
-  padding: 12px;
+  z-index: var(--z-popover);
+  padding: var(--sp-3);
   border: 1px solid rgba(201, 138, 95, 0.22);
-  border-radius: var(--radius-sm);
-  background: linear-gradient(160deg, rgba(20, 24, 36, 0.99), rgba(8, 10, 16, 0.99));
-  box-shadow: 0 26px 70px rgba(0, 0, 0, 0.68);
-  animation: dd-in 0.14s ease;
+  border-radius: var(--r-sm);
+  background: linear-gradient(160deg, rgba(20, 28, 23, 0.99), rgba(8, 12, 10, 0.99));
+  box-shadow: var(--elev-2);
+    --travel: 3px;
+  animation: enter-down var(--dur-1) ease;
 }
 
 .cal-head {
@@ -6172,7 +6219,7 @@ table.grid.dist-table thead th.ign-col {
 
 .cal-title {
   font-family: var(--display);
-  font-size: 14px;
+  font-size: var(--fs-base);
   font-weight: 600;
   color: var(--gold-bright);
 }
@@ -6189,7 +6236,7 @@ table.grid.dist-table thead th.ign-col {
   place-items: center;
   padding: 0;
   border: 1px solid transparent;
-  border-radius: 3px;
+  border-radius: var(--r-sm);
   background: transparent;
   color: var(--muted);
   cursor: pointer;
@@ -6216,7 +6263,7 @@ table.grid.dist-table thead th.ign-col {
   text-align: center;
   padding: 4px 0;
   font-family: var(--mono);
-  font-size: 7.5px;
+  font-size: var(--fs-micro);
   letter-spacing: 0.1em;
   color: var(--faint);
 }
@@ -6226,10 +6273,10 @@ table.grid.dist-table thead th.ign-col {
   display: grid;
   place-items: center;
   border: 1px solid transparent;
-  border-radius: 3px;
+  border-radius: var(--r-sm);
   background: transparent;
   color: var(--muted);
-  font-size: 11px;
+  font-size: var(--fs-xs);
   cursor: pointer;
 }
 
@@ -6240,7 +6287,7 @@ table.grid.dist-table thead th.ign-col {
 }
 
 .cal-day.out {
-  color: rgba(106, 110, 121, 0.45);
+  color: rgba(104, 114, 104, 0.45);
 }
 
 .cal-day.today {
@@ -6253,13 +6300,13 @@ table.grid.dist-table thead th.ign-col {
   border-color: transparent;
   color: #16110c;
   font-weight: 700;
-  box-shadow: 0 0 16px rgba(201, 138, 95, 0.25);
+  box-shadow: var(--glow-gold-soft);
 }
 
 .cal-foot {
   display: flex;
   justify-content: space-between;
-  gap: 8px;
+  gap: var(--sp-2);
   margin-top: 8px;
   padding-top: 8px;
   border-top: 1px solid rgba(167, 184, 173, 0.08);
@@ -6268,11 +6315,11 @@ table.grid.dist-table thead th.ign-col {
 .cal-foot button {
   padding: 4px 7px;
   border: 0;
-  border-radius: 3px;
+  border-radius: var(--r-sm);
   background: transparent;
   color: var(--faint);
   font-family: var(--mono);
-  font-size: 8.5px;
+  font-size: var(--fs-micro);
   letter-spacing: 0.08em;
   text-transform: uppercase;
   cursor: pointer;
@@ -6287,12 +6334,12 @@ table.grid.dist-table thead th.ign-col {
 
 .toasts {
   position: fixed;
-  z-index: 500;
+  z-index: var(--z-toast);
   right: 22px;
   bottom: 22px;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: var(--sp-2);
   pointer-events: none;
   max-width: min(380px, calc(100vw - 32px));
 }
@@ -6301,12 +6348,14 @@ table.grid.dist-table thead th.ign-col {
   position: relative;
   padding: 11px 14px 11px 18px;
   border: 1px solid rgba(201, 138, 95, 0.22);
-  border-radius: var(--radius-sm);
-  background: linear-gradient(150deg, rgba(22, 27, 40, 0.97), rgba(8, 10, 16, 0.98));
-  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+  border-radius: var(--r-sm);
+  background: linear-gradient(150deg, rgba(22, 30, 25, 0.97), rgba(8, 12, 10, 0.98));
+  box-shadow: var(--elev-2);
   color: var(--text);
-  font-size: 12px;
-  animation: toast-in 0.24s var(--ease);
+  font-size: var(--fs-sm);
+    --travel: 8px;
+  --enter-scale: 1;
+  animation: enter var(--dur-2) var(--ease);
   overflow: hidden;
 }
 
@@ -6328,12 +6377,7 @@ table.grid.dist-table thead th.ign-col {
   background: var(--red);
 }
 
-@keyframes toast-in {
-  from {
-    opacity: 0;
-    transform: translateY(8px);
-  }
-}
+
 
 /* ---------- Tools iframe ---------- */
 
@@ -6354,7 +6398,7 @@ table.grid.dist-table thead th.ign-col {
 .intro {
   position: fixed;
   inset: 0;
-  z-index: 1000;
+  z-index: var(--z-intro);
   display: grid;
   place-items: center;
   background: radial-gradient(circle at 50% 48%, #0a100d 0%, #050807 58%, #000 100%);
@@ -6598,6 +6642,14 @@ table.grid.dist-table thead th.ign-col {
   opacity: 0;
 }
 
+/* Referenced via animation-name (not the animation shorthand), which is
+   why this looks unused - it flips the intro strokes from opacity 0. */
+@keyframes appear {
+  to {
+    opacity: 1;
+  }
+}
+
 .intro.armed .stroke {
   animation-name: appear;
   animation-duration: 0.001s;
@@ -6662,11 +6714,6 @@ table.grid.dist-table thead th.ign-col {
     stroke-dashoffset: -0.95;
   }
 }
-@keyframes appear {
-  to {
-    opacity: 1;
-  }
-}
 @keyframes intro-word-out {
   to {
     opacity: 0;
@@ -6684,9 +6731,9 @@ table.grid.dist-table thead th.ign-col {
   z-index: 2;
   display: flex;
   align-items: center;
-  gap: 14px;
+  gap: var(--sp-4);
   font-family: var(--mono);
-  font-size: 8.5px;
+  font-size: var(--fs-micro);
   letter-spacing: 0.3em;
   text-transform: uppercase;
   color: rgba(232, 184, 143, 0.75);
@@ -6710,7 +6757,7 @@ table.grid.dist-table thead th.ign-col {
   }
 }
 
-/* Skip prompt — MMORPG cinematic-style (top right) */
+/* Skip prompt â€” MMORPG cinematic-style (top right) */
 .intro-skip {
   position: absolute;
   top: 44px;
@@ -6718,23 +6765,24 @@ table.grid.dist-table thead th.ign-col {
   z-index: 5;
   display: inline-flex;
   align-items: center;
-  gap: 11px;
+  gap: var(--sp-3);
   padding: 7px 16px 7px 8px;
   border: 1px solid rgba(201, 138, 95, 0.45);
   background: linear-gradient(180deg, rgba(14, 20, 18, 0.86), rgba(6, 10, 9, 0.92));
   color: #f2e6d8;
   font-family: var(--mono);
-  font-size: 10px;
+  font-size: var(--fs-micro);
   line-height: 1;
   letter-spacing: 0.3em;
   text-transform: uppercase;
   cursor: pointer;
   opacity: 0;
   box-shadow:
-    0 14px 32px rgba(0, 0, 0, 0.5),
-    inset 0 1px 0 rgba(255, 255, 255, 0.06);
+    var(--elev-1),
+    var(--bevel);
   animation: intro-skip-in 0.7s ease 0.45s both;
-  transition: border-color 0.18s ease, background 0.18s ease, color 0.18s ease, box-shadow 0.18s ease;
+  transition: border-color var(--dur-1) ease, background var(--dur-1) ease,
+    color var(--dur-1) ease, box-shadow var(--dur-1) ease;
 }
 
 .intro-skip::before,
@@ -6767,7 +6815,7 @@ table.grid.dist-table thead th.ign-col {
   border: 1px solid rgba(232, 184, 143, 0.55);
   background: linear-gradient(180deg, rgba(201, 138, 95, 0.24), rgba(201, 138, 95, 0.07));
   color: #ffe6cd;
-  font-size: 9px;
+  font-size: var(--fs-micro);
   letter-spacing: 0.14em;
   box-shadow:
     inset 0 -2px 0 rgba(0, 0, 0, 0.55),
@@ -6786,7 +6834,7 @@ table.grid.dist-table thead th.ign-col {
   color: #fff4e6;
   outline: none;
   box-shadow:
-    0 16px 36px rgba(0, 0, 0, 0.55),
+    var(--elev-2),
     0 0 24px rgba(201, 138, 95, 0.3),
     inset 0 1px 0 rgba(255, 255, 255, 0.1);
 }
@@ -6830,12 +6878,12 @@ table.grid.dist-table thead th.ign-col {
   }
 }
 
-@media (max-width: 560px) {
+@media (max-width: 640px) {
   .intro-skip {
     top: 34px;
     right: 22px;
     padding: 6px 13px 6px 7px;
-    font-size: 9px;
+    font-size: var(--fs-micro);
     letter-spacing: 0.22em;
   }
 }
@@ -6884,10 +6932,10 @@ table.grid.dist-table thead th.ign-col {
 }
 
 /* ============================================================
-   Responsive Ã¢â‚¬â€ desktop compression
+   Responsive ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â desktop compression
    ============================================================ */
 
-@media (max-width: 1280px) {
+@media (max-width: 1200px) {
   .shell {
     grid-template-columns: 248px minmax(0, 1fr);
   }
@@ -6924,7 +6972,7 @@ table.grid.dist-table thead th.ign-col {
   .content-roster .roster-main {
     display: grid;
     grid-template-columns: minmax(0, 1fr) 340px;
-    gap: 16px;
+    gap: var(--sp-4);
     flex: 1;
     min-height: 0;
   }
@@ -6958,7 +7006,7 @@ table.grid.dist-table thead th.ign-col {
   }
   .content-roster .dist-row {
     grid-template-columns: minmax(0, 110px) minmax(20px, 1fr) 36px;
-    gap: 8px;
+    gap: var(--sp-2);
   }
   .content-roster .roster-top {
     min-height: 0;
@@ -6979,28 +7027,28 @@ table.grid.dist-table thead th.ign-col {
     font-size: clamp(17px, 17cqi, 27px);
   }
   .content-roster .page-head-copy h1 {
-    font-size: 32px;
+    font-size: var(--fs-2xl);
   }
   .content-roster .page-head {
     align-items: center;
   }
   .content-roster .roster-summaries > .panel-card,
   .content-roster .roster-split > .panel-card {
-    padding: 16px;
+    padding: var(--sp-4);
   }
   .content-roster .roster-summaries h3,
   .content-roster .roster-split h3 {
-    font-size: 15px;
+    font-size: var(--fs-md);
   }
   .content-roster .panel-head {
     margin-bottom: 10px;
   }
   .content-roster .roster-summary-meta {
     margin: -4px 0 10px;
-    font-size: 9px;
+    font-size: var(--fs-micro);
   }
   .content-roster .dist-list {
-    gap: 6px;
+    gap: var(--sp-2);
   }
   .content-roster .attendance-caption {
     display: none;
@@ -7013,20 +7061,20 @@ table.grid.dist-table thead th.ign-col {
     font-size: clamp(26px, 3.4vh, 42px);
   }
   .content-roster .attendance-legend li {
-    font-size: 10px;
+    font-size: var(--fs-micro);
   }
   .content-roster .attendance-footer {
     margin-top: 7px;
     padding-top: 6px;
-    font-size: 7px;
+    font-size: var(--fs-micro);
   }
 }
 
 /* ============================================================
-   Responsive Ã¢â‚¬â€ tablet / mobile
+   Responsive ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â tablet / mobile
    ============================================================ */
 
-@media (max-width: 1320px) {
+@media (max-width: 1200px) {
   .dash-deck {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
@@ -7040,9 +7088,9 @@ table.grid.dist-table thead th.ign-col {
     overflow-y: auto;
     padding: 0;
     border: 1px solid transparent;
-    border-radius: var(--radius);
+    border-radius: var(--r-md);
     background: var(--glass) padding-box, var(--edge) border-box;
-    box-shadow: var(--shadow-soft), inset 0 1px 0 rgba(255, 255, 255, 0.035);
+    box-shadow: var(--elev-1), var(--bevel);
     scrollbar-gutter: stable;
   }
 
@@ -7078,9 +7126,7 @@ table.grid.dist-table thead th.ign-col {
     padding: 0 16px 16px;
     scrollbar-gutter: auto;
   }
-}
 
-@media (max-width: 1100px) {
   .auth {
     grid-template-columns: minmax(0, 1fr) minmax(380px, 0.95fr);
   }
@@ -7128,13 +7174,13 @@ table.grid.dist-table thead th.ign-col {
   .sidebar {
     position: fixed;
     inset: 0 auto 0 0;
-    z-index: 90;
+    z-index: var(--z-rail);
     width: min(86vw, 330px);
     height: 100vh;
     height: 100dvh;
     padding: 18px 14px;
     transform: translateX(-102%);
-    transition: transform 0.24s var(--ease);
+    transition: transform var(--dur-2) var(--ease);
     background:
       radial-gradient(520px 320px at 0% 0%, rgba(201, 138, 95, 0.08), transparent 65%),
       linear-gradient(180deg, rgba(8, 13, 10, 0.78), rgba(6, 10, 8, 0.86) 82%);
@@ -7156,7 +7202,7 @@ table.grid.dist-table thead th.ign-col {
     margin-left: auto;
     padding: 0;
     border: 1px solid var(--line-soft);
-    border-radius: 4px;
+    border-radius: var(--r-sm);
     background: transparent;
     color: var(--muted);
     cursor: pointer;
@@ -7171,20 +7217,20 @@ table.grid.dist-table thead th.ign-col {
     display: block;
     position: fixed;
     inset: 0;
-    z-index: 80;
-    background: rgba(3, 4, 8, 0.66);
+    z-index: var(--z-backdrop);
+    background: rgba(3, 6, 4, 0.66);
     backdrop-filter: blur(3px);
-    animation: overlay-in 0.16s ease;
+        animation: enter-fade var(--dur-1) ease;
   }
 
   .nav-item {
     padding: 9px 12px;
-    font-size: 13px;
+    font-size: var(--fs-base);
   }
 
   .topbar {
     padding: 10px 13px 8px;
-    gap: 9px 10px;
+    gap: var(--sp-2) var(--sp-2);
   }
 
   .menu-btn {
@@ -7208,7 +7254,7 @@ table.grid.dist-table thead th.ign-col {
   }
 
   .topbar h2 {
-    font-size: 16px;
+    font-size: var(--fs-md);
     max-width: none;
   }
 
@@ -7268,7 +7314,7 @@ table.grid.dist-table thead th.ign-col {
     display: flex;
     flex: 0 0 100%;
     max-width: none;
-    gap: 7px;
+    gap: var(--sp-2);
     margin: 0 -4px;
     padding: 2px 4px 0;
     border-top: 1px solid rgba(167, 184, 173, 0.06);
@@ -7277,10 +7323,10 @@ table.grid.dist-table thead th.ign-col {
   .main-tab {
     padding: 6px 11px;
     border: 1px solid rgba(167, 184, 173, 0.12);
-    border-radius: 999px;
-    font-size: 8.5px;
+    border-radius: var(--r-pill);
+    font-size: var(--fs-micro);
     letter-spacing: 0.1em;
-    background: rgba(10, 13, 20, 0.55);
+    background: rgba(10, 14, 11, 0.55);
   }
 
   .main-tab.active {
@@ -7308,7 +7354,7 @@ table.grid.dist-table thead th.ign-col {
       'search add'
       'col col';
     align-items: center;
-    gap: 8px;
+    gap: var(--sp-2);
     width: 100%;
   }
 
@@ -7355,7 +7401,7 @@ table.grid.dist-table thead th.ign-col {
   }
 
   .panel-card {
-    padding: 16px;
+    padding: var(--sp-4);
   }
 
   .panel-head {
@@ -7364,7 +7410,7 @@ table.grid.dist-table thead th.ign-col {
 
   .panel-card h3,
   .table-card h3 {
-    font-size: 16px;
+    font-size: var(--fs-md);
   }
 
   .table-scroll {
@@ -7377,7 +7423,7 @@ table.grid.dist-table thead th.ign-col {
   .cell-input,
   .toolbar .input,
   .toolbar .select {
-    font-size: 16px;
+    font-size: var(--fs-md);
   }
 
   .btn {
@@ -7389,8 +7435,8 @@ table.grid.dist-table thead th.ign-col {
   }
 
   .profile-hero {
-    padding: 16px;
-    gap: 13px;
+    padding: var(--sp-4);
+    gap: var(--sp-3);
     margin-bottom: 12px;
     grid-template-columns: auto minmax(0, 1fr);
   }
@@ -7403,11 +7449,11 @@ table.grid.dist-table thead th.ign-col {
   .avatar {
     width: 58px;
     height: 58px;
-    font-size: 19px;
+    font-size: var(--fs-lg);
   }
 
   .profile-hero .id h1 {
-    font-size: 22px;
+    font-size: var(--fs-xl);
     margin-bottom: 6px;
   }
 
@@ -7424,7 +7470,7 @@ table.grid.dist-table thead th.ign-col {
   .badge {
     flex: 0 0 auto;
     white-space: nowrap;
-    font-size: 7.5px;
+    font-size: var(--fs-micro);
   }
 
   .hero-progress {
@@ -7434,14 +7480,14 @@ table.grid.dist-table thead th.ign-col {
 
   .dash-deck {
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 9px;
+    gap: var(--sp-2);
     margin-bottom: 12px;
   }
 
   .dash-tile {
     min-height: 68px;
     padding: 11px 12px;
-    gap: 9px;
+    gap: var(--sp-2);
   }
 
   .dash-tile-ico {
@@ -7450,11 +7496,11 @@ table.grid.dist-table thead th.ign-col {
   }
 
   .dash-tile-text strong {
-    font-size: 11px;
+    font-size: var(--fs-xs);
   }
 
   .dash-tile-text span {
-    font-size: 7px;
+    font-size: var(--fs-micro);
   }
 
   .dash-tile-arrow {
@@ -7463,7 +7509,7 @@ table.grid.dist-table thead th.ign-col {
 
   .profile-sections {
     grid-template-columns: 1fr;
-    gap: 12px;
+    gap: var(--sp-3);
   }
 
   .panel-tip {
@@ -7481,7 +7527,7 @@ table.grid.dist-table thead th.ign-col {
 
   .field-grid {
     grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-    gap: 12px;
+    gap: var(--sp-3);
   }
 
   .field-grid > .field-long {
@@ -7490,11 +7536,11 @@ table.grid.dist-table thead th.ign-col {
 
   .field-question {
     grid-template-columns: 1fr;
-    gap: 8px;
+    gap: var(--sp-2);
   }
 
   .question-text {
-    font-size: 7.5px;
+    font-size: var(--fs-micro);
   }
 
   .page-head {
@@ -7502,7 +7548,7 @@ table.grid.dist-table thead th.ign-col {
   }
 
   .page-head-copy h1 {
-    font-size: 27px;
+    font-size: var(--fs-2xl);
   }
 
   .page-head-mark {
@@ -7511,7 +7557,7 @@ table.grid.dist-table thead th.ign-col {
   }
 
   .stat-row {
-    gap: 9px;
+    gap: var(--sp-2);
   }
 
   .stat-card {
@@ -7551,13 +7597,13 @@ table.grid.dist-table thead th.ign-col {
   }
 
   .boss-hero {
-    padding: 16px;
-    gap: 14px;
+    padding: var(--sp-4);
+    gap: var(--sp-4);
     align-items: center;
   }
 
   .boss-hero-copy h1 {
-    font-size: 24px;
+    font-size: var(--fs-xl);
   }
 
   .boss-hero-orb {
@@ -7566,7 +7612,7 @@ table.grid.dist-table thead th.ign-col {
   }
 
   .boss-hero-orb span {
-    font-size: 21px;
+    font-size: var(--fs-lg);
   }
 
   .boss-hero-stats {
@@ -7574,7 +7620,7 @@ table.grid.dist-table thead th.ign-col {
   }
 
   .podium {
-    gap: 8px;
+    gap: var(--sp-2);
   }
 
   .podium-card {
@@ -7584,19 +7630,19 @@ table.grid.dist-table thead th.ign-col {
   .podium-avatar {
     width: 38px;
     height: 38px;
-    font-size: 12px;
+    font-size: var(--fs-sm);
   }
 
   .podium-card strong {
-    font-size: 10.5px;
+    font-size: var(--fs-micro);
   }
 
   .podium-points {
-    font-size: 16px;
+    font-size: var(--fs-md);
   }
 
   .att-toolbar {
-    gap: 10px;
+    gap: var(--sp-2);
   }
 
   .att-toolbar .field {
@@ -7611,7 +7657,7 @@ table.grid.dist-table thead th.ign-col {
   }
 
   .att-actions {
-    gap: 7px;
+    gap: var(--sp-2);
   }
 
   .att-actions .input {
@@ -7626,7 +7672,7 @@ table.grid.dist-table thead th.ign-col {
 
   .cp-layout {
     grid-template-columns: 1fr;
-    gap: 12px;
+    gap: var(--sp-3);
   }
 
   .cp-layout .panel-card {
@@ -7646,11 +7692,11 @@ table.grid.dist-table thead th.ign-col {
   }
 
   .announce {
-    padding: 16px;
+    padding: var(--sp-4);
   }
 
   .announce-head h2 {
-    font-size: 24px;
+    font-size: var(--fs-xl);
   }
 
   .announce-seal {
@@ -7663,12 +7709,12 @@ table.grid.dist-table thead th.ign-col {
   }
 
   .modal {
-    padding: 20px;
+    padding: var(--sp-5);
     max-height: 90vh;
   }
 
   .modal h3 {
-    font-size: 20px;
+    font-size: var(--fs-lg);
   }
 
   .tip-row {
@@ -7699,7 +7745,7 @@ table.grid.dist-table thead th.ign-col {
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 12px;
+    gap: var(--sp-3);
     margin-bottom: 22px;
   }
 
@@ -7712,7 +7758,7 @@ table.grid.dist-table thead th.ign-col {
 
   .auth-mobile-brand span {
     font-family: var(--display);
-    font-size: 23px;
+    font-size: var(--fs-xl);
     font-weight: 600;
     letter-spacing: 0.22em;
     color: #ece9df;
@@ -7762,7 +7808,7 @@ table.grid.dist-table thead th.ign-col {
   }
 
   .overlay {
-    padding: 12px;
+    padding: var(--sp-3);
   }
 
   .toasts {
@@ -7778,7 +7824,7 @@ table.grid.dist-table thead th.ign-col {
 
   .intro-meta {
     bottom: 9vh;
-    font-size: 7px;
+    font-size: var(--fs-micro);
     letter-spacing: 0.2em;
   }
 
@@ -7904,7 +7950,7 @@ table.grid.dist-table thead th.ign-col {
   }
 }
 
-@media (max-width: 560px) {
+@media (max-width: 640px) {
   .content {
     padding: 12px 11px 30px;
   }
@@ -7942,8 +7988,8 @@ table.grid.dist-table thead th.ign-col {
   .podium-card {
     flex-direction: row;
     justify-content: flex-start;
-    gap: 10px;
-    padding: 12px;
+    gap: var(--sp-2);
+    padding: var(--sp-3);
   }
 
   .podium-card strong {
@@ -7952,7 +7998,7 @@ table.grid.dist-table thead th.ign-col {
   }
 
   .podium-points {
-    font-size: 18px;
+    font-size: var(--fs-lg);
   }
 
   .podium-label {
@@ -8733,7 +8779,7 @@ table.grid.dist-table thead th.ign-col {
   inset: 0;
   width: 100%;
   height: 100%;
-  z-index: 900;
+  z-index: var(--z-cursor);
   pointer-events: none;
 }
 
@@ -8750,7 +8796,7 @@ table.grid.dist-table thead th.ign-col {
   background: rgba(5, 8, 7, 0.8);
   backdrop-filter: blur(3px);
   font-family: var(--mono);
-  font-size: 10px;
+  font-size: var(--fs-micro);
   letter-spacing: 0.18em;
   text-transform: uppercase;
   color: var(--gold-bright);
@@ -8764,7 +8810,7 @@ table.grid.dist-table thead th.ign-col {
 @media (max-width: 900px) {
   .attendance-podium {
     justify-content: flex-start;
-    gap: 8px;
+    gap: var(--sp-2);
     margin-bottom: 14px;
     padding: 6px 2px 8px;
   }
@@ -8779,7 +8825,7 @@ table.grid.dist-table thead th.ign-col {
 
   .attendance-podium-card {
     min-height: 158px;
-    gap: 5px;
+    gap: var(--sp-2);
     padding: 12px 8px 10px;
   }
 
@@ -8794,7 +8840,7 @@ table.grid.dist-table thead th.ign-col {
   }
 
   .attendance-podium-avatar {
-    font-size: 16px;
+    font-size: var(--fs-md);
   }
 
   .attendance-podium-slot.rank-1 .attendance-podium-avatar-wrap,
@@ -8804,23 +8850,23 @@ table.grid.dist-table thead th.ign-col {
   }
 
   .attendance-podium-slot.rank-1 .attendance-podium-avatar {
-    font-size: 20px;
+    font-size: var(--fs-lg);
   }
 
   .attendance-podium-ign {
-    font-size: 12px;
+    font-size: var(--fs-sm);
   }
 
   .attendance-podium-slot.rank-1 .attendance-podium-ign {
-    font-size: 14px;
+    font-size: var(--fs-base);
   }
 
   .attendance-podium-score strong {
-    font-size: 16px;
+    font-size: var(--fs-md);
   }
 
   .attendance-podium-slot.rank-1 .attendance-podium-score strong {
-    font-size: 20px;
+    font-size: var(--fs-lg);
   }
 
   .attendance-podium-base {
@@ -8828,23 +8874,23 @@ table.grid.dist-table thead th.ign-col {
   }
 
   .attendance-podium-base span {
-    font-size: 18px;
+    font-size: var(--fs-lg);
   }
 
   .attendance-podium-slot.rank-1 .attendance-podium-base span {
-    font-size: 24px;
+    font-size: var(--fs-xl);
   }
 
   .attendance-podium-slot.rank-4 .attendance-podium-base span {
-    font-size: 15px;
+    font-size: var(--fs-md);
   }
 
   .attendance-podium-slot.rank-5 .attendance-podium-base span {
-    font-size: 11px;
+    font-size: var(--fs-xs);
   }
 }
 
-@media (max-width: 560px) {
+@media (max-width: 640px) {
   .roster-profile-card {
     padding: 0 16px 18px;
   }
@@ -8856,18 +8902,18 @@ table.grid.dist-table thead th.ign-col {
 
   .roster-profile-head {
     flex-wrap: wrap;
-    gap: 10px;
+    gap: var(--sp-2);
     margin-top: -32px;
   }
 
   .roster-profile-avatar {
     width: 76px;
     height: 76px;
-    font-size: 24px;
+    font-size: var(--fs-xl);
   }
 
   .roster-profile-id h2 {
-    font-size: 20px;
+    font-size: var(--fs-lg);
   }
 
   .roster-profile-cp {
@@ -8880,13 +8926,13 @@ table.grid.dist-table thead th.ign-col {
   }
 
   .roster-profile-cp strong {
-    font-size: 20px;
+    font-size: var(--fs-lg);
     margin-top: 0;
   }
 
   .roster-profile-details {
     grid-template-columns: 1fr;
-    gap: 12px;
+    gap: var(--sp-3);
     margin-top: 18px;
     padding-top: 14px;
   }
@@ -8894,13 +8940,11 @@ table.grid.dist-table thead th.ign-col {
   .roster-profile-notes {
     margin-top: 14px;
   }
-}
 
-@media (max-width: 700px) {
   .attendance-podium {
     display: grid;
     grid-template-columns: repeat(5, minmax(0, 1fr));
-    gap: 4px;
+    gap: var(--sp-1);
     align-items: end;
     overflow: visible;
     padding: 4px 0 6px;
@@ -8916,7 +8960,7 @@ table.grid.dist-table thead th.ign-col {
 
   .attendance-podium-card {
     min-height: 132px;
-    gap: 4px;
+    gap: var(--sp-1);
     padding: 8px 3px 6px;
     border-top-width: 2px;
   }
@@ -8933,7 +8977,7 @@ table.grid.dist-table thead th.ign-col {
   }
 
   .attendance-podium-avatar {
-    font-size: 12px;
+    font-size: var(--fs-sm);
   }
 
   .attendance-podium-slot.rank-1 .attendance-podium-avatar-wrap,
@@ -8943,7 +8987,7 @@ table.grid.dist-table thead th.ign-col {
   }
 
   .attendance-podium-slot.rank-1 .attendance-podium-avatar {
-    font-size: 14px;
+    font-size: var(--fs-base);
   }
 
   .attendance-podium-rank {
@@ -8966,12 +9010,12 @@ table.grid.dist-table thead th.ign-col {
   }
 
   .attendance-podium-ign {
-    font-size: 8px;
+    font-size: var(--fs-micro);
     letter-spacing: 0;
   }
 
   .attendance-podium-slot.rank-1 .attendance-podium-ign {
-    font-size: 9.5px;
+    font-size: var(--fs-micro);
   }
 
   .attendance-podium-score {
@@ -8979,15 +9023,15 @@ table.grid.dist-table thead th.ign-col {
   }
 
   .attendance-podium-score strong {
-    font-size: 10.5px;
+    font-size: var(--fs-micro);
   }
 
   .attendance-podium-slot.rank-1 .attendance-podium-score strong {
-    font-size: 12.5px;
+    font-size: var(--fs-sm);
   }
 
   .attendance-podium-score span {
-    font-size: 7px;
+    font-size: var(--fs-micro);
   }
 
   .attendance-podium-score-label {
@@ -8999,19 +9043,19 @@ table.grid.dist-table thead th.ign-col {
   }
 
   .attendance-podium-base span {
-    font-size: 12px;
+    font-size: var(--fs-sm);
   }
 
   .attendance-podium-slot.rank-1 .attendance-podium-base span {
-    font-size: 16px;
+    font-size: var(--fs-md);
   }
 
   .attendance-podium-slot.rank-4 .attendance-podium-base span {
-    font-size: 11px;
+    font-size: var(--fs-xs);
   }
 
   .attendance-podium-slot.rank-5 .attendance-podium-base span {
-    font-size: 9px;
+    font-size: var(--fs-micro);
   }
 }
 
@@ -9020,12 +9064,10 @@ table.grid.dist-table thead th.ign-col {
     flex: 1 1 100%;
     width: 100%;
   }
-}
 
-@media (max-width: 900px) {
   .activity-stats {
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 9px;
+    gap: var(--sp-2);
   }
 
   .activity-stat {
@@ -9034,7 +9076,7 @@ table.grid.dist-table thead th.ign-col {
 
   .activity-filters {
     padding: 10px;
-    gap: 8px;
+    gap: var(--sp-2);
   }
 
   .activity-search {
@@ -9056,13 +9098,11 @@ table.grid.dist-table thead th.ign-col {
   }
 }
 
-@media (max-width: 560px) {
+@media (max-width: 640px) {
   .activity-table {
     min-width: 840px;
   }
-}
 
-@media (max-width: 700px) {
   .activity-table-scroll {
     overflow-x: hidden;
   }
@@ -9085,11 +9125,11 @@ table.grid.dist-table thead th.ign-col {
   .activity-table tbody tr {
     display: grid;
     grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-    gap: 9px 14px;
+    gap: var(--sp-2) var(--sp-4);
     margin-bottom: 10px;
-    padding: 12px;
+    padding: var(--sp-3);
     border: 1px solid rgba(167, 184, 173, 0.1);
-    border-radius: var(--radius-sm);
+    border-radius: var(--r-sm);
     background: rgba(5, 8, 7, 0.18);
   }
 
@@ -9110,7 +9150,7 @@ table.grid.dist-table thead th.ign-col {
     margin-bottom: 3px;
     color: var(--faint);
     font-family: var(--mono);
-    font-size: 7px;
+    font-size: var(--fs-micro);
     letter-spacing: 0.12em;
     text-transform: uppercase;
   }
@@ -9127,7 +9167,7 @@ table.grid.dist-table thead th.ign-col {
   }
 
   .activity-time {
-    font-size: 10px;
+    font-size: var(--fs-micro);
   }
 
   .activity-actor {
@@ -9195,7 +9235,7 @@ table.grid.dist-table thead th.ign-col {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 18px;
+  gap: var(--sp-4);
   padding: 18px 24px 16px;
   border-bottom: 1px solid rgba(167, 184, 173, 0.09);
 }
@@ -9207,7 +9247,7 @@ table.grid.dist-table thead th.ign-col {
 .music-kicker {
   display: block;
   font-family: var(--mono);
-  font-size: 8px;
+  font-size: var(--fs-micro);
   line-height: 1.4;
   letter-spacing: 0.2em;
   text-transform: uppercase;
@@ -9217,7 +9257,7 @@ table.grid.dist-table thead th.ign-col {
 .music-head h2 {
   margin: 0;
   font-family: var(--display);
-  font-size: 28px;
+  font-size: var(--fs-2xl);
   font-weight: 600;
   line-height: 1.1;
   letter-spacing: 0.06em;
@@ -9228,7 +9268,7 @@ table.grid.dist-table thead th.ign-col {
   max-width: 62ch;
   margin: 0;
   color: var(--muted);
-  font-size: 11.5px;
+  font-size: var(--fs-xs);
 }
 
 .music-shell > .music-list-fab {
@@ -9247,13 +9287,14 @@ table.grid.dist-table thead th.ign-col {
   background: rgba(10, 14, 12, 0.82);
   color: var(--accent-2);
   box-shadow:
-    0 12px 28px rgba(0, 0, 0, 0.42),
+    var(--elev-1),
     0 0 22px rgba(201, 138, 95, 0.14),
     inset 0 1px 0 rgba(255, 255, 255, 0.08);
   cursor: pointer;
   transform: translateX(-50%);
-  animation: music-fab-bounce var(--music-fab-duration, 2.6s) var(--music-fab-delay, 0s) infinite;
-  transition: color 0.16s, background 0.16s, border-color 0.16s, box-shadow 0.16s, opacity 0.24s ease;
+  animation: music-fab-bounce var(--music-fab-duration, 2.6s) var(--music-fab-delay, 0s) 3;
+  transition: color var(--dur-1), background var(--dur-1), border-color var(--dur-1),
+    box-shadow var(--dur-1), opacity var(--dur-2) ease;
 }
 
 /* Mobile: fades out while the track-list sheet slides up. */
@@ -9267,7 +9308,7 @@ table.grid.dist-table thead th.ign-col {
   background: rgba(201, 138, 95, 0.18);
   border-color: rgba(201, 138, 95, 0.62);
   box-shadow:
-    0 14px 32px rgba(0, 0, 0, 0.46),
+    var(--elev-2),
     0 0 28px rgba(201, 138, 95, 0.22),
     inset 0 1px 0 rgba(255, 255, 255, 0.1);
 }
@@ -9281,7 +9322,7 @@ table.grid.dist-table thead th.ign-col {
   display: flex;
   align-items: center;
   justify-content: flex-end;
-  gap: 10px;
+  gap: var(--sp-2);
   flex-wrap: wrap;
   flex: none;
   padding-top: 3px;
@@ -9290,14 +9331,14 @@ table.grid.dist-table thead th.ign-col {
 .music-chip {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: var(--sp-2);
   padding: 6px 10px;
   border: 1px solid rgba(201, 138, 95, 0.2);
-  border-radius: 99px;
+  border-radius: var(--r-pill);
   background: rgba(201, 138, 95, 0.07);
   color: var(--accent-2);
   font-family: var(--mono);
-  font-size: 8px;
+  font-size: var(--fs-micro);
   letter-spacing: 0.1em;
   text-transform: uppercase;
   white-space: nowrap;
@@ -9311,12 +9352,12 @@ table.grid.dist-table thead th.ign-col {
 .music-drive-link {
   color: var(--faint);
   font-family: var(--mono);
-  font-size: 8px;
+  font-size: var(--fs-micro);
   letter-spacing: 0.1em;
   text-transform: uppercase;
   text-decoration: none;
   border-bottom: 1px dotted rgba(167, 184, 173, 0.28);
-  transition: color 0.16s, border-color 0.16s;
+  transition: color var(--dur-1), border-color var(--dur-1);
 }
 
 .music-drive-link:hover {
@@ -9338,7 +9379,7 @@ table.grid.dist-table thead th.ign-col {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 13px;
+  gap: var(--sp-3);
   padding: 22px 24px;
   overflow-y: auto;
 }
@@ -9346,7 +9387,7 @@ table.grid.dist-table thead th.ign-col {
 .music-now-info {
   display: flex;
   flex-direction: column;
-  gap: 13px;
+  gap: var(--sp-3);
   width: 100%;
   max-width: 440px;
   min-width: 0;
@@ -9368,7 +9409,7 @@ table.grid.dist-table thead th.ign-col {
   gap: 2px;
   overflow: hidden;
   border: 1px solid hsla(var(--cover-hue, 150), 52%, 62%, 0.3);
-  border-radius: 8px;
+  border-radius: var(--r-md);
   background:
     radial-gradient(circle at 30% 18%, hsla(var(--cover-hue, 150), 62%, 68%, 0.24), transparent 46%),
     radial-gradient(circle at 78% 86%, hsla(var(--cover-hue-2, 155), 45%, 52%, 0.18), transparent 52%),
@@ -9379,8 +9420,8 @@ table.grid.dist-table thead th.ign-col {
       #060907 100%
     );
   box-shadow:
-    0 26px 60px rgba(0, 0, 0, 0.48),
-    inset 0 1px 0 rgba(255, 255, 255, 0.06);
+    var(--elev-1),
+    var(--bevel);
 }
 
 .music-cover::before {
@@ -9418,7 +9459,7 @@ table.grid.dist-table thead th.ign-col {
   z-index: 1;
   margin-top: 8px;
   font-family: var(--display);
-  font-size: 17px;
+  font-size: var(--fs-md);
   letter-spacing: 0.28em;
   color: #ece9df;
 }
@@ -9427,7 +9468,7 @@ table.grid.dist-table thead th.ign-col {
   position: relative;
   z-index: 1;
   font-family: var(--mono);
-  font-size: 6.5px;
+  font-size: var(--fs-micro);
   letter-spacing: 0.34em;
   text-transform: uppercase;
   color: var(--faint);
@@ -9436,11 +9477,11 @@ table.grid.dist-table thead th.ign-col {
 .music-cover-index {
   display: flex;
   justify-content: center;
-  gap: 4px;
+  gap: var(--sp-1);
   margin-top: 8px;
   color: var(--muted);
   font-family: var(--mono);
-  font-size: 8px;
+  font-size: var(--fs-micro);
   letter-spacing: 0.12em;
 }
 
@@ -9458,7 +9499,7 @@ table.grid.dist-table thead th.ign-col {
 .music-track-copy h3 {
   margin: 2px 0 3px;
   font-family: var(--display);
-  font-size: 22px;
+  font-size: var(--fs-xl);
   font-weight: 600;
   line-height: 1.18;
   letter-spacing: 0.035em;
@@ -9470,10 +9511,10 @@ table.grid.dist-table thead th.ign-col {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
+  gap: var(--sp-2);
   color: var(--muted);
   font-family: var(--mono);
-  font-size: 8px;
+  font-size: var(--fs-micro);
   letter-spacing: 0.1em;
   text-transform: uppercase;
 }
@@ -9499,7 +9540,7 @@ table.grid.dist-table thead th.ign-col {
   margin-bottom: 4px;
   color: var(--faint);
   font-family: var(--mono);
-  font-size: 8px;
+  font-size: var(--fs-micro);
   letter-spacing: 0.06em;
 }
 
@@ -9511,7 +9552,7 @@ table.grid.dist-table thead th.ign-col {
   width: 100%;
   height: 4px;
   margin: 0;
-  border-radius: 99px;
+  border-radius: var(--r-pill);
   outline: none;
   cursor: pointer;
   background: linear-gradient(
@@ -9536,7 +9577,7 @@ table.grid.dist-table thead th.ign-col {
   background: var(--accent-2);
   box-shadow: 0 0 0 3px rgba(201, 138, 95, 0.14), 0 0 12px rgba(201, 138, 95, 0.3);
   opacity: 0;
-  transition: opacity 0.16s;
+  transition: opacity var(--dur-1);
 }
 
 .music-range:hover::-webkit-slider-thumb,
@@ -9557,7 +9598,7 @@ table.grid.dist-table thead th.ign-col {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 10px;
+  gap: var(--sp-2);
   margin-top: 2px;
 }
 
@@ -9573,7 +9614,7 @@ table.grid.dist-table thead th.ign-col {
   background: transparent;
   color: var(--muted);
   cursor: pointer;
-  transition: color 0.16s, background 0.16s, border-color 0.16s, transform 0.16s;
+  transition: color var(--dur-1), background var(--dur-1), border-color var(--dur-1), transform var(--dur-1);
 }
 
 .music-control svg {
@@ -9642,7 +9683,7 @@ table.grid.dist-table thead th.ign-col {
   max-width: 360px;
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--sp-2);
   color: var(--faint);
 }
 
@@ -9659,7 +9700,7 @@ table.grid.dist-table thead th.ign-col {
   background: transparent;
   color: var(--muted);
   cursor: pointer;
-  transition: color 0.16s, background 0.16s;
+  transition: color var(--dur-1), background var(--dur-1);
 }
 
 .music-volume-btn:hover {
@@ -9683,7 +9724,7 @@ table.grid.dist-table thead th.ign-col {
   flex: none;
   text-align: right;
   font-family: var(--mono);
-  font-size: 8px;
+  font-size: var(--fs-micro);
   letter-spacing: 0.04em;
 }
 
@@ -9700,11 +9741,11 @@ table.grid.dist-table thead th.ign-col {
   background: transparent;
   color: var(--muted);
   font-family: var(--mono);
-  font-size: 11px;
+  font-size: var(--fs-xs);
   font-weight: 600;
   letter-spacing: 0.02em;
   cursor: pointer;
-  transition: color 0.16s;
+  transition: color var(--dur-1);
 }
 
 .music-bg-toggle:hover {
@@ -9725,10 +9766,10 @@ table.grid.dist-table thead th.ign-col {
   margin-top: 1px;
   padding: 7px 10px;
   border: 1px solid rgba(217, 104, 95, 0.28);
-  border-radius: var(--radius-sm);
+  border-radius: var(--r-sm);
   background: rgba(217, 104, 95, 0.08);
   color: #ff9298;
-  font-size: 10px;
+  font-size: var(--fs-micro);
   line-height: 1.4;
   text-align: center;
 }
@@ -9752,7 +9793,7 @@ table.grid.dist-table thead th.ign-col {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
+  gap: var(--sp-3);
   padding: 0 4px 12px;
   border-bottom: 1px solid rgba(167, 184, 173, 0.08);
 }
@@ -9762,7 +9803,7 @@ table.grid.dist-table thead th.ign-col {
   flex: 1;
   min-width: 0;
   font-family: var(--display);
-  font-size: 18px;
+  font-size: var(--fs-lg);
   font-weight: 600;
   letter-spacing: 0.04em;
   text-transform: uppercase;
@@ -9776,7 +9817,7 @@ table.grid.dist-table thead th.ign-col {
   display: flex;
   align-items: center;
   justify-content: flex-end;
-  gap: 8px;
+  gap: var(--sp-2);
   flex: none;
 }
 
@@ -9789,15 +9830,15 @@ table.grid.dist-table thead th.ign-col {
   flex: none;
   overflow: hidden;
   border: 1px solid rgba(167, 184, 173, 0.16);
-  border-radius: 99px;
-  background: rgba(10, 14, 20, 0.55);
+  border-radius: var(--r-pill);
+  background: rgba(10, 15, 12, 0.55);
   color: var(--muted);
   transition:
-    width 0.24s cubic-bezier(0.22, 0.8, 0.3, 1),
-    color 0.16s,
-    background 0.16s,
-    border-color 0.16s,
-    box-shadow 0.16s;
+    width var(--dur-2) cubic-bezier(0.22, 0.8, 0.3, 1),
+    color var(--dur-1),
+    background var(--dur-1),
+    border-color var(--dur-1),
+    box-shadow var(--dur-1);
 }
 
 .music-search-expand:hover,
@@ -9813,7 +9854,7 @@ table.grid.dist-table thead th.ign-col {
 
 .music-search-expand:focus-within {
   border-color: rgba(201, 138, 95, 0.55);
-  background: rgba(7, 9, 15, 0.82);
+  background: rgba(7, 11, 9, 0.82);
   box-shadow: 0 0 0 3px rgba(201, 138, 95, 0.08);
 }
 
@@ -9824,13 +9865,12 @@ table.grid.dist-table thead th.ign-col {
   height: 100%;
   padding: 0;
   border: 0;
-  outline: none;
   background: transparent;
   color: var(--text);
-  font-size: 12px;
+  font-size: var(--fs-sm);
   opacity: 0;
   pointer-events: none;
-  transition: opacity 0.14s ease, padding 0.24s ease;
+  transition: opacity var(--dur-1) ease, padding var(--dur-2) ease;
 }
 
 .music-search-expand.is-open input {
@@ -9882,7 +9922,7 @@ table.grid.dist-table thead th.ign-col {
   background: rgba(201, 138, 95, 0.07);
   color: var(--accent-2);
   cursor: pointer;
-  transition: color 0.16s, background 0.16s, border-color 0.16s;
+  transition: color var(--dur-1), background var(--dur-1), border-color var(--dur-1);
 }
 
 .music-list-hide:hover {
@@ -9901,7 +9941,7 @@ table.grid.dist-table thead th.ign-col {
   padding-top: 3px;
   color: var(--faint);
   font-family: var(--mono);
-  font-size: 8px;
+  font-size: var(--fs-micro);
   letter-spacing: 0.1em;
   text-transform: uppercase;
   white-space: nowrap;
@@ -9945,16 +9985,16 @@ table.grid.dist-table thead th.ign-col {
   display: grid;
   grid-template-columns: 30px minmax(0, 1fr) auto;
   align-items: center;
-  gap: 10px;
+  gap: var(--sp-2);
   width: 100%;
   padding: 9px 8px;
   border: 1px solid transparent;
-  border-radius: var(--radius-sm);
+  border-radius: var(--r-sm);
   background: transparent;
   color: inherit;
   text-align: left;
   cursor: pointer;
-  transition: background 0.16s, border-color 0.16s, color 0.16s;
+  transition: background var(--dur-1), border-color var(--dur-1), color var(--dur-1);
 }
 
 .music-row:hover {
@@ -9975,7 +10015,7 @@ table.grid.dist-table thead th.ign-col {
   justify-content: center;
   color: var(--faint);
   font-family: var(--mono);
-  font-size: 8px;
+  font-size: var(--fs-micro);
   letter-spacing: 0.04em;
 }
 
@@ -9994,7 +10034,7 @@ table.grid.dist-table thead th.ign-col {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  font-size: 12px;
+  font-size: var(--fs-sm);
   font-weight: 600;
   letter-spacing: 0.01em;
 }
@@ -10002,7 +10042,7 @@ table.grid.dist-table thead th.ign-col {
 .music-row-artist {
   color: var(--faint);
   font-family: var(--mono);
-  font-size: 7.5px;
+  font-size: var(--fs-micro);
   letter-spacing: 0.12em;
   text-transform: uppercase;
 }
@@ -10010,7 +10050,7 @@ table.grid.dist-table thead th.ign-col {
 .music-row-meta {
   color: var(--faint);
   font-family: var(--mono);
-  font-size: 8px;
+  font-size: var(--fs-micro);
   letter-spacing: 0.04em;
   white-space: nowrap;
 }
@@ -10029,7 +10069,7 @@ table.grid.dist-table thead th.ign-col {
 .music-row-eq span {
   width: 2.5px;
   height: 45%;
-  border-radius: 2px;
+  border-radius: var(--r-sm);
   background: var(--accent-2);
   animation: music-row-eq 0.82s ease-in-out infinite;
 }
@@ -10040,7 +10080,7 @@ table.grid.dist-table thead th.ign-col {
 .music-list-empty {
   padding: 30px 12px;
   color: var(--faint);
-  font-size: 12px;
+  font-size: var(--fs-sm);
   text-align: center;
 }
 
@@ -10051,7 +10091,7 @@ table.grid.dist-table thead th.ign-col {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 10px;
+  gap: var(--sp-2);
   padding: 40px 20px;
   color: var(--muted);
   text-align: center;
@@ -10076,7 +10116,7 @@ table.grid.dist-table thead th.ign-col {
 
 .music-state strong {
   font-family: var(--display);
-  font-size: 18px;
+  font-size: var(--fs-lg);
   font-weight: 600;
   color: var(--text);
 }
@@ -10084,7 +10124,7 @@ table.grid.dist-table thead th.ign-col {
 .music-state-note {
   max-width: 48ch;
   color: var(--faint);
-  font-size: 11px;
+  font-size: var(--fs-xs);
 }
 
 .music-state .btn {
@@ -10093,10 +10133,10 @@ table.grid.dist-table thead th.ign-col {
 
 .music-state--loading {
   flex-direction: row;
-  gap: 10px;
+  gap: var(--sp-2);
   color: var(--faint);
   font-family: var(--mono);
-  font-size: 9px;
+  font-size: var(--fs-micro);
   letter-spacing: 0.14em;
   text-transform: uppercase;
 }
@@ -10107,22 +10147,22 @@ table.grid.dist-table thead th.ign-col {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
+  gap: var(--sp-2);
   flex: none;
   height: 34px;
   padding: 0 14px;
   border: 1px solid rgba(167, 184, 173, 0.22);
-  border-radius: var(--radius-sm);
+  border-radius: var(--r-sm);
   background: rgba(9, 13, 12, 0.74);
   color: var(--muted);
   font-family: var(--mono);
-  font-size: 9px;
+  font-size: var(--fs-micro);
   line-height: 1;
   letter-spacing: 0.18em;
   text-transform: uppercase;
   white-space: nowrap;
   cursor: pointer;
-  transition: color 0.16s, border-color 0.16s, background 0.16s, box-shadow 0.16s;
+  transition: color var(--dur-1), border-color var(--dur-1), background var(--dur-1), box-shadow var(--dur-1);
 }
 
 .music-fs-btn svg {
@@ -10135,7 +10175,7 @@ table.grid.dist-table thead th.ign-col {
   color: #ffe2c8;
   border-color: rgba(201, 138, 95, 0.55);
   background: rgba(201, 138, 95, 0.14);
-  box-shadow: 0 0 18px rgba(201, 138, 95, 0.18);
+  box-shadow: var(--glow-gold-soft);
 }
 
 .music-fs-btn:focus-visible {
@@ -10147,7 +10187,7 @@ table.grid.dist-table thead th.ign-col {
 .music-shell.is-fs {
   position: fixed;
   inset: 0;
-  z-index: 470;
+  z-index: var(--z-fs);
   flex: none;
   border: 0;
   border-radius: 0;
@@ -10169,7 +10209,7 @@ table.grid.dist-table thead th.ign-col {
 /* Track list is opt-in in fullscreen (chrome button toggles it). */
 .music-shell.is-fs:not(.is-fs-list) .music-playlist,
 .music-shell.is-fs > .music-list-fab {
-  /* Later media queries force the FAB visible on mobile — keep it out of fullscreen. */
+  /* Later media queries force the FAB visible on mobile â€” keep it out of fullscreen. */
   display: none !important;
 }
 
@@ -10201,14 +10241,14 @@ table.grid.dist-table thead th.ign-col {
 }
 
 .music-shell.is-fs .music-kicker {
-  font-size: 7px;
+  font-size: var(--fs-micro);
   letter-spacing: 0.18em;
 }
 
 .music-shell.is-fs .music-track-copy h3 {
   margin: 1px 0;
   max-width: 100%;
-  font-size: 15px;
+  font-size: var(--fs-md);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -10217,7 +10257,7 @@ table.grid.dist-table thead th.ign-col {
 
 .music-shell.is-fs .music-track-meta {
   justify-content: flex-start;
-  font-size: 7.5px;
+  font-size: var(--fs-micro);
 }
 
 .music-shell.is-fs .music-progress {
@@ -10259,7 +10299,7 @@ table.grid.dist-table thead th.ign-col {
 
 /* Bar (and its exit button) is hidden until the mouse moves. */
 .music-shell.is-fs .music-now {
-  transition: opacity 0.25s ease, transform 0.25s ease;
+  transition: opacity var(--dur-2) ease, transform var(--dur-2) ease;
 }
 
 .music-shell.is-fs.is-idle .music-now {
@@ -10280,8 +10320,8 @@ table.grid.dist-table thead th.ign-col {
     grid-template-areas: 'cover text prev play next progress shuffle repeat volume list fs';
     align-items: center;
     justify-content: center;
-    column-gap: 12px;
-    row-gap: 8px;
+    column-gap: var(--sp-3);
+    row-gap: var(--sp-2);
     overflow: visible;
     padding: 14px 22px;
     text-align: left;
@@ -10362,8 +10402,8 @@ table.grid.dist-table thead th.ign-col {
       'volume list';
     align-content: end;
     align-items: center;
-    row-gap: 10px;
-    column-gap: 12px;
+    row-gap: var(--sp-2);
+    column-gap: var(--sp-3);
     overflow: visible;
     padding: 16px 16px 24px;
     text-align: center;
@@ -10435,7 +10475,7 @@ table.grid.dist-table thead th.ign-col {
     right: 12px;
     z-index: 6;
     opacity: 1;
-    transition: opacity 0.25s ease;
+    transition: opacity var(--dur-2) ease;
   }
 
   .music-shell.is-fs.is-idle > .music-fs-float {
@@ -10484,17 +10524,6 @@ table.grid.dist-table thead th.ign-col {
   80% { transform: translate(-50%, 0) rotate(0); }
 }
 
-@keyframes music-sheet-item {
-  from {
-    opacity: 0;
-    transform: translate3d(0, 16px, 0);
-  }
-  to {
-    opacity: 1;
-    transform: translate3d(0, 0, 0);
-  }
-}
-
 @keyframes music-row-eq {
   0%, 100% { height: 35%; }
   40% { height: 100%; }
@@ -10527,7 +10556,7 @@ table.grid.dist-table thead th.ign-col {
   62% { transform: scaleY(0.55); }
 }
 
-@media (max-width: 1100px) {
+@media (max-width: 1200px) {
   .music-layout {
     grid-template-columns: minmax(0, 1fr) clamp(300px, 30%, 380px);
   }
@@ -10537,7 +10566,7 @@ table.grid.dist-table thead th.ign-col {
   }
 
   .music-head h2 {
-    font-size: 24px;
+    font-size: var(--fs-xl);
   }
 
   .music-now {
@@ -10643,11 +10672,15 @@ table.grid.dist-table thead th.ign-col {
 
   /* Playlist header + rows stagger in behind the sheet. */
   .music-shell:not(.is-fs).is-list-open .music-playlist-head {
-    animation: music-sheet-item 0.44s cubic-bezier(0.22, 1, 0.36, 1) 0.08s both;
+        --travel: 16px;
+    --enter-scale: 1;
+    animation: enter var(--dur-3) cubic-bezier(0.22, 1, 0.36, 1) 0.08s both;
   }
 
   .music-shell:not(.is-fs).is-list-open .music-row {
-    animation: music-sheet-item 0.44s cubic-bezier(0.22, 1, 0.36, 1) both;
+        --travel: 16px;
+    --enter-scale: 1;
+    animation: enter var(--dur-3) cubic-bezier(0.22, 1, 0.36, 1) both;
   }
 
   .music-shell:not(.is-fs).is-list-open .music-row:nth-child(1) { animation-delay: 0.12s; }
@@ -10665,12 +10698,12 @@ table.grid.dist-table thead th.ign-col {
   .music-head {
     flex-direction: row;
     align-items: center;
-    gap: 10px;
+    gap: var(--sp-2);
     padding: 14px 16px;
   }
 
   .music-head h2 {
-    font-size: 22px;
+    font-size: var(--fs-xl);
   }
 
   .music-list-hide {
@@ -10686,7 +10719,7 @@ table.grid.dist-table thead th.ign-col {
   }
 
   .music-search-expand input {
-    font-size: 16px;
+    font-size: var(--fs-md);
   }
 
   .music-cover-wrap {
@@ -10694,21 +10727,21 @@ table.grid.dist-table thead th.ign-col {
   }
 }
 
-@media (max-width: 560px) {
+@media (max-width: 640px) {
   .music-head {
     flex-direction: row;
     align-items: center;
-    gap: 8px;
+    gap: var(--sp-2);
     padding: 13px 13px 12px;
   }
 
   .music-head h2 {
-    font-size: 20px;
+    font-size: var(--fs-lg);
   }
 
   .music-now {
     padding: 14px 12px 68px;
-    gap: 11px;
+    gap: var(--sp-3);
   }
 
   .music-cover-wrap {
@@ -10721,15 +10754,15 @@ table.grid.dist-table thead th.ign-col {
   }
 
   .music-cover-label {
-    font-size: 15px;
+    font-size: var(--fs-md);
   }
 
   .music-track-copy h3 {
-    font-size: 18px;
+    font-size: var(--fs-lg);
   }
 
   .music-controls {
-    gap: 6px;
+    gap: var(--sp-2);
   }
 
   .music-control {
@@ -10755,12 +10788,12 @@ table.grid.dist-table thead th.ign-col {
   }
 
   .music-playlist-head h3 {
-    font-size: 16px;
+    font-size: var(--fs-md);
   }
 
   .music-row {
     grid-template-columns: 24px minmax(0, 1fr) auto;
-    gap: 8px;
+    gap: var(--sp-2);
     padding: 8px 6px;
   }
 
@@ -10769,7 +10802,7 @@ table.grid.dist-table thead th.ign-col {
   }
 
   .music-row-title {
-    font-size: 11.5px;
+    font-size: var(--fs-xs);
   }
 }
 
@@ -10778,13 +10811,13 @@ table.grid.dist-table thead th.ign-col {
   .music-head {
     flex-direction: row;
     align-items: center;
-    gap: 10px;
+    gap: var(--sp-2);
     padding: 10px 14px;
   }
 
   .music-head h2 {
     margin: 1px 0 0;
-    font-size: 18px;
+    font-size: var(--fs-lg);
   }
 
   .music-head p {
@@ -10792,7 +10825,7 @@ table.grid.dist-table thead th.ign-col {
   }
 
   .music-kicker {
-    font-size: 7px;
+    font-size: var(--fs-micro);
   }
 
   .music-head-meta {
@@ -10808,7 +10841,7 @@ table.grid.dist-table thead th.ign-col {
     align-items: center;
     align-content: center;
     justify-items: stretch;
-    gap: 6px 14px;
+    gap: var(--sp-2) var(--sp-4);
     padding: 12px 16px 56px;
   }
 
@@ -10826,7 +10859,7 @@ table.grid.dist-table thead th.ign-col {
   .music-bg-toggle {
     width: 32px;
     height: 32px;
-    font-size: 10px;
+    font-size: var(--fs-micro);
   }
 
   .music-cover-wrap {
@@ -10843,11 +10876,11 @@ table.grid.dist-table thead th.ign-col {
 
   .music-cover-label {
     margin-top: 4px;
-    font-size: 12px;
+    font-size: var(--fs-sm);
   }
 
   .music-cover-sub {
-    font-size: 5.5px;
+    font-size: var(--fs-micro);
   }
 
   .music-cover-index {
@@ -10863,7 +10896,7 @@ table.grid.dist-table thead th.ign-col {
 
   .music-track-copy h3 {
     margin: 1px 0 2px;
-    font-size: 16px;
+    font-size: var(--fs-md);
   }
 
   .music-track-meta {
@@ -10881,7 +10914,7 @@ table.grid.dist-table thead th.ign-col {
     grid-column: 2;
     grid-row: 3;
     justify-content: flex-start;
-    gap: 5px;
+    gap: var(--sp-2);
     margin: 0;
   }
 
@@ -10958,5 +10991,98 @@ table.grid.dist-table thead th.ign-col {
 @media (pointer: coarse) {
   .music-range::-webkit-slider-thumb {
     opacity: 1;
+  }
+}
+
+/* ============================================================
+   Entrance motion - one shape for "appears".
+   enter      rises from below + settles in scale   (modals, toasts, cards)
+   enter-down drops in from above                   (dropdowns, menus)
+   enter-fade fade only                             (full-screen overlays)
+   Distance and start scale are per-surface: --travel, --enter-scale.
+   ============================================================ */
+@keyframes enter {
+  from {
+    opacity: 0;
+    transform: translate3d(0, var(--travel, 8px), 0) scale(var(--enter-scale, 0.98));
+  }
+}
+
+@keyframes enter-down {
+  from {
+    opacity: 0;
+    transform: translate3d(0, calc(var(--travel, 4px) * -1), 0);
+  }
+}
+
+@keyframes enter-fade {
+  from {
+    opacity: 0;
+  }
+}
+
+/* ============================================================
+   Global focus & motion policy
+   ============================================================ */
+
+/* One visible focus ring for everything focusable. Component rules may
+   refine it; nothing may silently delete it. */
+:focus-visible {
+  outline: 2px solid var(--accent-2);
+  outline-offset: 2px;
+}
+
+/* Mouse/touch focus stays quiet - only the keyboard ring above shows. */
+:focus:not(:focus-visible) {
+  outline: none;
+}
+
+/* Reduced motion: collapse every transition and animation to an instant
+   change. Components that need motion to stay legible opt back in above. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Decorative motion freezes while the tab is hidden (toggled by App.tsx),
+   so idle tabs stop animating in the background. */
+html.anim-paused *,
+html.anim-paused *::before,
+html.anim-paused *::after {
+  animation-play-state: paused !important;
+}
+
+/* ============================================================
+   Blur budget
+   ============================================================ */
+/* Blur over the live canvas is the main scroll-cost on phones, and users
+   who ask for reduced transparency have asked us not to frost glass at all.
+   Surfaces that were leaning on the blur for legibility go opaque instead. */
+@media (max-width: 900px), (prefers-reduced-transparency: reduce) {
+  .roster-panel,
+  .auth-card,
+  .sidebar,
+  .topbar,
+  .avatar-lightbox,
+  .roster-profile-overlay,
+  .overlay,
+  .dd-menu,
+  .nav-backdrop,
+  .drop-overlay {
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+
+  .sidebar,
+  .topbar,
+  .auth-card,
+  .roster-panel {
+    background: var(--glass-solid);
   }
 }
