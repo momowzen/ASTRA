@@ -8,6 +8,7 @@ export interface SelectOption {
   value: string;
   label?: string;
   color?: string;
+  group?: string;
 }
 
 type Variant = 'field' | 'cell' | 'coll' | 'lang';
@@ -195,19 +196,28 @@ export function Select({
                 <span className="dd-item-label muted">{placeholder}</span>
               </div>
             )}
-            {filtered.map((o) => (
-              <div
-                key={o.value}
-                className={`dd-item ${o.value === value ? 'active' : ''}`}
-                role="option"
-                aria-selected={o.value === value}
-                onClick={() => pick(o.value)}
-              >
-                <span className="dd-item-label" style={{ color: o.color ?? optionColor(o.value) }}>
-                  {o.label ?? o.value}
-                </span>
-              </div>
-            ))}
+            {(() => {
+              let lastGroup: string | undefined;
+              return filtered.map((o) => {
+                const showGroup = !!o.group && o.group !== lastGroup;
+                lastGroup = o.group;
+                return (
+                  <div key={o.value}>
+                    {showGroup && <div className="dd-group">{o.group}</div>}
+                    <div
+                      className={`dd-item ${o.value === value ? 'active' : ''}`}
+                      role="option"
+                      aria-selected={o.value === value}
+                      onClick={() => pick(o.value)}
+                    >
+                      <span className="dd-item-label" style={{ color: o.color ?? optionColor(o.value) }}>
+                        {o.label ?? o.value}
+                      </span>
+                    </div>
+                  </div>
+                );
+              });
+            })()}
             {filtered.length === 0 && <div className="dd-empty">{t('common.noMatches')}</div>}
           </div>,
           document.body,

@@ -477,6 +477,7 @@ function AttendanceView({
                 options={BOSSES.map((b) => ({
                   value: b.name,
                   label: `${bossLabel(b.name, t, lang)} — ${pointsFor(b.name)} ${pointsFor(b.name) === 1 ? t('boss.pt') : t('boss.pts')}`,
+                  group: b.cat ? t(`boss.category.${b.cat}`) : undefined,
                 }))}
               />
             )}
