@@ -47,6 +47,7 @@ export const BOSSES: Boss[] = [
   { id: 'Nevaeh', name: 'Nevaeh', level: 140, weekly: true },
   { id: 'Tumier', name: 'Tumier', level: 140, weekly: true },
   { id: 'Nerucas', name: 'Nerucas', level: 140, weekly: true },
+  { id: 'Dumenta', name: 'Dumenta', level: 140, weekly: true },
   { id: 'Lucus', name: 'Lucus', level: 145, weekly: true },
 ];
 
