@@ -66,8 +66,8 @@ export async function storeAvatar(
   // copy as a data: URL so the avatar is stored in Google Sheets and survives
   // restarts / container switches instead of living on an ephemeral disk.
   const compact = await sharp(buffer)
-    .resize(256, 256, { fit: 'cover', position: 'attention' })
-    .webp({ quality: 70 })
+    .resize(192, 192, { fit: 'cover', position: 'attention' })
+    .webp({ quality: 60 })
     .toBuffer();
   return { url: `data:image/webp;base64,${compact.toString('base64')}`, key: '' };
 }
