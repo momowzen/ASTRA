@@ -1,5 +1,5 @@
 import { randomUUID } from 'node:crypto';
-import { mkdir, unlink, writeFile } from 'node:fs/promises';
+import { unlink } from 'node:fs/promises';
 import path from 'node:path';
 import { Storage } from '@google-cloud/storage';
 import sharp from 'sharp';
@@ -62,14 +62,19 @@ export async function storeAvatar(
     return { url: `${publicBase()}/${key}`, key };
   }
 
-  await mkdir(LOCAL_DIR, { recursive: true });
-  await writeFile(path.join(LOCAL_DIR, fileName), buffer);
-  return { url: `${origin.replace(/\/+$/, '')}/api/avatars/${fileName}`, key: fileName };
+  // No cloud bucket configured (and no billing required): embed a downscaled
+  // copy as a data: URL so the avatar is stored in Google Sheets and survives
+  // restarts / container switches instead of living on an ephemeral disk.
+  const compact = await sharp(buffer)
+    .resize(256, 256, { fit: 'cover', position: 'attention' })
+    .webp({ quality: 70 })
+    .toBuffer();
+  return { url: `data:image/webp;base64,${compact.toString('base64')}`, key: '' };
 }
 
 export async function deleteAvatarByUrl(url: string): Promise<void> {
   const value = (url || '').trim();
-  if (!value) return;
+  if (!value || value.startsWith('data:')) return;
 
   if (config.storageBucket) {
     const base = `${publicBase()}/`;

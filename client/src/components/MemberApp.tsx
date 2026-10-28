@@ -75,8 +75,16 @@ function FitLabel({ text, className }: { text: string; className?: string }) {
     const ctx = document.createElement('canvas').getContext('2d');
 
     const fit = () => {
-      el.style.fontSize = '';
       if (!ctx) return;
+      // When wrapping is allowed (e.g. mobile question labels) let CSS handle it
+      // instead of forcing a single line at a tiny font size.
+      const initialStyle = getComputedStyle(el);
+      if (initialStyle.whiteSpace !== 'nowrap') {
+        el.style.fontSize = '';
+        return;
+      }
+      // Measure at the CSS base size, then shrink only if needed.
+      el.style.fontSize = '';
       const style = getComputedStyle(el);
       const base = parseFloat(style.fontSize) || 12;
       const available = el.clientWidth;
@@ -92,9 +100,20 @@ function FitLabel({ text, className }: { text: string; className?: string }) {
     };
 
     fit();
-    const observer = new ResizeObserver(fit);
-    observer.observe(el);
-    return () => observer.disconnect();
+    // Observe the container, not the label itself: mutating the label's font size
+    // must not re-trigger this callback (that feedback loop caused the "bouncing").
+    const target = el.parentElement ?? el;
+    const observer = new ResizeObserver(() => {
+      // Defer to avoid ResizeObserver loop warnings.
+      requestAnimationFrame(fit);
+    });
+    observer.observe(target);
+    const onResize = () => requestAnimationFrame(fit);
+    window.addEventListener('resize', onResize);
+    return () => {
+      observer.disconnect();
+      window.removeEventListener('resize', onResize);
+    };
   }, [text]);
 
   return (

@@ -46,8 +46,8 @@ async function main(): Promise<void> {
   app.use('/api', api);
 
   if (!config.storageBucket) {
-    console.warn(
-      '[avatars] GOOGLE_STORAGE_BUCKET is not set; using server/uploads/avatars for this run. Set it in production.',
+    console.info(
+      '[avatars] GOOGLE_STORAGE_BUCKET is not set; avatars will be embedded as data: URLs in Google Sheets.',
     );
   }
 
