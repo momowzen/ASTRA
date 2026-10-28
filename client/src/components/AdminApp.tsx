@@ -594,7 +594,7 @@ export default function AdminApp({
             .map((tb) => (
               <button
                 key={tb.meta.title}
-                className={`nav-item ${!bossView && !toolView && !rosterView && tb.meta.title === tab?.meta.title ? 'active' : ''}`}
+                className={`nav-item nav-caps ${!bossView && !toolView && !rosterView && tb.meta.title === tab?.meta.title ? 'active' : ''}`}
                 onClick={() => {
                   setActiveTitle(tb.meta.title);
                   setBossView(null);
