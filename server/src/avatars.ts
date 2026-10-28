@@ -93,7 +93,7 @@ export function avatarMap(): Record<string, string> {
   for (const row of tab.rows) {
     const ign = String(row.cells[0] ?? '').trim();
     const url = String(row.cells[col] ?? '').trim();
-    if (ign && /^https?:\/\//i.test(url)) out[ign.toLowerCase()] = url;
+    if (ign && (/^https?:\/\//i.test(url) || /^data:image\//i.test(url))) out[ign.toLowerCase()] = url;
   }
   return out;
 }
