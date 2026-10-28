@@ -171,6 +171,7 @@ export default function AdminApp({
   onLogout,
 }: Props) {
   const [activeTitle, setActiveTitle] = useState(data.tabs[0]?.meta.title ?? '');
+  const [restored, setRestored] = useState(false);
   const [search, setSearch] = useState('');
   const [showCol, setShowCol] = useState(-1);
   const [filterVal, setFilterVal] = useState('');
@@ -222,6 +223,50 @@ export default function AdminApp({
 
   const tab = data.tabs.find((t) => t.meta.title === activeTitle) || data.tabs[0];
   const isBasic = (tab?.meta.title ?? '').toUpperCase() === 'BASIC INFORMATION';
+
+  useEffect(() => {
+    if (restored || !data.tabs?.length) return;
+    try {
+      const raw = localStorage.getItem(`astra.admin.view.${session.username.trim().toLowerCase()}`);
+      if (raw) {
+        const v = JSON.parse(raw);
+        if (v?.type === 'sheet' && data.tabs.some((t) => t.meta.title === v.title)) {
+          setActiveTitle(v.title);
+          setRosterView(false);
+          setBossView(null);
+          setToolView(null);
+        } else if (v?.type === 'roster') {
+          setRosterView(true);
+          setBossView(null);
+          setToolView(null);
+          setActiveTitle('');
+        } else if (v?.type === 'boss' && v.view) {
+          setBossView(v.view);
+          setRosterView(false);
+          setToolView(null);
+          setActiveTitle('');
+        } else if (v?.type === 'tool' && v.tool) {
+          setToolView(v.tool);
+          setRosterView(false);
+          setBossView(null);
+          setActiveTitle('');
+        }
+      }
+    } catch {}
+    setRestored(true);
+  }, [data.tabs, restored]);
+
+  useEffect(() => {
+    if (!restored) return;
+    try {
+      let desc: { type: string; title?: string; view?: string; tool?: string } = { type: 'roster' };
+      if (bossView) desc = { type: 'boss', view: bossView };
+      else if (toolView) desc = { type: 'tool', tool: toolView };
+      else if (rosterView) desc = { type: 'roster' };
+      else if (activeTitle) desc = { type: 'sheet', title: activeTitle };
+      localStorage.setItem(`astra.admin.view.${session.username.trim().toLowerCase()}`, JSON.stringify(desc));
+    } catch {}
+  }, [activeTitle, bossView, toolView, rosterView, restored]);
   const isCpH = (tab?.meta.title ?? '').toUpperCase() === 'CP HISTORY';
   const isDistH = (tab?.meta.title ?? '').toUpperCase() === 'DISTRIBUTION HISTORY';
 
@@ -462,133 +507,133 @@ export default function AdminApp({
           </button>
         </div>
 
-        <div className="section-label">{t('admin.rosterSection')}</div>
-        <button
-          className={`nav-item nav-caps ${rosterView ? 'active' : ''}`}
-          onClick={() => {
-            setRosterView(true);
-            setBossView(null);
-            setToolView(null);
-            setEditing(null);
-            setShowCol(-1);
-            setFilterVal('');
-          }}
-        >
-          <span className="ico">
-            <IconOverview />
-          </span>
-          {t('admin.rosterOverview')}
-        </button>
-        <button
-          className={`nav-item nav-caps ${toolView === 'profile-completion' ? 'active' : ''}`}
-          onClick={() => {
-            setToolView('profile-completion');
-            setBossView(null);
-            setRosterView(false);
-            setEditing(null);
-            setShowCol(-1);
-            setFilterVal('');
-          }}
-        >
-          <span className="ico">
-            <IconUserCheck />
-          </span>
-          {t('tools.profileCompletion')}
-        </button>
-
-        <div className="section-label">{t('admin.trackerSection')}</div>
-        <button
-          className={`nav-item nav-caps ${bossView === 'dashboard' ? 'active' : ''}`}
-          onClick={() => {
-            setBossView('dashboard');
-            setToolView(null);
-            setRosterView(false);
-          }}
-        >
-          <span className="ico">
-            <IconTrophy />
-          </span>
-          {t('admin.dashboard')}
-        </button>
-        <button
-          className={`nav-item nav-caps ${bossView === 'attendance' ? 'active' : ''}`}
-          onClick={() => {
-            setBossView('attendance');
-            setToolView(null);
-            setRosterView(false);
-          }}
-        >
-          <span className="ico">
-            <IconPlus />
-          </span>
-          {t('admin.attendance')}
-        </button>
-        <button
-          className={`nav-item nav-caps ${bossView === 'config' ? 'active' : ''}`}
-          onClick={() => {
-            setBossView('config');
-            setToolView(null);
-            setRosterView(false);
-          }}
-        >
-          <span className="ico">
-            <IconGear />
-          </span>
-          {t('admin.bossConfig')}
-        </button>
-
-        <div className="section-label">{t('tools.section')}</div>
-        <button
-          className={`nav-item nav-caps ${toolView === 'distribution' ? 'active' : ''}`}
-          onClick={() => {
-            setToolView('distribution');
-            setBossView(null);
-            setRosterView(false);
-            setEditing(null);
-            setShowCol(-1);
-            setFilterVal('');
-          }}
-        >
-          <span className="ico">
-            <IconReward />
-          </span>
-          {t('tools.distribution')}
-        </button>
-        <button
-          className={`nav-item nav-caps ${toolView === 'cp-update' ? 'active' : ''}`}
-          onClick={() => {
-            setToolView('cp-update');
-            setBossView(null);
-            setRosterView(false);
-            setEditing(null);
-            setShowCol(-1);
-            setFilterVal('');
-          }}
-        >
-          <span className="ico">
-            <IconTrendingUp />
-          </span>
-          {t('tools.cpUpdate')}
-        </button>
-        <button
-          className={`nav-item nav-caps ${toolView === 'activity-log' ? 'active' : ''}`}
-          onClick={() => {
-            setToolView('activity-log');
-            setBossView(null);
-            setRosterView(false);
-            setEditing(null);
-            setShowCol(-1);
-            setFilterVal('');
-          }}
-        >
-          <span className="ico">
-            <IconHistory />
-          </span>
-          {t('tools.activityLog')}
-        </button>
-
-        <div className="section-label">{t('admin.sheetTabs')}</div>
         <div className="tab-scroll">
+          <div className="section-label">{t('admin.rosterSection')}</div>
+          <button
+            className={`nav-item nav-caps ${rosterView ? 'active' : ''}`}
+            onClick={() => {
+              setRosterView(true);
+              setBossView(null);
+              setToolView(null);
+              setEditing(null);
+              setShowCol(-1);
+              setFilterVal('');
+            }}
+          >
+            <span className="ico">
+              <IconOverview />
+            </span>
+            {t('admin.rosterOverview')}
+          </button>
+          <button
+            className={`nav-item nav-caps ${toolView === 'profile-completion' ? 'active' : ''}`}
+            onClick={() => {
+              setToolView('profile-completion');
+              setBossView(null);
+              setRosterView(false);
+              setEditing(null);
+              setShowCol(-1);
+              setFilterVal('');
+            }}
+          >
+            <span className="ico">
+              <IconUserCheck />
+            </span>
+            {t('tools.profileCompletion')}
+          </button>
+
+          <div className="section-label">{t('admin.trackerSection')}</div>
+          <button
+            className={`nav-item nav-caps ${bossView === 'dashboard' ? 'active' : ''}`}
+            onClick={() => {
+              setBossView('dashboard');
+              setToolView(null);
+              setRosterView(false);
+            }}
+          >
+            <span className="ico">
+              <IconTrophy />
+            </span>
+            {t('admin.dashboard')}
+          </button>
+          <button
+            className={`nav-item nav-caps ${bossView === 'attendance' ? 'active' : ''}`}
+            onClick={() => {
+              setBossView('attendance');
+              setToolView(null);
+              setRosterView(false);
+            }}
+          >
+            <span className="ico">
+              <IconPlus />
+            </span>
+            {t('admin.attendance')}
+          </button>
+          <button
+            className={`nav-item nav-caps ${bossView === 'config' ? 'active' : ''}`}
+            onClick={() => {
+              setBossView('config');
+              setToolView(null);
+              setRosterView(false);
+            }}
+          >
+            <span className="ico">
+              <IconGear />
+            </span>
+            {t('admin.bossConfig')}
+          </button>
+
+          <div className="section-label">{t('tools.section')}</div>
+          <button
+            className={`nav-item nav-caps ${toolView === 'distribution' ? 'active' : ''}`}
+            onClick={() => {
+              setToolView('distribution');
+              setBossView(null);
+              setRosterView(false);
+              setEditing(null);
+              setShowCol(-1);
+              setFilterVal('');
+            }}
+          >
+            <span className="ico">
+              <IconReward />
+            </span>
+            {t('tools.distribution')}
+          </button>
+          <button
+            className={`nav-item nav-caps ${toolView === 'cp-update' ? 'active' : ''}`}
+            onClick={() => {
+              setToolView('cp-update');
+              setBossView(null);
+              setRosterView(false);
+              setEditing(null);
+              setShowCol(-1);
+              setFilterVal('');
+            }}
+          >
+            <span className="ico">
+              <IconTrendingUp />
+            </span>
+            {t('tools.cpUpdate')}
+          </button>
+          <button
+            className={`nav-item nav-caps ${toolView === 'activity-log' ? 'active' : ''}`}
+            onClick={() => {
+              setToolView('activity-log');
+              setBossView(null);
+              setRosterView(false);
+              setEditing(null);
+              setShowCol(-1);
+              setFilterVal('');
+            }}
+          >
+            <span className="ico">
+              <IconHistory />
+            </span>
+            {t('tools.activityLog')}
+          </button>
+
+          <div className="section-label">{t('admin.sheetTabs')}</div>
           {data.tabs
             .filter((tb) => !INTERNAL_TABS.includes(tb.meta.title.toUpperCase()))
             .map((tb) => (

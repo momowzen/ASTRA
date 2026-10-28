@@ -94,10 +94,8 @@ function langNext(){
       document.title=t('brand');
       $('brand').querySelector('.brand-text').textContent=t('brand');
       $('nextLbl').textContent=t('nextSpawn');
-      $('upcomingLbl').textContent=t(currentUpView==='tomorrow'?'tomorrow':'today');
       $('upTodayLbl').textContent=t('today');
       $('upTmrwLbl').textContent=t('tomorrow');
-      $('viewTitle').textContent=t(currentView==='schedule'?'schedTitle':'ivTitle');
       $('ivBtnLbl').textContent=t('ivTag');
       $('schedBtnLbl').textContent=t('schedTag');
       $('navTracker').textContent=t('tracker');
@@ -429,6 +427,7 @@ function langNext(){
         }
         if(h!==lastUpHtml[v]){e.innerHTML=h;lastUpHtml[v]=h;}
       }
+      $('upCount').textContent=list[currentUpView].length;
     }
 
     let lastSchedHtml='';
@@ -1214,7 +1213,6 @@ function fitRelic(){
         });
         viewBodies[currentView].hidden=false;
         Object.entries(viewBodies).forEach(([k,el])=>{if(k!==currentView) el.hidden=true;});
-        $('viewTitle').textContent=t(currentView==='schedule'?'schedTitle':'ivTitle');
         fitPanelCards(viewBodies[currentView]);
       });
     });
@@ -1229,7 +1227,6 @@ function fitRelic(){
         });
         upViewBodies[currentUpView].hidden=false;
         Object.entries(upViewBodies).forEach(([k,el])=>{if(k!==currentUpView) el.hidden=true;});
-        $('upcomingLbl').textContent=t(currentUpView==='tomorrow'?'tomorrow':'today');
         rUpcoming();
       });
     });

@@ -295,6 +295,14 @@
     cursor: pointer;
   }
 
+  .sidebar .nav-item {
+    font-size: var(--fs-xs);
+  }
+
+  .sidebar .section-label {
+    font-size: var(--fs-micro);
+  }
+
   .drawer-close:hover {
     color: var(--gold-bright);
     border-color: var(--line-strong);

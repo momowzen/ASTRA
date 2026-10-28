@@ -358,6 +358,7 @@ export default function MemberApp({
   onSessionChange,
 }: Props) {
   const [activeTitle, setActiveTitle] = useState('');
+  const [restored, setRestored] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [jump, setJump] = useState<{ tab: string; col: number } | null>(null);
@@ -573,6 +574,51 @@ export default function MemberApp({
 
   const cols = activeTab ? buildColumns(activeTab.meta) : [];
   const row = activeTab ? myRow(activeTab) : undefined;
+
+  useEffect(() => {
+    if (restored || !data.tabs?.length) return;
+    try {
+      const raw = localStorage.getItem(`astra.member.view.${session.ign.trim().toLowerCase()}`);
+      if (raw) {
+        const v = JSON.parse(raw);
+        if (v?.type === 'sheet' && memberTabs.some((t) => t.meta.title === v.title)) {
+          setActiveTitle(v.title);
+          setRosterView(false);
+          setToolsView(null);
+          setMediaView(null);
+        } else if (v?.type === 'roster') {
+          setRosterView(true);
+          setActiveTitle('');
+          setToolsView(null);
+          setMediaView(null);
+        } else if (v?.type === 'tool' && v.tool) {
+          setToolsView(v.tool as ToolView);
+          setActiveTitle('');
+          setRosterView(false);
+          setMediaView(null);
+        } else if (v?.type === 'media') {
+          setMediaView('music');
+          setMusicVisited(true);
+          setActiveTitle('');
+          setRosterView(false);
+          setToolsView(null);
+        }
+      }
+    } catch {}
+    setRestored(true);
+  }, [data.tabs, memberTabs, restored]);
+
+  useEffect(() => {
+    if (!restored) return;
+    try {
+      let desc: { type: string; title?: string; tool?: string } = { type: 'dashboard' };
+      if (mediaView === 'music') desc = { type: 'media' };
+      else if (toolsView) desc = { type: 'tool', tool: toolsView };
+      else if (rosterView) desc = { type: 'roster' };
+      else if (activeTitle) desc = { type: 'sheet', title: activeTitle };
+      localStorage.setItem(`astra.member.view.${session.ign.trim().toLowerCase()}`, JSON.stringify(desc));
+    } catch {}
+  }, [activeTitle, rosterView, toolsView, mediaView, restored]);
   const showCollectionTip = !!activeTab && COLLECTION_TABS.has(activeTab.meta.title.trim().toUpperCase());
   const collectionGroups: { label: string; cols: Column[] }[] = [];
   if (activeTab && activeTab.meta.headerRows === 2) {
@@ -646,92 +692,93 @@ export default function MemberApp({
           </button>
         </div>
 
-        <div className="section-label">{t('member.myProfile')}</div>
-        <button
-          className={`nav-item ${isDashboard ? 'active' : ''}`}
-          onClick={() => selectTab('')}
-          title={t('member.profile')}
-        >
-          <span className="ico">
-            <IconUser />
-          </span>
-          {t('member.profile')}
-        </button>
-        {memberTabs.map((t) => (
+        <div className="tab-scroll">
+          <div className="section-label">{t('member.myProfile')}</div>
           <button
-            key={t.meta.title}
-            className={`nav-item ${t.meta.title === activeTitle ? 'active' : ''}`}
-            onClick={() => selectTab(t.meta.title)}
-            title={tabText(t.meta.title)}
+            className={`nav-item ${isDashboard ? 'active' : ''}`}
+            onClick={() => selectTab('')}
+            title={t('member.profile')}
           >
             <span className="ico">
-              <IconSheet />
+              <IconUser />
             </span>
-            {tabText(t.meta.title)}
+            {t('member.profile')}
           </button>
-        ))}
+          {memberTabs.map((t) => (
+            <button
+              key={t.meta.title}
+              className={`nav-item ${t.meta.title === activeTitle ? 'active' : ''}`}
+              onClick={() => selectTab(t.meta.title)}
+              title={tabText(t.meta.title)}
+            >
+              <span className="ico">
+                <IconSheet />
+              </span>
+              {tabText(t.meta.title)}
+            </button>
+          ))}
 
-        <div className="section-label">{t('member.tools')}</div>
-        <button className={`nav-item ${rosterView ? 'active' : ''}`} onClick={showRoster} title={t('member.roster')}>
-          <span className="ico">
-            <IconUsers />
-          </span>
-          {t('member.roster')}
-        </button>
-        <button
-          className={`nav-item ${toolsView === 'attendance' ? 'active' : ''}`}
-          onClick={() => showTool('attendance')}
-          title={t('member.toolAttendance')}
-        >
-          <span className="ico">
-            <IconTrophy />
-          </span>
-          {t('member.toolAttendance')}
-        </button>
-        <button
-          className={`nav-item ${toolsView === 'tracker' ? 'active' : ''}`}
-          onClick={() => showTool('tracker')}
-          title={t('member.toolBossTracker')}
-        >
-          <span className="ico">
-            <IconTimer />
-          </span>
-          {t('member.toolBossTracker')}
-        </button>
-        <button
-          className={`nav-item ${toolsView === 'hidden' ? 'active' : ''}`}
-          onClick={() => showTool('hidden')}
-          title={t('member.toolHiddenClass')}
-        >
-          <span className="ico">
-            <IconSparkles />
-          </span>
-          {t('member.toolHiddenClass')}
-        </button>
-        <button
-          className={`nav-item ${toolsView === 'relic' ? 'active' : ''}`}
-          onClick={() => showTool('relic')}
-          title={t('member.toolRelic')}
-        >
-          <span className="ico">
-            <IconGem />
-          </span>
-          {t('member.toolRelic')}
-        </button>
+          <div className="section-label">{t('member.tools')}</div>
+          <button className={`nav-item ${rosterView ? 'active' : ''}`} onClick={showRoster} title={t('member.roster')}>
+            <span className="ico">
+              <IconUsers />
+            </span>
+            {t('member.roster')}
+          </button>
+          <button
+            className={`nav-item ${toolsView === 'attendance' ? 'active' : ''}`}
+            onClick={() => showTool('attendance')}
+            title={t('member.toolAttendance')}
+          >
+            <span className="ico">
+              <IconTrophy />
+            </span>
+            {t('member.toolAttendance')}
+          </button>
+          <button
+            className={`nav-item ${toolsView === 'tracker' ? 'active' : ''}`}
+            onClick={() => showTool('tracker')}
+            title={t('member.toolBossTracker')}
+          >
+            <span className="ico">
+              <IconTimer />
+            </span>
+            {t('member.toolBossTracker')}
+          </button>
+          <button
+            className={`nav-item ${toolsView === 'hidden' ? 'active' : ''}`}
+            onClick={() => showTool('hidden')}
+            title={t('member.toolHiddenClass')}
+          >
+            <span className="ico">
+              <IconSparkles />
+            </span>
+            {t('member.toolHiddenClass')}
+          </button>
+          <button
+            className={`nav-item ${toolsView === 'relic' ? 'active' : ''}`}
+            onClick={() => showTool('relic')}
+            title={t('member.toolRelic')}
+          >
+            <span className="ico">
+              <IconGem />
+            </span>
+            {t('member.toolRelic')}
+          </button>
 
-        <div className="section-label">{t('member.media')}</div>
-        <button
-          className={`nav-item ${mediaView === 'music' ? 'active' : ''}`}
-          onClick={() => showMedia('music')}
-          title={t('member.music')}
-        >
-          <span className="ico">
-            <IconMusic />
-          </span>
-          {t('member.music')}
-        </button>
+          <div className="section-label">{t('member.media')}</div>
+          <button
+            className={`nav-item ${mediaView === 'music' ? 'active' : ''}`}
+            onClick={() => showMedia('music')}
+            title={t('member.music')}
+          >
+            <span className="ico">
+              <IconMusic />
+            </span>
+            {t('member.music')}
+          </button>
+        </div>
 
-        <div className="spacer" />
         <div className="userbox">
           <button className="nav-item" onClick={() => setSettingsOpen(true)} title={t('common.settings')}>
             <span className="ico">

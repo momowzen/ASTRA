@@ -177,7 +177,7 @@ export function Select({
             ref={menuRef}
             className="dd-menu"
             role="listbox"
-            style={menuStyle(rect, placeUp, rect.width)}
+            style={menuStyle(rect, placeUp, variant === 'coll' ? 0 : rect.width)}
           >
             {searchable && (
               <div className="dd-search">
