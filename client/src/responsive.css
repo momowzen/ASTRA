@@ -262,7 +262,9 @@
     position: fixed;
     inset: 0 auto 0 0;
     z-index: var(--z-rail);
-    width: min(86vw, 330px);
+    width: fit-content;
+    max-width: 86vw;
+    min-width: 220px;
     height: 100vh;
     height: 100dvh;
     padding: 18px 14px;
