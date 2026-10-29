@@ -69,7 +69,4 @@ export const config = {
   groqApiKey: process.env.GROQ_API_KEY || '',
   geminiApiKey: process.env.GEMINI_API_KEY || '',
   deepseekApiKey: process.env.DEEPSEEK_API_KEY || '',
-  ttsUrl: (process.env.TTS_URL || 'http://localhost:5050').replace(/\/+$/, ''),
-  ttsApiKey: process.env.TTS_API_KEY || 'your_api_key_here',
-  ttsVoice: process.env.TTS_VOICE || '',
 };

@@ -160,33 +160,8 @@ function langNext(){
       u.rate=1;u.pitch=1;
       window.speechSynthesis.speak(u);
     }
-    let ttsQueue=[],ttsPlaying=false,ttsAudio=null;
-    function ttsPlayNext(){
-      if(ttsPlaying)return;
-      const blob=ttsQueue.shift();
-      if(!blob)return;
-      const url=URL.createObjectURL(blob);
-      const a=new Audio(url);
-      ttsAudio=a;ttsPlaying=true;
-      const done=()=>{try{URL.revokeObjectURL(url)}catch(e){}if(ttsAudio===a)ttsAudio=null;ttsPlaying=false;ttsPlayNext()};
-      a.onended=done;a.onerror=done;
-      const p=a.play();
-      if(p&&p.catch)p.catch(()=>done());
-    }
-    function ttsStop(){ttsQueue=[];if(ttsAudio){try{ttsAudio.pause()}catch(e){}ttsAudio=null}ttsPlaying=false;if(window.speechSynthesis)window.speechSynthesis.cancel()}
-    function speak(text,enText){
-      if(!text)return;
-      const base=ttsApiBase();
-      const token=lsGet('astra.token');
-      const headers=Object.assign({'Content-Type':'application/json'},token?{Authorization:'Bearer '+token}:{});
-      const ctrl=('AbortController'in window)?new AbortController():null;
-      const timer=ctrl?setTimeout(()=>ctrl.abort(),8000):null;
-      const clear=()=>{if(timer)clearTimeout(timer)};
-      fetch(base+'/tts',{method:'POST',headers:headers,body:JSON.stringify({input:text,voice:ttsVoiceName()}),signal:ctrl?ctrl.signal:undefined})
-        .then(r=>{clear();if(!r.ok)throw new Error('tts '+r.status);return r.blob()})
-        .then(b=>{if(!b||!b.size)throw new Error('tts empty');ttsQueue.push(b);ttsPlayNext()})
-        .catch(()=>{clear();speakBuiltin(text,enText)});
-    }
+    function ttsStop(){if(window.speechSynthesis)window.speechSynthesis.cancel()}
+    function speak(text,enText){speakBuiltin(text,enText)}
     function ttsCheck(){
       if(!alarmOn||!window.speechSynthesis)return;
       const n=now();
