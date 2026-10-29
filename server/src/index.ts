@@ -52,10 +52,6 @@ async function main(): Promise<void> {
   }
 
   app.use((err: Error, _req: Request, res: Response, _next: NextFunction) => {
-    if (err.message === 'Origin not allowed') {
-      res.status(403).json({ error: 'Origin not allowed' });
-      return;
-    }
     console.error('[server] unhandled error:', err);
     res.status(500).json({ error: 'Internal server error' });
   });

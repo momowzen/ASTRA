@@ -29,7 +29,6 @@ export default function App() {
   const [error, setError] = useState('');
   const [toasts, setToasts] = useState<Toast[]>([]);
   const [live, setLive] = useState<'live' | 'stale' | 'error'>('stale');
-  const [, setTick] = useState(0);
 
   const revRef = useRef('');
   const pendingRef = useRef<DataResponse | null>(null);
@@ -102,15 +101,15 @@ export default function App() {
 
     const interval = setInterval(async () => {
       if (!getSession()) return;
-        const ae = document.activeElement;
-        const typing =
-          !!ae &&
-          (ae.tagName === 'INPUT' || ae.tagName === 'TEXTAREA' || ae.tagName === 'SELECT') &&
-          ae.getAttribute('type') !== 'checkbox';
+      const ae = document.activeElement;
+      const typing =
+        !!ae &&
+        (ae.tagName === 'INPUT' || ae.tagName === 'TEXTAREA' || ae.tagName === 'SELECT') &&
+        ae.getAttribute('type') !== 'checkbox';
 
-        try {
-          const res = await fetchData(revRef.current || undefined);
-          setLive('live');
+      try {
+        const res = await fetchData(revRef.current || undefined);
+        setLive('live');
 
         if (res.unchanged) {
           if (pendingRef.current && !typing) applyData(pendingRef.current);
@@ -135,11 +134,6 @@ export default function App() {
 
     return () => clearInterval(interval);
   }, [session, applyData, pushToast, t]);
-
-  useEffect(() => {
-    const i = setInterval(() => setTick((t) => t + 1), 1000);
-    return () => clearInterval(i);
-  }, []);
 
   // Reload the tab automatically when a new release is deployed.
   useEffect(() => startVersionSync(), []);

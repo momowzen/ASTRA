@@ -44,10 +44,7 @@ function localFileName(): string {
   return `${randomUUID().replace(/-/g, '').slice(0, 20)}.webp`;
 }
 
-export async function storeAvatar(
-  buffer: Buffer,
-  origin: string,
-): Promise<{ url: string; key: string }> {
+export async function storeAvatar(buffer: Buffer): Promise<{ url: string; key: string }> {
   const fileName = localFileName();
 
   if (config.storageBucket) {

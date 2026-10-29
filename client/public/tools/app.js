@@ -242,6 +242,9 @@ function langNext(){
 
     function p2(n){return String(n).padStart(2,'0')}
     function now(){return Date.now()}
+    // Escape untrusted strings (remote market data, Firestore guild names)
+    // before they are concatenated into innerHTML. Also safe in attributes.
+    function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
     function fmtNum(n){return (Number(n)||0).toLocaleString('en-US')}
     function fmtCompact(n){const v=Number(n)||0;const a=Math.abs(v);if(a>=1e6)return trimK(v/1e6)+'M';if(a>=1e4)return trimK(v/1e3)+'k';if(a>=1e3)return (v/1e3).toFixed(1).replace(/\.0$/,'')+'k';return fmtNum(v)}
     function trimK(x){const s=(Math.round(x*10)/10).toFixed(1).replace(/\.0$/,'');return s}
@@ -396,7 +399,7 @@ function langNext(){
             const rem=x.t-n;
             const cls=statusClassFor(rem);
             const gd=getGuildDisplay(x.b.id);
-            const badge=gd?'<span class="guild-badge guild-'+gd.idx+'">'+gd.display+'</span>':'';
+            const badge=gd?'<span class="guild-badge guild-'+gd.idx+'">'+esc(gd.display)+'</span>':'';
             return '<div class="boss-card '+cls+'" data-t="'+x.t+'"><div class="boss-card-main"><span class="boss-card-name">'+bn(x.b)+'</span>'+badge+'</div><div class="boss-card-time"><span class="boss-card-time-value">'+(rem<=0?t('spawned'):fmtT(x.t))+'</span></div></div>';
           }).join('')+'</div>';
         }
@@ -665,7 +668,7 @@ function langNext(){
         const isSel=row.key===relicTier;
         const rowName=(row.name&&row.name!==row.key)?row.name:row.key;
         const rc=gradeColor(row.bg),rb=gradeBg(row.bg);
-        return '<div class="tier-row'+(isBest?' best-value':'')+(isSel?' selected':'')+'" data-tier="'+row.key+'">'+(row.imageUrl?'<span class="tier-ico '+(rb?'g':'')+'" '+(rb?'style="background:'+rb+'"':'')+'><img class="tier-img" src="'+row.imageUrl+'" alt="" loading="lazy" onerror="this.style.display=\'none\'"></span>':'')+'<span class="tier-name"><span class="tier-real" style="color:'+(rc||'')+'">'+rowName+'</span>'+(isBest?'<i class="chk-ico" title="'+t('bestTag')+'"></i>':'')+'</span><span class="tier-cost">'+relicFmt(row.usdt)+'</span></div>';
+        return '<div class="tier-row'+(isBest?' best-value':'')+(isSel?' selected':'')+'" data-tier="'+row.key+'">'+(row.imageUrl?'<span class="tier-ico '+(rb?'g':'')+'" '+(rb?'style="background:'+rb+'"':'')+'><img class="tier-img" src="'+esc(row.imageUrl)+'" alt="" loading="lazy" onerror="this.style.display=\'none\'"></span>':'')+'<span class="tier-name"><span class="tier-real" style="color:'+(rc||'')+'">'+esc(rowName)+'</span>'+(isBest?'<i class="chk-ico" title="'+t('bestTag')+'"></i>':'')+'</span><span class="tier-cost">'+relicFmt(row.usdt)+'</span></div>';
       }).join('');
       tier.hidden=false;
       renderInsight(total);
@@ -704,7 +707,7 @@ function langNext(){
       eff.sort((a,b)=>(a.cpc??1e18)-(b.cpc??1e18));
       let h='';
       h+='<div class="mkt-insight-card mkt-cost-card"><div class="mkt-insight-title">'+t('mktInsight')+'</div><div class="mkt-cost-cp"><span class="mkt-cost-cp-val">'+(costCP!==null?relicFmt(costCP):'\u2014')+'</span><span class="mkt-cost-cp-unit">'+t('mktCostCp')+'</span></div></div>';
-      h+='<div class="mkt-insight-card mkt-best-card"><div class="mkt-insight-title">'+t('mktBestTier')+'</div><div class="mkt-best-row"><span class="tier-real" style="color:'+(gradeColor(best.bg)||'')+'">'+(best.name&&best.name!==best.key?best.name:best.key)+'</span><span class="mkt-best-meta">'+relicFmt(best.per1k)+' / '+fmtNum(1000)+'</span></div><div class="mkt-best-cta">'+t('mktBestTip')+' '+relicFmt(bestCost)+' <span class="mkt-qty">('+fmtNum(bestQ)+')</span></div></div>';
+      h+='<div class="mkt-insight-card mkt-best-card"><div class="mkt-insight-title">'+t('mktBestTier')+'</div><div class="mkt-best-row"><span class="tier-real" style="color:'+(gradeColor(best.bg)||'')+'">'+esc(best.name&&best.name!==best.key?best.name:best.key)+'</span><span class="mkt-best-meta">'+relicFmt(best.per1k)+' / '+fmtNum(1000)+'</span></div><div class="mkt-best-cta">'+t('mktBestTip')+' '+relicFmt(bestCost)+' <span class="mkt-qty">('+fmtNum(bestQ)+')</span></div></div>';
       h+='<div class="mkt-details">';
       h+='<div class="mkt-insight-card"><div class="mkt-insight-title">'+t('mktCalc')+'</div><div class="mkt-calc-row"><span>'+t('mktCalcPieces')+'</span><b>'+fmtCompact(total)+'</b></div><div class="mkt-calc-row"><span>'+t('mktCalcCp')+'</span><b>+'+fmtCompact(gCP)+'</b></div><div class="mkt-calc-row"><span>'+t('mktCalcCost')+'</span><b>'+relicFmt(totalCost)+'</b></div></div>';
 

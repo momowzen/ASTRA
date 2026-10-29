@@ -60,8 +60,8 @@ export const config = {
   mediaFolderId: (process.env.MEDIA_DRIVE_FOLDER_ID || '1y82GuXV2-R5_X8FkSeu3EcieJGBFl5BZ').trim(),
   pollIntervalMs: num(process.env.SYNC_POLL_INTERVAL_MS, 5000),
   maxRows: num(process.env.SYNC_MAX_ROWS, 2000),
-  adminUsername: 'admin',
-  adminInitialPassword: 'admin',
+  adminUsername: (process.env.ADMIN_USERNAME || '').trim() || 'admin',
+  adminInitialPassword: process.env.ADMIN_INITIAL_PASSWORD || 'admin',
   aiProviders: (process.env.AI_PROVIDER || 'gemini')
     .split(',')
     .map((s) => s.trim().toLowerCase())

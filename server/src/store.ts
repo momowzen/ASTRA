@@ -160,7 +160,7 @@ function computeRev(tabs: TabData[]): string {
     .slice(0, 16);
 }
 
-function intPoints(value: string | undefined): number {
+export function intPoints(value: string | undefined): number {
   const n = Number.parseInt(value ?? '', 10);
   return Number.isFinite(n) && n >= 0 ? n : 0;
 }

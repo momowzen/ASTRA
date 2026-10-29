@@ -10,14 +10,50 @@ declare global {
   }
 }
 
+/**
+ * Only allow API bases we already trust: the host configured in
+ * public/config.js, or localhost (dev). Anything else — e.g. a crafted
+ * `?api=https://evil.example/api` link — must never receive the login
+ * body or the Authorization header.
+ */
+function isAllowedApiBase(base: string): boolean {
+  let url: URL;
+  try {
+    url = new URL(base);
+  } catch {
+    return false;
+  }
+  const isLocal = url.hostname === 'localhost' || url.hostname === '127.0.0.1';
+  if (url.protocol === 'http:') return isLocal;
+  if (url.protocol !== 'https:') return false;
+  if (isLocal) return true;
+  const cfg = window.ASTRA_CONFIG?.apiBase?.trim();
+  if (!cfg) return false;
+  try {
+    return new URL(cfg).host === url.host;
+  } catch {
+    return false;
+  }
+}
+
 export function apiBase(): string {
   const fromQuery = new URLSearchParams(window.location.search).get('api');
   if (fromQuery) {
-    sessionStorage.setItem(API_SESSION_KEY, fromQuery);
-    return fromQuery.replace(/\/+$/, '');
+    const candidate = fromQuery.replace(/\/+$/, '');
+    if (isAllowedApiBase(candidate)) {
+      sessionStorage.setItem(API_SESSION_KEY, candidate);
+      return candidate;
+    }
+    // Rejected override: drop it so the bad link cannot stick for this tab.
+    sessionStorage.removeItem(API_SESSION_KEY);
+  } else {
+    const override = sessionStorage.getItem(API_SESSION_KEY);
+    if (override) {
+      const base = override.replace(/\/+$/, '');
+      if (isAllowedApiBase(base)) return base;
+      sessionStorage.removeItem(API_SESSION_KEY);
+    }
   }
-  const override = sessionStorage.getItem(API_SESSION_KEY);
-  if (override) return override.replace(/\/+$/, '');
   if (!import.meta.env.DEV) {
     const cfg = window.ASTRA_CONFIG?.apiBase?.trim();
     if (cfg) return cfg.replace(/\/+$/, '');

@@ -248,8 +248,13 @@ export async function appendRows(
   );
 }
 
-export async function appendRow(title: string, cells: string[], columnCount: number): Promise<void> {
-  await appendRows(title, [cells], columnCount);
+export async function appendRow(
+  title: string,
+  cells: string[],
+  columnCount: number,
+  valueInputOption: 'RAW' | 'USER_ENTERED' = 'USER_ENTERED',
+): Promise<void> {
+  await appendRows(title, [cells], columnCount, valueInputOption);
 }
 
 export async function deleteRow(title: string, sheetId: number, rowIndex1Based: number): Promise<void> {

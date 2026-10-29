@@ -10,6 +10,8 @@ export interface Credential {
   createdAt: string;
   updatedAt: string;
   ign: string;
+  /** 1-based sheet row this credential occupies (header row = 1). */
+  sheetRow: number;
 }
 
 const HEADER = ['USERNAME', 'PASSWORD_HASH', 'SALT', 'ROLE', 'CREATED_AT', 'UPDATED_AT', 'IGN'];
@@ -76,6 +78,10 @@ function parse(rows: string[][]): Credential[] {
       createdAt: r[4] || '',
       updatedAt: r[5] || '',
       ign,
+      // i is the index within `rows`; rows[0] is the header, so the sheet row
+      // is i + 1. Keep it from the raw loop position so blank rows skipped
+      // above cannot shift later writes onto another account's row.
+      sheetRow: i + 1,
     });
   }
   return out;
@@ -106,11 +112,11 @@ export async function setPassword(
   ign = '',
 ): Promise<void> {
   const all = await listCredentials();
-  const idx = all.findIndex((c) => c.username.toLowerCase() === username.trim().toLowerCase());
+  const found = all.find((c) => c.username.toLowerCase() === username.trim().toLowerCase());
   const { hash, salt } = await hashPassword(password);
   const title = config.credentialsTab;
-  if (idx >= 0) {
-    const sheetRow = idx + 2;
+  if (found) {
+    const sheetRow = found.sheetRow;
     await sheets.updateValues(title, `B${sheetRow}:C${sheetRow}`, [[hash, salt]]);
     await sheets.updateValues(title, `D${sheetRow}:D${sheetRow}`, [[role]]);
     await sheets.updateValues(title, `F${sheetRow}:F${sheetRow}`, [[now()]]);
@@ -121,12 +127,12 @@ export async function setPassword(
 
 export async function renameUsername(currentUsername: string, newUsername: string, ign: string): Promise<void> {
   const all = await listCredentials();
-  const idx = all.findIndex((c) => c.username.toLowerCase() === currentUsername.trim().toLowerCase());
-  if (idx < 0) return;
-  const sheetRow = idx + 2;
+  const found = all.find((c) => c.username.toLowerCase() === currentUsername.trim().toLowerCase());
+  if (!found) return;
+  const sheetRow = found.sheetRow;
   const title = config.credentialsTab;
   await sheets.updateValues(title, `A${sheetRow}:A${sheetRow}`, [[newUsername.trim()]]);
-  if (ign && !all[idx].ign) {
+  if (ign && !found.ign) {
     await sheets.updateValues(title, `F${sheetRow}:G${sheetRow}`, [[now(), ign.trim()]]);
   } else {
     await sheets.updateValues(title, `F${sheetRow}:F${sheetRow}`, [[now()]]);

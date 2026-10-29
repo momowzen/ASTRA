@@ -3,7 +3,7 @@ import { config } from './config';
 import * as sheets from './sheets';
 import { findCredential, findCredentialByIgn, renameUsername, deleteCredentialByIgn, setPassword, verifyCredential } from './credentials';
 import { rateLimit, requireAdmin, requireAuth, signToken } from './auth';
-import { applyLocalWrite, findIgn, getSnapshot, getTab, memberEditEnabled, rowBelongsTo, scheduleRefresh, noteWrite, noteTabMutation, lastError } from './store';
+import { applyLocalWrite, findIgn, getSnapshot, getTab, intPoints, memberEditEnabled, rowBelongsTo, scheduleRefresh, noteWrite, noteTabMutation, lastError } from './store';
 import { avatarMap, clearAvatar, setAvatar } from './avatars';
 import { deleteAvatarByUrl, prepareAvatar, storeAvatar } from './storage';
 import { BOSS_NAMES } from './bosses';
@@ -17,6 +17,13 @@ class ForbiddenRow extends Error {
   }
 }
 
+const NOT_READY_MSG = 'The server is still loading spreadsheet data. Try again in a moment.';
+
+/** True when a handler failed only because the snapshot has not been built yet. */
+function notLoaded(err: unknown): boolean {
+  return err instanceof Error && err.message === 'Data not loaded yet';
+}
+
 export const api = Router();
 
 const MAX_VALUE_LEN = 1000;
@@ -26,11 +33,6 @@ const MAX_AVATAR_BYTES = 4 * 1024 * 1024;
 const INTERNAL_TABS = ['BOSS ATTENDANCE', 'BOSS CONFIG', 'DISTRIBUTION HISTORY', 'CP HISTORY', 'SETTINGS'];
 
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-
-function intPoints(value: string | undefined): number {
-  const n = parseInt(value ?? '', 10);
-  return Number.isFinite(n) && n >= 0 ? n : 0;
-}
 
 function distributionDate(d: Date): string {
   return `${MONTHS[d.getMonth()]}. ${d.getDate()}, ${d.getFullYear()}`;
@@ -44,12 +46,6 @@ function formatCp(value: string): string {
 
 function bad(res: Response, status: number, message: string): void {
   res.status(status).json({ error: message });
-}
-
-function requestOrigin(req: Request): string {
-  const proto = (req.get('x-forwarded-proto') || req.protocol).split(',')[0].trim();
-  const host = (req.get('x-forwarded-host') || req.get('host') || '').split(',')[0].trim();
-  return `${proto}://${host}`;
 }
 
 function avatarTarget(req: Request): string | null {
@@ -75,7 +71,9 @@ api.get('/health', (_req, res) => {
     tabs = snap.tabs.length;
   } catch {
   }
-  res.json({ ok: rev !== null, rev, tabs, lastError });
+  // Never expose the raw upstream error text here: it can contain Google API
+  // details and this endpoint is unauthenticated. Details stay in server logs.
+  res.json({ ok: rev !== null, rev, tabs, syncError: lastError !== null });
 });
 
 api.post('/auth/login', async (req, res) => {
@@ -83,6 +81,11 @@ api.post('/auth/login', async (req, res) => {
   const password = String(req.body?.password ?? '');
   if (!username || !password) return bad(res, 400, 'Username and password are required');
 
+  // Per-IP cap first: without it, one IP could try unlimited usernames since
+  // the per-username bucket below is keyed by username.
+  if (!rateLimit(`login-ip:${req.ip}`, 30, 10 * 60 * 1000)) {
+    return bad(res, 429, 'Too many login attempts. Try again in a few minutes.');
+  }
   const key = `login:${req.ip}:${username.toLowerCase()}`;
   if (!rateLimit(key, 10, 10 * 60 * 1000)) {
     return bad(res, 429, 'Too many login attempts. Try again in a few minutes.');
@@ -133,6 +136,9 @@ api.post('/auth/password', requireAuth, async (req, res) => {
   if (!current || !next) return bad(res, 400, 'Current and new password are required');
   if (next.length < 6) return bad(res, 400, 'New password must be at least 6 characters');
   if (next.length > 128) return bad(res, 400, 'New password must be 128 characters or fewer');
+  if (!rateLimit(`password:${req.ip}`, 10, 10 * 60 * 1000)) {
+    return bad(res, 429, 'Too many attempts. Try again in a few minutes.');
+  }
 
   try {
     const cred =
@@ -163,6 +169,9 @@ api.post('/auth/username', requireAuth, async (req, res) => {
   const next = String(req.body?.username ?? '').trim();
   if (!next) return bad(res, 400, 'A username is required');
   if (!current) return bad(res, 400, 'Your current password is required');
+  if (!rateLimit(`username:${req.ip}`, 10, 10 * 60 * 1000)) {
+    return bad(res, 429, 'Too many attempts. Try again in a few minutes.');
+  }
 
   try {
     const cred =
@@ -345,59 +354,65 @@ api.get('/media/:id/stream', (req, res) => {
   void streamMediaTrack(req, res);
 });
 
+/** True when the session may set or clear the avatar of `target`. */
+function canUseAvatarTarget(s: { role: string; ign: string }, target: string): boolean {
+  return s.role === 'ADMIN' || target.toLowerCase() === s.ign.trim().toLowerCase();
+}
+
 api.post('/profile/avatar', requireAuth, async (req, res) => {
   try {
-  const s = req.session!;
-  const target = avatarTarget(req);
-  if (!target) return bad(res, 400, 'No member selected');
-  if (s.role !== 'ADMIN' && target.toLowerCase() !== s.ign.trim().toLowerCase()) {
-    return bad(res, 403, 'You can only change your own profile picture');
-  }
-  if (!rateLimit(`avatar:${s.username.toLowerCase()}`, 10, 10 * 60 * 1000)) {
-    return bad(res, 429, 'Too many profile picture changes. Try again later.');
-  }
+    const s = req.session!;
+    const target = avatarTarget(req);
+    if (!target) return bad(res, 400, 'No member selected');
+    if (!canUseAvatarTarget(s, target)) {
+      return bad(res, 403, 'You can only change your own profile picture');
+    }
+    if (!rateLimit(`avatar:${s.username.toLowerCase()}`, 10, 10 * 60 * 1000)) {
+      return bad(res, 429, 'Too many profile picture changes. Try again later.');
+    }
 
-  const dataUrl = String(req.body?.image ?? '');
-  const match = /^data:image\/(?:png|jpe?g|webp);base64,([A-Za-z0-9+/=\r\n]+)$/i.exec(dataUrl);
-  if (!match) return bad(res, 400, 'Choose a PNG, JPEG, or WebP image');
-  const input = Buffer.from(match[1], 'base64');
-  if (input.length === 0) return bad(res, 400, 'The image is empty');
-  if (input.length > MAX_AVATAR_BYTES) return bad(res, 413, 'Image is too large (max 4 MB)');
+    const dataUrl = String(req.body?.image ?? '');
+    const match = /^data:image\/(?:png|jpe?g|webp);base64,([A-Za-z0-9+/=\r\n]+)$/i.exec(dataUrl);
+    if (!match) return bad(res, 400, 'Choose a PNG, JPEG, or WebP image');
+    const input = Buffer.from(match[1], 'base64');
+    if (input.length === 0) return bad(res, 400, 'The image is empty');
+    if (input.length > MAX_AVATAR_BYTES) return bad(res, 413, 'Image is too large (max 4 MB)');
 
-  let processed: Buffer;
-  try {
-    processed = await prepareAvatar(input);
-  } catch {
-    return bad(res, 400, 'That image could not be processed. Choose a PNG, JPEG, or WebP image.');
-  }
+    let processed: Buffer;
+    try {
+      processed = await prepareAvatar(input);
+    } catch {
+      return bad(res, 400, 'That image could not be processed. Choose a PNG, JPEG, or WebP image.');
+    }
 
-  let stored: { url: string; key: string };
-  try {
-    stored = await storeAvatar(processed, requestOrigin(req));
+    let stored: { url: string; key: string };
+    try {
+      stored = await storeAvatar(processed);
+    } catch (err) {
+      console.error('[avatar] upload failed:', err instanceof Error ? err.message : err);
+      return bad(res, 500, 'Could not store the profile picture');
+    }
+
+    const result = await setAvatar(target, stored.url).catch(async (err) => {
+      await deleteAvatarByUrl(stored.url).catch(() => undefined);
+      throw err;
+    });
+    if (!result) {
+      await deleteAvatarByUrl(stored.url).catch(() => undefined);
+      return bad(res, 404, 'Member row not found');
+    }
+    if (result.previous && result.previous !== stored.url) {
+      await deleteAvatarByUrl(result.previous).catch(() => undefined);
+    }
+    const tab = getTab('BASIC INFORMATION');
+    if (tab && result.previous !== stored.url) {
+      logEntries([
+        makeCellEntry(tab, result.row, result.col, result.previous, stored.url, actorFor(req)),
+      ]);
+    }
+    res.json({ url: stored.url });
   } catch (err) {
-    console.error('[avatar] upload failed:', err instanceof Error ? err.message : err);
-    return bad(res, 500, `Could not store the profile picture: ${err instanceof Error ? err.message : 'unknown error'}`);
-  }
-
-  const result = await setAvatar(target, stored.url).catch(async (err) => {
-    await deleteAvatarByUrl(stored.url).catch(() => undefined);
-    throw err;
-  });
-  if (!result) {
-    await deleteAvatarByUrl(stored.url).catch(() => undefined);
-    return bad(res, 404, 'Member row not found');
-  }
-  if (result.previous && result.previous !== stored.url) {
-    await deleteAvatarByUrl(result.previous).catch(() => undefined);
-  }
-  const tab = getTab('BASIC INFORMATION');
-  if (tab && result.previous !== stored.url) {
-    logEntries([
-      makeCellEntry(tab, result.row, result.col, result.previous, stored.url, actorFor(req)),
-    ]);
-  }
-  res.json({ url: stored.url });
-  } catch (err) {
+    if (notLoaded(err)) return bad(res, 503, NOT_READY_MSG);
     console.error('[avatar] request failed:', err instanceof Error ? err.message : err);
     if (!res.headersSent) bad(res, 500, 'Could not update the profile picture');
   }
@@ -405,22 +420,23 @@ api.post('/profile/avatar', requireAuth, async (req, res) => {
 
 api.delete('/profile/avatar', requireAuth, async (req, res) => {
   try {
-  const s = req.session!;
-  const target = avatarTarget(req);
-  if (!target) return bad(res, 400, 'No member selected');
-  if (s.role !== 'ADMIN' && target.toLowerCase() !== s.ign.trim().toLowerCase()) {
-    return bad(res, 403, 'You can only change your own profile picture');
-  }
+    const s = req.session!;
+    const target = avatarTarget(req);
+    if (!target) return bad(res, 400, 'No member selected');
+    if (!canUseAvatarTarget(s, target)) {
+      return bad(res, 403, 'You can only change your own profile picture');
+    }
 
-  const result = await clearAvatar(target);
-  if (!result) return bad(res, 404, 'Member row not found');
-  if (result.previous) await deleteAvatarByUrl(result.previous).catch(() => undefined);
-  const tab = getTab('BASIC INFORMATION');
-  if (tab && result.col >= 0 && result.previous) {
-    logEntries([makeCellEntry(tab, result.row, result.col, result.previous, '', actorFor(req))]);
-  }
-  res.json({ ok: true });
+    const result = await clearAvatar(target);
+    if (!result) return bad(res, 404, 'Member row not found');
+    if (result.previous) await deleteAvatarByUrl(result.previous).catch(() => undefined);
+    const tab = getTab('BASIC INFORMATION');
+    if (tab && result.col >= 0 && result.previous) {
+      logEntries([makeCellEntry(tab, result.row, result.col, result.previous, '', actorFor(req))]);
+    }
+    res.json({ ok: true });
   } catch (err) {
+    if (notLoaded(err)) return bad(res, 503, NOT_READY_MSG);
     console.error('[avatar] delete failed:', err instanceof Error ? err.message : err);
     if (!res.headersSent) bad(res, 500, 'Could not remove the profile picture');
   }
@@ -428,39 +444,39 @@ api.delete('/profile/avatar', requireAuth, async (req, res) => {
 
 api.put('/tabs/:title/values', requireAuth, async (req, res) => {
   const title = decodeURIComponent(req.params.title);
-  const tab = getTab(title);
-  if (!tab) return bad(res, 404, 'Tab not found');
-  if (title === config.credentialsTab) return bad(res, 403, 'This tab is not editable');
-
-  const updates = req.body?.updates;
-  if (!Array.isArray(updates) || updates.length === 0) {
-    return bad(res, 400, 'No updates supplied');
-  }
-  if (updates.length > MAX_UPDATES) return bad(res, 400, 'Too many updates in one request');
-
-  const s = req.session!;
-  const isAdmin = s.role === 'ADMIN';
-  if (!isAdmin && INTERNAL_TABS.includes(title.toUpperCase())) {
-    return bad(res, 403, 'This tab is not editable');
-  }
-  const clean: { row: number; col: number; value: string }[] = [];
-
-  for (const u of updates) {
-    const row = Number(u?.row);
-    const col = Number(u?.col);
-    const value = String(u?.value ?? '');
-    if (!Number.isInteger(row) || !Number.isInteger(col)) return bad(res, 400, 'Invalid update');
-    if (row <= tab.meta.headerRows) return bad(res, 400, 'Cannot edit header rows');
-    if (col < 0 || col >= tab.meta.columnCount) return bad(res, 400, 'Column out of range');
-    if (value.length > MAX_VALUE_LEN) return bad(res, 400, 'Value too long');
-    if (value.startsWith('=')) return bad(res, 400, 'Formulas are not allowed');
-    if (!isAdmin) {
-      if (col === 0) return bad(res, 403, 'You cannot change your IGN');
-    }
-    clean.push({ row, col, value });
-  }
-
   try {
+    const tab = getTab(title);
+    if (!tab) return bad(res, 404, 'Tab not found');
+    if (title === config.credentialsTab) return bad(res, 403, 'This tab is not editable');
+
+    const updates = req.body?.updates;
+    if (!Array.isArray(updates) || updates.length === 0) {
+      return bad(res, 400, 'No updates supplied');
+    }
+    if (updates.length > MAX_UPDATES) return bad(res, 400, 'Too many updates in one request');
+
+    const s = req.session!;
+    const isAdmin = s.role === 'ADMIN';
+    if (!isAdmin && INTERNAL_TABS.includes(title.toUpperCase())) {
+      return bad(res, 403, 'This tab is not editable');
+    }
+    const clean: { row: number; col: number; value: string }[] = [];
+
+    for (const u of updates) {
+      const row = Number(u?.row);
+      const col = Number(u?.col);
+      const value = String(u?.value ?? '');
+      if (!Number.isInteger(row) || !Number.isInteger(col)) return bad(res, 400, 'Invalid update');
+      if (row <= tab.meta.headerRows) return bad(res, 400, 'Cannot edit header rows');
+      if (col < 0 || col >= tab.meta.columnCount) return bad(res, 400, 'Column out of range');
+      if (value.length > MAX_VALUE_LEN) return bad(res, 400, 'Value too long');
+      if (value.startsWith('=')) return bad(res, 400, 'Formulas are not allowed');
+      if (!isAdmin) {
+        if (col === 0) return bad(res, 403, 'You cannot change your IGN');
+      }
+      clean.push({ row, col, value });
+    }
+
     if (!isAdmin) {
       const rows = [...new Set(clean.map((u) => u.row))];
       if (rows.length > 50) return bad(res, 400, 'Too many rows');
@@ -486,10 +502,15 @@ api.put('/tabs/:title/values', requireAuth, async (req, res) => {
     const previous = new Map<string, string>();
     for (const u of clean) previous.set(`${u.row}:${u.col}`, snapshotValue(tab, u.row, u.col));
 
-    await sheets.batchUpdateValues(
-      title,
-      clean.map((u) => ({ a1: `${sheets.columnLetter(u.col)}${u.row}`, values: [[u.value]] })),
-    );
+    // USER_ENTERED parses leading "+", "-", "@" as formulas too (e.g.
+    // +IMPORTXML(...)), so those cells are written RAW; everything else keeps
+    // the normal parsing behavior it has today.
+    const risky = clean.filter((u) => /^[+\-@]/.test(u.value));
+    const plain = clean.filter((u) => !/^[+\-@]/.test(u.value));
+    const byCell = (list: { row: number; col: number; value: string }[]) =>
+      list.map((u) => ({ a1: `${sheets.columnLetter(u.col)}${u.row}`, values: [[u.value]] }));
+    await sheets.batchUpdateValues(title, byCell(plain));
+    await sheets.batchUpdateValues(title, byCell(risky), 'RAW');
     for (const u of clean) noteWrite(title, u.row, u.col, u.value);
     for (const u of clean) applyLocalWrite(title, u.row, u.col, u.value);
 
@@ -508,6 +529,7 @@ api.put('/tabs/:title/values', requireAuth, async (req, res) => {
     if (err instanceof ForbiddenRow) {
       return bad(res, 403, 'That row does not belong to your IGN');
     }
+    if (notLoaded(err)) return bad(res, 503, NOT_READY_MSG);
     console.error('[write] cell update failed:', err);
     bad(res, 502, 'Could not write to the spreadsheet');
   }
@@ -515,27 +537,30 @@ api.put('/tabs/:title/values', requireAuth, async (req, res) => {
 
 api.post('/tabs/:title/rows', requireAuth, requireAdmin, async (req, res) => {
   const title = decodeURIComponent(req.params.title);
-  const tab = getTab(title);
-  if (!tab) return bad(res, 404, 'Tab not found');
-
-  const cells = Array.isArray(req.body?.cells) ? req.body.cells.map((c: unknown) => String(c ?? '')) : null;
-  if (!cells) return bad(res, 400, 'Row cells are required');
-  if (cells.some((c: string) => c.length > MAX_VALUE_LEN)) return bad(res, 400, 'Value too long');
-  if (cells.some((c: string) => c.startsWith('='))) return bad(res, 400, 'Formulas are not allowed');
-  if (cells.length > tab.meta.columnCount) return bad(res, 400, 'Too many cells for this tab');
-  if (!cells[0] || !cells[0].trim()) return bad(res, 400, 'IGN (first column) is required');
-  if (tab.rows.some((r) => (r.cells[0] || '').trim().toLowerCase() === cells[0].trim().toLowerCase())) {
-    return bad(res, 409, 'A row with this IGN already exists');
-  }
-
   try {
+    const tab = getTab(title);
+    if (!tab) return bad(res, 404, 'Tab not found');
+
+    const cells = Array.isArray(req.body?.cells) ? req.body.cells.map((c: unknown) => String(c ?? '')) : null;
+    if (!cells) return bad(res, 400, 'Row cells are required');
+    if (cells.some((c: string) => c.length > MAX_VALUE_LEN)) return bad(res, 400, 'Value too long');
+    if (cells.some((c: string) => c.startsWith('='))) return bad(res, 400, 'Formulas are not allowed');
+    if (cells.length > tab.meta.columnCount) return bad(res, 400, 'Too many cells for this tab');
+    if (!cells[0] || !cells[0].trim()) return bad(res, 400, 'IGN (first column) is required');
+    if (tab.rows.some((r) => (r.cells[0] || '').trim().toLowerCase() === cells[0].trim().toLowerCase())) {
+      return bad(res, 409, 'A row with this IGN already exists');
+    }
+
     const padded = [...cells];
     while (padded.length < tab.meta.columnCount) padded.push('');
-    await sheets.appendRow(title, padded, tab.meta.columnCount);
+    // See the PUT handler above: rows containing "+", "-", "@" go in RAW.
+    const raw = padded.some((c) => /^[+\-@]/.test(c));
+    await sheets.appendRow(title, padded, tab.meta.columnCount, raw ? 'RAW' : 'USER_ENTERED');
     noteTabMutation(title);
     scheduleRefresh();
     res.json({ ok: true });
   } catch (err) {
+    if (notLoaded(err)) return bad(res, 503, NOT_READY_MSG);
     console.error('[write] append row failed:', err);
     bad(res, 502, 'Could not add the row');
   }
@@ -543,19 +568,20 @@ api.post('/tabs/:title/rows', requireAuth, requireAdmin, async (req, res) => {
 
 api.delete('/tabs/:title/rows', requireAuth, requireAdmin, async (req, res) => {
   const title = decodeURIComponent(req.params.title);
-  const tab = getTab(title);
-  if (!tab) return bad(res, 404, 'Tab not found');
-
-  const row = Number(req.query.row);
-  if (!Number.isInteger(row) || row <= tab.meta.headerRows) return bad(res, 400, 'Invalid row');
-  if (!tab.rows.some((r) => r.row === row)) return bad(res, 404, 'Row not found');
-
   try {
+    const tab = getTab(title);
+    if (!tab) return bad(res, 404, 'Tab not found');
+
+    const row = Number(req.query.row);
+    if (!Number.isInteger(row) || row <= tab.meta.headerRows) return bad(res, 400, 'Invalid row');
+    if (!tab.rows.some((r) => r.row === row)) return bad(res, 404, 'Row not found');
+
     await sheets.deleteRow(title, tab.meta.sheetId, row);
     noteTabMutation(title);
     scheduleRefresh();
     res.json({ ok: true });
   } catch (err) {
+    if (notLoaded(err)) return bad(res, 503, NOT_READY_MSG);
     console.error('[write] delete row failed:', err);
     bad(res, 502, 'Could not delete the row');
   }
@@ -821,12 +847,7 @@ Rules:
 - One line per row, in reading order. No headers, no numbering, no bullets, no quotes, no commentary.
 - Skip a row if its name or number is unreadable.`;
 
-interface DeepSeekResponse {
-  error?: { message?: string };
-  choices?: { message?: { content?: string } }[];
-}
-
-interface GroqResponse {
+interface ChatCompletionResponse {
   error?: { message?: string };
   choices?: { message?: { content?: string } }[];
 }
@@ -836,12 +857,26 @@ interface GeminiResponse {
   candidates?: { content?: { parts?: { text?: string }[] } }[];
 }
 
-async function readWithGroq(image: string, prompt: string): Promise<string> {
-  const upstream = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+/**
+ * Shared client for OpenAI-compatible chat-completions OCR readers (Groq,
+ * DeepSeek). The request/response shapes are identical; only the URL, key,
+ * model and a few body extras differ.
+ */
+async function readWithOpenAiChat(
+  image: string,
+  prompt: string,
+  opts: {
+    url: string;
+    apiKey: string;
+    model: string;
+    extraBody?: Record<string, unknown>;
+  },
+): Promise<string> {
+  const upstream = await fetch(opts.url, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${config.groqApiKey}` },
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${opts.apiKey}` },
     body: JSON.stringify({
-      model: 'qwen/qwen3.8-27b',
+      model: opts.model,
       messages: [
         { role: 'system', content: prompt },
         {
@@ -852,19 +887,35 @@ async function readWithGroq(image: string, prompt: string): Promise<string> {
           ],
         },
       ],
-      temperature: 0,
-      reasoning_format: 'hidden',
-      max_tokens: 1000,
+      ...(opts.extraBody ?? {}),
     }),
     signal: AbortSignal.timeout(60_000),
   });
-  const data = (await upstream.json().catch(() => null)) as GroqResponse | null;
+  const data = (await upstream.json().catch(() => null)) as ChatCompletionResponse | null;
   if (!upstream.ok) {
     throw new Error(String(data?.error?.message ?? `HTTP ${upstream.status}`));
   }
   const text = String(data?.choices?.[0]?.message?.content ?? '');
   if (!text.trim()) throw new Error('empty reading');
   return text;
+}
+
+async function readWithGroq(image: string, prompt: string): Promise<string> {
+  return readWithOpenAiChat(image, prompt, {
+    url: 'https://api.groq.com/openai/v1/chat/completions',
+    apiKey: config.groqApiKey,
+    model: 'qwen/qwen3.8-27b',
+    extraBody: { temperature: 0, reasoning_format: 'hidden', max_tokens: 1000 },
+  });
+}
+
+async function readWithDeepSeek(image: string, prompt: string): Promise<string> {
+  return readWithOpenAiChat(image, prompt, {
+    url: 'https://api.deepseek.com/chat/completions',
+    apiKey: config.deepseekApiKey,
+    model: 'deepseek-flash',
+    extraBody: { stream: false },
+  });
 }
 
 const GEMINI_MODELS = [
@@ -876,38 +927,6 @@ const GEMINI_MODELS = [
   'gemini-flash-lite-latest',
   'gemini-3.1-flash-lite',
 ];
-
-async function readWithDeepSeek(image: string, prompt: string): Promise<string> {
-  const upstream = await fetch('https://api.deepseek.com/chat/completions', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${config.deepseekApiKey}`,
-    },
-    body: JSON.stringify({
-      model: 'deepseek-flash',
-      messages: [
-        { role: 'system', content: prompt },
-        {
-          role: 'user',
-          content: [
-            { type: 'text', text: 'Transcribe the player names in this screenshot.' },
-            { type: 'image_url', image_url: { url: image } },
-          ],
-        },
-      ],
-      stream: false,
-    }),
-    signal: AbortSignal.timeout(60_000),
-  });
-  const data = (await upstream.json().catch(() => null)) as DeepSeekResponse | null;
-  if (!upstream.ok) {
-    throw new Error(String(data?.error?.message ?? `HTTP ${upstream.status}`));
-  }
-  const text = String(data?.choices?.[0]?.message?.content ?? '');
-  if (!text.trim()) throw new Error('empty reading');
-  return text;
-}
 
 async function readWithGemini(image: string, prompt: string): Promise<string> {
   const mime = image.slice(image.indexOf('data:') + 5, image.indexOf(';'));
@@ -971,10 +990,12 @@ function readerFor(provider: string): { name: string; key: string; read: (image:
   }
 }
 
-async function runOcrReader(
+type OcrReader = { name: string; key: string; read: (image: string, prompt: string) => Promise<string> };
+
+/** Validation shared by every OCR endpoint: image shape + provider config. */
+function prepareOcrReaders(
   image: string,
-  prompt: string,
-): Promise<{ ok: true; text: string } | { ok: false; status: number; error: string }> {
+): { ok: true; ready: OcrReader[] } | { ok: false; status: number; error: string } {
   if (!image.startsWith('data:image/') || !image.includes(';base64,')) {
     return { ok: false, status: 400, error: 'A base64 image data URL is required' };
   }
@@ -988,9 +1009,18 @@ async function runOcrReader(
   if (ready.length === 0) {
     return { ok: false, status: 503, error: 'No AI reader key is configured on the server' };
   }
+  return { ok: true, ready };
+}
+
+async function runOcrReader(
+  image: string,
+  prompt: string,
+): Promise<{ ok: true; text: string } | { ok: false; status: number; error: string }> {
+  const prep = prepareOcrReaders(image);
+  if (!prep.ok) return prep;
 
   const errors: string[] = [];
-  for (const reader of ready) {
+  for (const reader of prep.ready) {
     try {
       const text = await reader.read(image, prompt);
       return { ok: true, text };
@@ -1006,21 +1036,10 @@ async function runOcrReadersAll(
   image: string,
   prompt: string,
 ): Promise<{ ok: true; texts: string[] } | { ok: false; status: number; error: string }> {
-  if (!image.startsWith('data:image/') || !image.includes(';base64,')) {
-    return { ok: false, status: 400, error: 'A base64 image data URL is required' };
-  }
-  if (image.length > 12_000_000) return { ok: false, status: 413, error: 'Image is too large' };
+  const prep = prepareOcrReaders(image);
+  if (!prep.ok) return prep;
 
-  const chosen = config.aiProviders.map(readerFor);
-  if (chosen.some((r) => r === null)) {
-    return { ok: false, status: 400, error: `Unknown AI_PROVIDER value: ${config.aiProviders.join(', ')}` };
-  }
-  const ready = chosen.filter((r): r is NonNullable<typeof r> => r !== null && r.key !== '');
-  if (ready.length === 0) {
-    return { ok: false, status: 503, error: 'No AI reader key is configured on the server' };
-  }
-
-  const settled = await Promise.allSettled(ready.map((r) => r.read(image, prompt)));
+  const settled = await Promise.allSettled(prep.ready.map((r) => r.read(image, prompt)));
   const texts: string[] = [];
   const errors: string[] = [];
   settled.forEach((res, i) => {
@@ -1028,8 +1047,8 @@ async function runOcrReadersAll(
       texts.push(res.value);
     } else {
       const msg = res.status === 'rejected' ? (res.reason as Error).message : 'empty reading';
-      console.error(`[ocr] ${ready[i].name} failed:`, msg);
-      errors.push(`${ready[i].name}: ${msg}`);
+      console.error(`[ocr] ${prep.ready[i].name} failed:`, msg);
+      errors.push(`${prep.ready[i].name}: ${msg}`);
     }
   });
   if (texts.length === 0) return { ok: false, status: 502, error: errors.join(' | ') || 'No reader produced text' };
@@ -1093,9 +1112,16 @@ api.post('/cp/update', requireAuth, requireAdmin, async (req, res) => {
       : [{ a1: `${letter}1`, values: [[date]] }];
     const newRows: string[][] = [];
 
+    // Discover the CP column by header name, exactly like GET /data does.
+    // Fall back to column B (index 1) when no CP header exists — that is the
+    // only layout that works today. Never column A (the IGN column).
+    const basicHeaders = (basic.meta.headers[0] || []).map((x) => String(x).trim().toUpperCase());
+    let cpCol = basicHeaders.indexOf('CP');
+    if (cpCol < 1) cpCol = 1;
+
     for (const it of clean) {
       const bRow = basicRow.get(it.ign);
-      if (bRow) basicWrites.push({ a1: `${sheets.columnLetter(1)}${bRow}`, values: [[it.cp]] });
+      if (bRow) basicWrites.push({ a1: `${sheets.columnLetter(cpCol)}${bRow}`, values: [[it.cp]] });
       const hRow = histRow.get(it.ign);
       if (hRow) {
         histWrites.push({ a1: `${letter}${hRow}`, values: [[it.cp]] });
@@ -1114,7 +1140,7 @@ api.post('/cp/update', requireAuth, requireAdmin, async (req, res) => {
     }
     for (const it of clean) {
       const bRow = basicRow.get(it.ign);
-      if (bRow) noteWrite('BASIC INFORMATION', bRow, 1, it.cp);
+      if (bRow) noteWrite('BASIC INFORMATION', bRow, cpCol, it.cp);
     }
     noteTabMutation('BASIC INFORMATION');
     noteTabMutation('CP HISTORY');
