@@ -91,7 +91,7 @@ export function isSupportedAvatar(file: File): boolean {
   return ['image/png', 'image/jpeg', 'image/webp'].includes(file.type.toLowerCase());
 }
 
-function loadImage(src: string): Promise<HTMLImageElement> {
+export function loadImage(src: string): Promise<HTMLImageElement> {
   return new Promise((resolve, reject) => {
     const img = new Image();
     img.onload = () => resolve(img);
@@ -100,29 +100,45 @@ function loadImage(src: string): Promise<HTMLImageElement> {
   });
 }
 
-export async function fileToAvatarDataUrl(file: File): Promise<string> {
-  const raw = await new Promise<string>((resolve, reject) => {
+export function fileToRawDataUrl(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onload = () => resolve(String(reader.result ?? ''));
     reader.onerror = () => reject(new Error('Could not read image'));
     reader.readAsDataURL(file);
   });
+}
 
+/**
+ * Render the visible part of an avatar crop to a square image.
+ * `scale` is the display factor over the "cover" fit (>= 1); `offX`/`offY`
+ * are the image's drag offset in stage pixels, with the stage itself sized
+ * `stageSize` px (the circular preview the user saw).
+ */
+export function cropToSquareDataUrl(
+  img: HTMLImageElement,
+  scale: number,
+  offX: number,
+  offY: number,
+  stageSize: number,
+  out = 512,
+): string {
   try {
-    const img = await loadImage(raw);
-    const size = 512;
+    if (!img.naturalWidth || !img.naturalHeight || stageSize <= 0) return '';
     const canvas = document.createElement('canvas');
-    canvas.width = size;
-    canvas.height = size;
+    canvas.width = out;
+    canvas.height = out;
     const ctx = canvas.getContext('2d');
-    if (!ctx || !img.naturalWidth || !img.naturalHeight) return raw;
-    const scale = Math.max(size / img.naturalWidth, size / img.naturalHeight);
-    const width = img.naturalWidth * scale;
-    const height = img.naturalHeight * scale;
-    ctx.drawImage(img, (size - width) / 2, (size - height) / 2, width, height);
+    if (!ctx) return '';
+    const ratio = out / stageSize;
+    const w = img.naturalWidth * scale * ratio;
+    const h = img.naturalHeight * scale * ratio;
+    const x = ((stageSize - img.naturalWidth * scale) / 2 + offX) * ratio;
+    const y = ((stageSize - img.naturalHeight * scale) / 2 + offY) * ratio;
+    ctx.drawImage(img, x, y, w, h);
     return canvas.toDataURL('image/webp', 0.86);
   } catch {
-    return raw;
+    return '';
   }
 }
 

@@ -967,6 +967,10 @@
     flex: 1;
   }
 
+  .avatar-crop-stage {
+    width: min(240px, 70vw);
+  }
+
   .auth-card {
     padding: 60px 18px 70px;
   }

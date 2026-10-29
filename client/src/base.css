@@ -2694,6 +2694,75 @@ table.grid .labels.single th {
   text-align: center;
 }
 
+/* ---------- Avatar crop modal ---------- */
+
+.avatar-crop-overlay {
+  z-index: calc(var(--z-overlay) + 1);
+}
+
+.avatar-crop-modal {
+  width: min(420px, 100%);
+}
+
+/* The stage IS the result preview: the image is clipped to the circle, so
+   what the member sees inside it is exactly what the avatar will show. */
+.avatar-crop-stage {
+  position: relative;
+  width: min(260px, 64vw);
+  aspect-ratio: 1;
+  margin: 0 auto;
+  border-radius: 50%;
+  overflow: hidden;
+  touch-action: none;
+  cursor: grab;
+  user-select: none;
+  -webkit-user-select: none;
+  background:
+    repeating-conic-gradient(rgba(167, 184, 173, 0.06) 0% 25%, transparent 0% 50%) 0 0 / 22px 22px,
+    #0a0f0c;
+  box-shadow:
+    0 0 0 1px rgba(232, 184, 143, 0.4),
+    0 0 0 7px rgba(8, 13, 10, 0.92),
+    var(--elev-1);
+}
+
+.avatar-crop-stage:active {
+  cursor: grabbing;
+}
+
+.avatar-crop-stage img {
+  position: absolute;
+  max-width: none;
+  pointer-events: none;
+  -webkit-user-drag: none;
+  user-select: none;
+}
+
+.avatar-crop-zoom {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  margin-top: var(--sp-4);
+  color: var(--muted);
+  font-size: var(--fs-sm);
+}
+
+.avatar-crop-zoom span {
+  flex: none;
+}
+
+.avatar-crop-zoom input[type='range'] {
+  flex: 1;
+  min-width: 0;
+  accent-color: var(--gold);
+  cursor: pointer;
+}
+
+.avatar-crop-zoom input[type='range']:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
 .hero-sigil-ring {
   position: absolute;
   inset: -6px;

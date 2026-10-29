@@ -2,8 +2,9 @@ import { FormEvent, useRef, useState, type ChangeEvent } from 'react';
 import { changePassword, changeUsername, removeAvatar, uploadAvatar, ApiError } from '../api';
 import type { Session } from '../types';
 import { useLang } from '../i18n';
-import { fileToAvatarDataUrl, isSupportedAvatar } from '../utils';
+import { fileToRawDataUrl, isSupportedAvatar } from '../utils';
 import Avatar from './Avatar';
+import AvatarCropModal from './AvatarCropModal';
 import { IconCamera } from './icons';
 
 interface Props {
@@ -28,6 +29,7 @@ export default function MemberSettingsModal({
   const avatarInput = useRef<HTMLInputElement>(null);
   const [avatarPreview, setAvatarPreview] = useState<string | undefined>(undefined);
   const [avatarBusy, setAvatarBusy] = useState(false);
+  const [cropSource, setCropSource] = useState<string | null>(null);
   const shownAvatar = avatarPreview === undefined ? (avatarUrl ?? '') : avatarPreview;
 
   const [username, setUsername] = useState(session.username);
@@ -112,12 +114,27 @@ export default function MemberSettingsModal({
     }
     setAvatarBusy(true);
     try {
-      const image = await fileToAvatarDataUrl(file);
-      const res = await uploadAvatar(image);
+      // Hold the raw image and let the member choose the crop first;
+      // nothing is uploaded until they confirm in the crop modal.
+      setCropSource(await fileToRawDataUrl(file));
+    } catch {
+      toast(t('member.photoFailed'), 'err');
+    } finally {
+      setAvatarBusy(false);
+    }
+  }
+
+  async function confirmCrop(cropped: string) {
+    if (avatarBusy) return;
+    setAvatarBusy(true);
+    try {
+      const res = await uploadAvatar(cropped);
       setAvatarPreview(res.url);
       onAvatarUpdated?.(res.url);
+      setCropSource(null);
       toast(t('member.photoUpdated'), 'ok');
     } catch (err) {
+      // Keep the modal open so the crop is not lost on a transient failure.
       toast(err instanceof ApiError ? err.message : t('member.photoFailed'), 'err');
     } finally {
       setAvatarBusy(false);
@@ -146,6 +163,7 @@ export default function MemberSettingsModal({
   );
 
   return (
+    <>
     <div className="overlay" onMouseDown={(e) => e.target === e.currentTarget && onClose()}>
       <div className="modal">
         <h3>{t('member.settingsTitle')}</h3>
@@ -297,5 +315,15 @@ export default function MemberSettingsModal({
         </div>
       </div>
     </div>
+
+    {cropSource && (
+      <AvatarCropModal
+        source={cropSource}
+        busy={avatarBusy}
+        onCancel={() => setCropSource(null)}
+        onConfirm={confirmCrop}
+      />
+    )}
+    </>
   );
 }
