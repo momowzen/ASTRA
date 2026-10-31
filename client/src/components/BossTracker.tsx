@@ -477,7 +477,7 @@ function AttendanceView({
                 searchPlaceholder={t('boss.searchBoss')}
                 options={BOSSES.map((b) => ({
                   value: b.name,
-                  label: `${bossLabel(b.name, t, lang)} â€” ${pointsFor(b.name)} ${pointsFor(b.name) === 1 ? t('boss.pt') : t('boss.pts')}`,
+                  label: `${bossLabel(b.name, t, lang)} — ${pointsFor(b.name)} ${pointsFor(b.name) === 1 ? t('boss.pt') : t('boss.pts')}`,
                   group: b.cat ? t(`boss.category.${b.cat}`) : undefined,
                 }))}
               />
@@ -588,7 +588,7 @@ function AttendanceView({
                 />
                 <span className="att-ign">{name}</span>
                 <span className="att-check" aria-hidden="true">
-                  {on ? 'âœ“' : ''}
+                  {on ? '✓' : ''}
                 </span>
                 <input type="checkbox" checked={on} readOnly tabIndex={-1} />
               </div>
@@ -636,7 +636,7 @@ function DashboardView({ attendanceTab, avatars }: { attendanceTab: TabData | un
               {bandCount > 0 && (
                 <>
                   {' '}
-                  Â· {t('boss.top30Meta', { n: bandCount })}
+                  · {t('boss.top30Meta', { n: bandCount })}
                 </>
               )}
             </span>
@@ -680,7 +680,7 @@ function DashboardView({ attendanceTab, avatars }: { attendanceTab: TabData | un
                 <tr>
                   <td colSpan={3}>
                     <div className="empty">
-                      <div className="big">â€”</div>
+                      <div className="big">—</div>
                       {t('boss.noAttendance')}
                     </div>
                   </td>
