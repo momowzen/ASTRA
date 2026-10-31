@@ -436,7 +436,7 @@ function langNext(){
       const n=now();
       const h='<div class="interval-grid">'+grpInt().map((g,i)=>{
         const isNext=nxtBoss&&g.b.includes(nxtBoss);
-        return '<div class="interval-card '+(isNext?'highlight':'')+'"><div class="interval-header"><div class="interval-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg><span>'+t('every')+' '+fmtInt(g.s)+'</span></div><span class="interval-count">'+g.b.length+'</span></div><div class="interval-rows">'+g.b.map(b=>{const et=timers[b.id]?.endTime,al=et&&et>n;return'<div class="interval-row" data-t="'+(et||0)+'"><span class="interval-row-name">'+bn(b)+'</span><span class="interval-row-time '+(al?'live':'na')+'">'+(al?fmtShort(et-n):'--')+'</span></div>'}).join('')+'</div></div>';
+        return '<div class="interval-card '+(isNext?'highlight':'')+'"><div class="interval-header"><div class="interval-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg><span>'+t('every')+' '+fmtInt(g.s)+'</span></div></div><div class="interval-rows">'+g.b.map(b=>{const et=timers[b.id]?.endTime,al=et&&et>n;return'<div class="interval-row" data-t="'+(et||0)+'"><span class="interval-row-name">'+bn(b)+'</span><span class="interval-row-time '+(al?'live':'na')+'">'+(al?fmtShort(et-n):'--')+'</span></div>'}).join('')+'</div></div>';
       }).join('')+'</div>';
       if(h===lastIntHtml)return;
       const ig=$('ivGrid');ig.innerHTML=h;lastIntHtml=h;fitPanelCards(ig);

@@ -291,7 +291,8 @@
     @keyframes urgent-pulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.85; transform: scale(1.02); } }
     .hero-countdown-label { font-size: 0.7rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-tertiary); }
 
-    .dashboard-grid { flex: 1; min-height: 0; display: grid; grid-template-columns: 1.25fr 1fr; grid-template-rows: 1fr; gap: var(--space-4); }
+    .dashboard-grid { flex: 1; min-height: 0; display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); grid-template-rows: 1fr; gap: var(--space-4); }
+    .dashboard-grid > .panel { min-width: 0; }
 
     .panel { display: flex; flex-direction: column; min-height: 0; background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: var(--radius-2xl); box-shadow: var(--shadow-md), inset 0 1px 0 var(--glass-highlight); transition: border-color var(--duration-normal) var(--ease-smooth), box-shadow var(--duration-normal) var(--ease-smooth); overflow: hidden; }
     .panel:hover { border-color: var(--glass-border-strong); box-shadow: var(--shadow-lg), inset 0 1px 0 var(--glass-highlight); }
@@ -481,7 +482,7 @@
     }
 
     @media (max-width: 1200px) {
-      .dashboard-grid { grid-template-columns: 1fr 1fr; }
+      .dashboard-grid { grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); }
       .hidden-grid { grid-template-columns: 1fr 1fr; }
     }
 
