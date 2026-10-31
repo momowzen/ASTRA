@@ -123,12 +123,13 @@ function langNext(){
     let alarmOn=false;
     const ttsSpoken=new Set();
     const ttsArmed=new Map();
+    const ttsTenArmed=new Set();
     function toggleAlarm(){
       alarmOn=!alarmOn;
       lsSet('astraalarm',alarmOn?'1':'0');
       updateAlarmBtn();
       if(!alarmOn)ttsStop();
-      if(alarmOn){ttsSpoken.clear();ttsArmed.clear();if(window.speechSynthesis){syncVoices();window.speechSynthesis.speak(new SpeechSynthesisUtterance(''))}}
+      if(alarmOn){ttsSpoken.clear();ttsArmed.clear();ttsTenArmed.clear();if(window.speechSynthesis){syncVoices();window.speechSynthesis.speak(new SpeechSynthesisUtterance(''))}}
     }
     function updateAlarmBtn(){
       const b=$('alarmBtn');
@@ -169,6 +170,14 @@ function langNext(){
         const tm=timers[b.id];
         if(!tm||!tm.endTime)continue;
         const rem=tm.endTime-n;
+        const tenKey=`${b.id}_${tm.endTime}`;
+        if(rem>10*60000){
+          ttsTenArmed.add(tenKey);
+        }else if(rem>0&&ttsTenArmed.has(tenKey)){
+          ttsTenArmed.delete(tenKey);
+          const spokenKey=tenKey+'_ten';
+          if(!ttsSpoken.has(spokenKey)){ttsSpoken.add(spokenKey);speak(t('ttsIn')(bn(b),10),`${b.name} spawns in 10 minutes.`)}
+        }
         if(rem>0)ttsArmed.set(b.id,tm.endTime);
         if(rem>0&&rem<=5*60000){
           const m=Math.ceil(rem/60000);
@@ -178,7 +187,7 @@ function langNext(){
           const armedEnd=ttsArmed.get(b.id);
           if(armedEnd===tm.endTime){
             const key=`${b.id}_${tm.endTime}_spawned`;
-            if(!ttsSpoken.has(key)){ttsSpoken.add(key);speak(t('ttsSpawned')(bn(b)),`${b.name} has spawned.`);ttsArmed.delete(b.id)}
+            if(!ttsSpoken.has(key)){ttsSpoken.add(key);speak(t('ttsSpawned')(bn(b)),`${b.name} has spawned.`);ttsArmed.delete(b.id);ttsTenArmed.delete(`${b.id}_${tm.endTime}`)}
           }
         }
       }
