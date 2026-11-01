@@ -1839,10 +1839,13 @@ html.anim-paused *::after {
   }
 
   .sidebar,
-  .topbar,
   .auth-card,
   .roster-panel {
     background: var(--glass-solid);
+  }
+
+  .topbar {
+    background: transparent;
   }
 }
 
