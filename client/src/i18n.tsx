@@ -202,6 +202,7 @@ const DICT: Record<string, { en: string; ko: string; ja: string; zh: string }> =
   'member.cropUse': { en: 'Use photo', ko: '사진 사용', ja: "この写真を使う", zh: '使用此照片' },
   'member.roster': { en: 'Roster', ko: '로스터', ja: "ロスター", zh: '名单' },
   'member.membersCount': { en: '{a} members', ko: '멤버 {a}명', ja: "メンバー {a}名", zh: '{a} 名成员' },
+  'member.guildInfo': { en: 'Guild info', ko: '길드 정보', ja: "ギルド情報", zh: '公会信息' },
   'member.tools': { en: 'Tools', ko: '도구', ja: "ツール", zh: '工具' },
   'member.media': { en: 'Media', ko: '미디어', ja: "メディア", zh: '媒体' },
   'member.music': { en: 'Music', ko: '음악', ja: "音楽", zh: '音乐' },

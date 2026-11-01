@@ -721,7 +721,7 @@ export default function MemberApp({
             </button>
           ))}
 
-          <div className="section-label">{t('member.tools')}</div>
+          <div className="section-label">{t('member.guildInfo')}</div>
           <button className={`nav-item ${rosterView ? 'active' : ''}`} onClick={showRoster} title={t('member.roster')}>
             <span className="ico">
               <IconUsers />
@@ -738,6 +738,8 @@ export default function MemberApp({
             </span>
             {t('member.toolAttendance')}
           </button>
+
+          <div className="section-label">{t('member.tools')}</div>
           <button
             className={`nav-item ${toolsView === 'tracker' ? 'active' : ''}`}
             onClick={() => showTool('tracker')}
