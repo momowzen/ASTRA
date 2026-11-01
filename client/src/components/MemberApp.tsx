@@ -12,6 +12,7 @@ import RosterProfileCard from './RosterProfileCard';
 import MediaMusic from './MediaMusic';
 import { DatePicker, Select } from './Dropdown';
 import { LangToggle, useLang } from '../i18n';
+import { useNavSlider } from '../useNavSlider';
 import { colLabel, memberColIsLong, memberColLabel, memberColValueLabel, tabLabel, valueLabel } from '../display';
 
 interface Props {
@@ -361,6 +362,7 @@ export default function MemberApp({
   const [restored, setRestored] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const navSlider = useNavSlider();
   const [jump, setJump] = useState<{ tab: string; col: number } | null>(null);
   const [rosterView, setRosterView] = useState(false);
   const [rosterCol, setRosterCol] = useState(-1);
@@ -692,7 +694,8 @@ export default function MemberApp({
           </button>
         </div>
 
-        <div className="tab-scroll">
+        <div className="tab-scroll" ref={navSlider.containerRef}>
+          <span className="nav-slider" aria-hidden="true" ref={navSlider.sliderRef} />
           <div className="section-label">{t('member.myProfile')}</div>
           <button
             className={`nav-item ${isDashboard ? 'active' : ''}`}

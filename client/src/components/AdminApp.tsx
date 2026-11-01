@@ -16,6 +16,7 @@ import CpHistoryView from './CpHistoryView';
 import Avatar from './Avatar';
 import ProfileCompletion from './ProfileCompletion';
 import { LangToggle, useLang } from '../i18n';
+import { useNavSlider } from '../useNavSlider';
 import { colLabel, tabLabel, valueLabel } from '../display';
 
 interface Props {
@@ -185,6 +186,7 @@ export default function AdminApp({
   const [tipOpen, setTipOpen] = useState(false);
   const [busy, setBusy] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const navSlider = useNavSlider();
   const [sort, setSort] = useState<SortState | null>(null);
   const [avatarPreview, setAvatarPreview] = useState<{
     url: string;
@@ -507,7 +509,8 @@ export default function AdminApp({
           </button>
         </div>
 
-        <div className="tab-scroll">
+        <div className="tab-scroll" ref={navSlider.containerRef}>
+          <span className="nav-slider" aria-hidden="true" ref={navSlider.sliderRef} />
           <div className="section-label">{t('admin.rosterSection')}</div>
           <button
             className={`nav-item nav-caps ${rosterView ? 'active' : ''}`}

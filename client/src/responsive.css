@@ -1009,6 +1009,7 @@
   .attendance-arc,
   .dist-fill,
   .progress-fill,
+  .nav-slider,
   .live .dot {
     animation: none !important;
     transition: none !important;

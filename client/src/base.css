@@ -1052,6 +1052,7 @@ select option {
 }
 
 .sidebar .section-label {
+  position: relative;
   padding: 10px 12px 4px;
   font-family: var(--mono);
   font-size: var(--fs-micro);
@@ -1080,33 +1081,52 @@ select option {
   transition: background var(--dur-1), color var(--dur-1), border-color var(--dur-1);
 }
 
-.nav-item::before {
-  content: '';
-  position: absolute;
-  left: 0;
-  top: 50%;
-  width: 2px;
-  height: 0;
-  border-radius: var(--r-sm);
-  background: linear-gradient(180deg, var(--gold-bright), var(--gold));
-  transform: translateY(-50%);
-  transition: height var(--dur-1) var(--ease);
-}
-
 .nav-item:hover {
   background: rgba(255, 255, 255, 0.035);
   color: var(--text);
 }
 
-.nav-item.active {
+/* The active tab is drawn once, by a shared highlight that useNavSlider
+   moves to the selected item — so switching tabs slides the marker across
+   the menu instead of blinking it into a new row. */
+.nav-slider {
+  position: absolute;
+  left: 0;
+  right: 2px;
+  top: 0;
+  height: 0;
+  opacity: 0;
+  pointer-events: none;
+  border-radius: var(--r-sm);
   background: linear-gradient(90deg, rgba(201, 138, 95, 0.12), rgba(201, 138, 95, 0.03) 62%, transparent);
-  border-color: rgba(201, 138, 95, 0.14);
-  color: #fdf8ec;
+  box-shadow: inset 0 0 0 1px rgba(201, 138, 95, 0.14);
+  transition:
+    transform var(--dur-2) var(--ease),
+    height var(--dur-2) var(--ease),
+    opacity var(--dur-1);
 }
 
-.nav-item.active::before {
+/* Gold marker, lifted from the old .nav-item.active::before. */
+.nav-slider::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  width: 2px;
   height: 18px;
+  border-radius: var(--r-sm);
+  background: linear-gradient(180deg, var(--gold-bright), var(--gold));
   box-shadow: 0 0 12px rgba(201, 138, 95, 0.75);
+  transform: translateY(-50%);
+}
+
+/* First placement only: it must land in place, not glide in. */
+.nav-slider.is-idle {
+  transition: none;
+}
+
+.nav-item.active {
+  color: #fdf8ec;
 }
 
 .nav-item.active .ico {
@@ -1139,6 +1159,7 @@ select option {
 }
 
 .sidebar .tab-scroll {
+  position: relative;
   flex: 1 1 auto;
   min-height: 0;
   overflow-y: auto;
