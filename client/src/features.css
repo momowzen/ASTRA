@@ -24,12 +24,13 @@
 }
 
 .profile-section .field-grid {
-  flex: 1;
+  flex: 0 0 auto;
   min-height: 0;
   overflow-y: auto;
   align-content: start;
   padding-right: 10px;
   scrollbar-gutter: stable;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
 .shell-member .content > .sheet-panel,
@@ -2890,4 +2891,20 @@ table.grid.dist-table thead th.ign-col {
   border-radius: 0;
   background: transparent;
   box-shadow: none;
+}
+
+/* Basic Information input heights and notes field */
+.profile-section .field > .input:not(textarea),
+.profile-section .field > .dd-trigger {
+  height: 44px;
+  min-height: 44px;
+  padding: 0 12px;
+  box-sizing: border-box;
+}
+textarea.notes-input {
+  min-height: 100px;
+  height: 100px;
+  resize: none !important;
+  width: 100%;
+  box-sizing: border-box;
 }

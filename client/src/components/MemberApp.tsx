@@ -547,6 +547,17 @@ export default function MemberApp({
   const rosterRow = myRow(rosterTab);
   const equipRow = myRow(equipTab);
   const rosterCols = rosterTab ? buildColumns(rosterTab.meta) : [];
+  const basicGridCols = (() => {
+    const cols = rosterCols.slice(1).filter((c) => c.label.trim().toUpperCase() !== 'NOTES');
+    const ni = cols.findIndex((c) => c.label.trim().toUpperCase() === 'NICKNAME');
+    const di = cols.findIndex((c) => c.label.trim().toUpperCase() === 'DATE JOINED');
+    if (ni >= 0 && di >= 0) {
+      const tmp = cols[ni];
+      cols[ni] = cols[di];
+      cols[di] = tmp;
+    }
+    return cols;
+  })();
   const equipCols = equipTab ? buildColumns(equipTab.meta) : [];
   const rosterJoinedIdx = rosterCols.find((c) => /date\s*joined/i.test(c.label))?.index ?? -1;
 
@@ -1092,34 +1103,56 @@ export default function MemberApp({
                       {t('member.noRowProfile')}
                     </div>
                   ) : (
-                    <div className="field-grid">
-                      {rosterCols.slice(1).map((c) => (
-                        <Field
-                          key={c.index}
-                          label={memberColLabel(c.label, t, lang)}
-                          rawLabel={c.label}
-                          value={rosterRow.cells[c.index] ?? ''}
-                          options={rosterTab.meta.options?.[c.index]}
-                          readOnly={
-                            (!canEdit && !MEMBER_ALWAYS_EDITABLE.has(c.label.trim().toUpperCase())) ||
-                            MEMBER_READONLY.has(c.label.trim().toUpperCase())
-                          }
-                          format={isCpLabel(c.label)}
-                          isDate={isDateLabel(c.label)}
-                          dataTab={rosterTab.meta.title}
-                          dataCol={c.index}
-                          onCommit={(v) => commit(rosterTab, rosterRow.row, c.index, v)}
-                        />
-                      ))}
-                      {rosterJoinedIdx >= 0 && (
-                        <div className="field">
-                          <label>{t('col.timeInGuild')}</label>
-                          <div className="field-ro" title={t('member.adminManaged')}>
-                            {guildDuration(rosterRow.cells[rosterJoinedIdx] ?? '') || '—'}
+                    <>
+                      <div className="field-grid">
+                        {basicGridCols.map((c) => (
+                          <Field
+                            key={c.index}
+                            label={memberColLabel(c.label, t, lang)}
+                            rawLabel={c.label}
+                            value={rosterRow.cells[c.index] ?? ''}
+                            options={rosterTab.meta.options?.[c.index]}
+                            readOnly={
+                              (!canEdit && !MEMBER_ALWAYS_EDITABLE.has(c.label.trim().toUpperCase())) ||
+                              MEMBER_READONLY.has(c.label.trim().toUpperCase())
+                            }
+                            format={isCpLabel(c.label)}
+                            isDate={isDateLabel(c.label)}
+                            dataTab={rosterTab.meta.title}
+                            dataCol={c.index}
+                            onCommit={(v) => commit(rosterTab, rosterRow.row, c.index, v)}
+                          />
+                        ))}
+                        {rosterJoinedIdx >= 0 && (
+                          <div className="field">
+                            <label>{t('col.timeInGuild')}</label>
+                            <div className="field-ro" title={t('member.adminManaged')}>
+                              {guildDuration(rosterRow.cells[rosterJoinedIdx] ?? '') || '—'}
+                            </div>
                           </div>
-                        </div>
-                      )}
-                    </div>
+                        )}
+                        {(() => {
+                          const notesIdx = rosterCols.find((c) => c.label.trim().toUpperCase() === 'NOTES')?.index ?? -1;
+                          if (notesIdx < 0) return null;
+                          return (
+                            <div className="field" style={{ gridColumn: '1 / -1' }}>
+                              <label>{memberColLabel('NOTES', t, lang)}</label>
+                              <textarea
+                                key={rosterRow.row}
+                                className="input notes-input"
+                                defaultValue={rosterRow.cells[notesIdx] ?? ''}
+                                onBlur={(e) => {
+                                  const v = e.target.value;
+                                  if (v !== (rosterRow.cells[notesIdx] ?? '')) {
+                                    void commit(rosterTab, rosterRow.row, notesIdx, v);
+                                  }
+                                }}
+                              />
+                            </div>
+                          );
+                        })()}
+                      </div>
+                    </>
                   )}
                 </section>
               )}
