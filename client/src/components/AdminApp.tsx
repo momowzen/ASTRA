@@ -7,6 +7,7 @@ import { addRow as apiAddRow, deleteRow as apiDeleteRow, saveCells, ApiError } f
 import { DatePicker, Select } from './Dropdown';
 import { IconBulb, IconClose, IconGear, IconGrid, IconHistory, IconLogout, IconMenu, IconOverview, IconPlus, IconReward, IconSearch, IconTrash, IconTrendingUp, IconTrophy, IconUserCheck } from './icons';
 import AdminSettings from './AdminSettings';
+import TopbarBossTracker from './TopbarBossTracker';
 import BossTracker from './BossTracker';
 import GuildRoster from './GuildRoster';
 import AdminTools from './AdminTools';
@@ -788,6 +789,7 @@ export default function AdminApp({
               )}
             </div>
           )}
+          <TopbarBossTracker enabled={true} dropdown={true} />
           <span className={`live ${live === 'live' ? '' : live}`}>
             <span className="dot" />
             <span className="live-text">{liveNote}</span>

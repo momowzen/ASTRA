@@ -1354,6 +1354,258 @@ select option {
   72% { height: 55%; }
 }
 
+/* Boss spawn countdown pill - visible everywhere except the Boss Tracker
+   itself. Sits just left of the now-playing pill (order 45). */
+.topbar-next-spawn {
+  order: 44;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-2);
+  min-width: 0;
+  max-width: min(40vw, 400px);
+  padding: 6px 11px 6px 9px;
+  border: 1px solid rgba(127, 191, 155, 0.24);
+  border-radius: var(--r-pill);
+  background: linear-gradient(135deg, rgba(127, 191, 155, 0.1), rgba(109, 156, 140, 0.05));
+  color: var(--green);
+  font-family: var(--mono);
+  text-align: left;
+  cursor: pointer;
+  transition: color var(--dur-1), background var(--dur-1), border-color var(--dur-1);
+}
+
+.topbar-next-spawn:hover {
+  border-color: rgba(127, 191, 155, 0.5);
+  background: linear-gradient(135deg, rgba(127, 191, 155, 0.16), rgba(109, 156, 140, 0.08));
+}
+
+.topbar-next-spawn.soon {
+  border-color: rgba(201, 138, 95, 0.34);
+  background: linear-gradient(135deg, rgba(201, 138, 95, 0.12), rgba(127, 191, 155, 0.05));
+  color: var(--gold-bright);
+}
+
+.topbar-next-spawn.soon:hover {
+  border-color: rgba(201, 138, 95, 0.55);
+}
+
+.topbar-next-spawn.urgent {
+  border-color: rgba(217, 104, 95, 0.46);
+  background: linear-gradient(135deg, rgba(217, 104, 95, 0.16), rgba(201, 138, 95, 0.06));
+  color: var(--danger);
+}
+
+.topbar-next-spawn.urgent:hover {
+  border-color: rgba(217, 104, 95, 0.68);
+}
+
+.topbar-next-spawn-ico {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 14px;
+  height: 14px;
+  flex: none;
+  animation: topbar-spawn-pulse 2.4s ease-in-out infinite;
+}
+
+.topbar-next-spawn-ico svg {
+  width: 14px;
+  height: 14px;
+}
+
+.topbar-next-spawn.urgent .topbar-next-spawn-ico {
+  animation-duration: 0.9s;
+}
+
+.topbar-next-spawn-copy {
+  min-width: 0;
+  display: flex;
+  align-items: baseline;
+  gap: var(--sp-2);
+}
+
+.topbar-next-spawn-label {
+  flex: none;
+  color: var(--faint);
+  font-size: var(--fs-micro);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.topbar-next-spawn strong {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--text);
+  font-family: var(--font);
+  font-size: var(--fs-xs);
+  font-weight: 600;
+}
+
+/* "in" reads as part of the label; only the duration carries the Boss
+   Tracker's colour steps: neutral → orange at 30 min → red at 5 min. */
+.topbar-next-spawn-time {
+  flex: none;
+  color: var(--text);
+  font-size: var(--fs-micro);
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+  transition: color var(--dur-1);
+}
+
+.topbar-next-spawn-in {
+  color: var(--faint);
+}
+
+.topbar-next-spawn-value {
+  color: inherit;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.topbar-next-spawn.soon .topbar-next-spawn-time {
+  color: #d9a17b;
+}
+
+.topbar-next-spawn.urgent .topbar-next-spawn-time {
+  color: var(--danger);
+}
+
+@keyframes topbar-spawn-pulse {
+  0%, 100% { opacity: 0.72; transform: scale(0.94); }
+  45% { opacity: 1; transform: scale(1.06); }
+}
+
+/* ---------- Admin boss tracker dropdown ---------- */
+.topbar-boss-wrap {
+  position: relative;
+  display: inline-flex;
+  order: 48;
+}
+
+.topbar-boss-dropdown {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  z-index: 70;
+  width: 100%;
+  max-height: 440px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  padding: 0;
+  border: 1px solid rgba(167, 184, 173, 0.18);
+  border-radius: var(--r-md);
+  background: rgba(9, 13, 12, 0.96);
+  backdrop-filter: blur(9px);
+  -webkit-backdrop-filter: blur(9px);
+  box-shadow: var(--elev-2);
+  animation: enter-down var(--dur-2) var(--ease) both;
+}
+
+.topbar-boss-dropdown-head {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px 8px;
+  border-bottom: 1px solid rgba(167, 184, 173, 0.07);
+  background: rgba(9, 13, 12, 0.98);
+}
+
+.topbar-boss-dropdown-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: auto;
+  padding: 4px 0 6px;
+  max-height: 160px;
+}
+
+.topbar-boss-dropdown-title {
+  font-size: var(--fs-micro);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--faint);
+}
+
+.topbar-boss-dropdown-count {
+  font-family: var(--mono);
+  font-size: var(--fs-micro);
+  color: var(--gold-bright);
+}
+
+.topbar-boss-dropdown-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.topbar-boss-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-3);
+  padding: 7px 14px;
+  border-bottom: 1px solid rgba(167, 184, 173, 0.04);
+  transition: background var(--dur-1);
+}
+
+.topbar-boss-row:last-child {
+  border-bottom: none;
+}
+
+.topbar-boss-row:hover {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.topbar-boss-row-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--text);
+  font-size: var(--fs-xs);
+  font-weight: 600;
+}
+
+.topbar-boss-row-time {
+  flex: none;
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+  font-family: var(--mono);
+  font-size: var(--fs-micro);
+  font-variant-numeric: tabular-nums;
+  color: var(--text);
+  white-space: nowrap;
+}
+
+.topbar-boss-row.soon .topbar-boss-row-time {
+  color: #d9a17b;
+}
+
+.topbar-boss-row.urgent .topbar-boss-row-time {
+  color: var(--danger);
+}
+
+.topbar-boss-row.spawned .topbar-boss-row-time {
+  color: var(--success);
+}
+
+.topbar-boss-row-sub {
+  color: var(--faint);
+  font-size: 10px;
+}
+
+.topbar-boss-empty {
+  padding: 16px 14px;
+  text-align: center;
+  color: var(--faint);
+  font-size: var(--fs-xs);
+}
+
 .menu-btn {
   display: none;
   align-items: center;

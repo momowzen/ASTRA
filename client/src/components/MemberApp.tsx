@@ -10,6 +10,7 @@ import ProfileProgress from './ProfileProgress';
 import AttendancePodium from './AttendancePodium';
 import RosterProfileCard from './RosterProfileCard';
 import MediaMusic from './MediaMusic';
+import TopbarBossTracker from './TopbarBossTracker';
 import { DatePicker, Select } from './Dropdown';
 import { LangToggle, useLang } from '../i18n';
 import { useNavSlider } from '../useNavSlider';
@@ -825,6 +826,7 @@ export default function MemberApp({
             </span>
           </div>
           <div className="grow" />
+          <TopbarBossTracker enabled={toolsView !== 'tracker'} onNavigate={() => showTool('tracker')} />
           {mediaView !== 'music' && musicBackground && nowPlaying?.playing && (
             <button
               type="button"

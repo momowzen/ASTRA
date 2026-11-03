@@ -252,6 +252,9 @@
   padding: 10px 0;
   border-bottom: 1px solid rgba(167, 184, 173, 0.07);
   gap: var(--sp-3);
+  /* .roster-filter is also a .table-meta, whose header gradient is meant for
+     table cards. Inside a panel-card the header must read like .panel-head. */
+  background: none;
 }
 
 .roster-panel .roster-filter h3 {

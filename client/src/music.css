@@ -1719,6 +1719,7 @@
 @media (prefers-reduced-motion: reduce) {
   .music-row-eq span,
   .topbar-now-playing-eq span,
+  .topbar-next-spawn-ico,
   .nav-item:hover .nav-ico-music .music-bar,
   .nav-item:active .nav-ico-music .music-bar {
     animation: none;

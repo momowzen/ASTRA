@@ -21,6 +21,27 @@ interface Toast {
   kind: 'ok' | 'err' | 'info';
 }
 
+/* A fresh login always lands on the default section (Profile for members,
+   Overview for admins). The remembered section exists only to survive a
+   page refresh of an already-authenticated session, so it is wiped exactly
+   when login succeeds: page loads never run this path, refreshes never do
+   either. Anything else (session expiry, restarting the browser) also
+   goes through login and therefore lands on the default again. */
+function forgetRememberedView(session: Session): void {
+  try {
+    /* Only the identity that just signed in is reset - an admin login on a
+       shared browser must not wipe a member's remembered section, and vice
+       versa. */
+    if (session.role === 'ADMIN') {
+      localStorage.removeItem(`astra.admin.view.${session.username.trim().toLowerCase()}`);
+    } else {
+      localStorage.removeItem(`astra.member.view.${session.ign.trim().toLowerCase()}`);
+    }
+  } catch {
+    // Storage is optional; failing here only affects the landing section.
+  }
+}
+
 export default function App() {
   const [session, setSession] = useState<Session | null>(() => getSession());
   const [intro, setIntro] = useState(() => !getSession());
@@ -186,7 +207,14 @@ export default function App() {
 
   let body: ReactNode;
   if (!session) {
-    body = <Login onDone={(s) => setSession(s)} />;
+    body = (
+      <Login
+        onDone={(s) => {
+          forgetRememberedView(s);
+          setSession(s);
+        }}
+      />
+    );
   } else if (error && !data) {
     body = (
       <div className="auth auth-solo">

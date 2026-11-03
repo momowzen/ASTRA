@@ -376,6 +376,12 @@ const DICT: Record<string, { en: string; ko: string; ja: string; zh: string }> =
 
   'cp.change': { en: 'Change', ko: '변동', ja: "変化", zh: '变化' },
 
+  'boss.nextSpawn': { en: 'Next spawn', ko: '다음 스폰', ja: "次のスポーン", zh: '下次刷新' },
+  'boss.inPrefix': { en: 'in ', ko: '', ja: '', zh: '' },
+  'boss.inSuffix': { en: '', ko: ' 후', ja: "後", zh: '后' },
+  'boss.todaySpawns': { en: "Today's spawns", ko: '오늘의 스폰', ja: "今日のスポーン", zh: '今日刷新' },
+  'boss.noSpawnsToday': { en: 'No spawns today', ko: '오늘 스폰 없음', ja: "今日のスポーンなし", zh: '今日无刷新' },
+  'boss.spawned': { en: 'Spawned', ko: '스폰됨', ja: "出現中", zh: '已刷新' },
   'boss.seeding': { en: 'Seeding the boss list…', ko: '보스 목록 생성 중…', ja: "ボスリストを作成中…", zh: '正在生成首领列表…' },
   'boss.noBosses': { en: 'No bosses configured yet.', ko: '아직 설정된 보스가 없습니다.', ja: "まだボスが設定されていません。", zh: '尚未配置首领。' },
   'boss.searchBoss': { en: 'Search boss…', ko: '보스 검색…', ja: "ボスを検索…", zh: '搜索首领…' },
