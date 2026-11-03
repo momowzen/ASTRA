@@ -14,6 +14,8 @@ export const TAB_KEYS: Record<string, string> = {
   'BOSS CONFIG': 'tab.bossConfig',
   'DISTRIBUTION HISTORY': 'tab.distributionHistory',
   'CP HISTORY': 'tab.cpHistory',
+  'WAR ATTENDANCE': 'tab.warAttendance',
+  'WAR ATTENDANCE HISTORY': 'tab.warAttendanceHistory',
 };
 
 export const COL_KEYS: Record<string, string> = {
@@ -44,6 +46,8 @@ export const COL_KEYS: Record<string, string> = {
   BELT: 'col.belt',
   'LEGENDARY CLOAK': 'col.legendaryCloak',
   POINTS: 'col.points',
+  'TOTAL POINTS': 'col.totalPoints',
+  'ATTENDANCE RATIO': 'col.attendanceRatio',
   REWARD: 'col.reward',
   BOSS: 'col.boss',
   NECK: 'col.neck',

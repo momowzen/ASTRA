@@ -186,6 +186,60 @@ function recomputeAttendance(next: Snapshot): { a1: string; values: string[][] }
   return writes;
 }
 
+function parseRatio(value: string | undefined): number | null {
+  const s = String(value ?? '').trim().replace(/%$/, '');
+  if (!s) return null;
+  const n = Number.parseFloat(s);
+  return Number.isFinite(n) ? n : null;
+}
+
+/**
+ * WAR ATTENDANCE is derived like BOSS ATTENDANCE: TOTAL POINTS is the sum of
+ * the boss columns and ATTENDANCE RATIO is TOTAL / instances. Recompute both
+ * on every sync and rewrite any row that drifted (e.g. after a boss column is
+ * added, edited, or deleted directly in the sheet). Mutates `next`.
+ */
+function recomputeWar(next: Snapshot): { a1: string; values: string[][] }[] {
+  const tab = next.tabs.find((t) => t.meta.title.toUpperCase() === 'WAR ATTENDANCE');
+  if (!tab) return [];
+  const norm = (s: string) => String(s ?? '').trim().toUpperCase();
+  const headers = tab.meta.headers[0] || [];
+  const totalIdx = headers.findIndex((h) => norm(h) === 'TOTAL POINTS' || norm(h) === 'TOTALPOINTS');
+  const ratioIdx = headers.findIndex((h) => norm(h) === 'ATTENDANCE RATIO' || norm(h) === 'ATTENDANCERATIO');
+  if (totalIdx < 0 || ratioIdx < 0) return [];
+  const bossCols: number[] = [];
+  for (let i = 0; i < tab.meta.columnCount; i++) {
+    const h = norm(headers[i]);
+    if (!h || h === 'IGN' || h === 'TOTAL POINTS' || h === 'TOTALPOINTS' || h === 'ATTENDANCE RATIO' || h === 'ATTENDANCERATIO') {
+      continue;
+    }
+    bossCols.push(i);
+  }
+  const instances = bossCols.length;
+  const writes: { a1: string; values: string[][] }[] = [];
+  for (const r of tab.rows) {
+    let total = 0;
+    for (const ci of bossCols) total += intPoints(r.cells[ci]);
+    const ratioPct = instances > 0 ? (total / instances) * 100 : 0;
+    const storedTotal = intPoints(r.cells[totalIdx]);
+    const storedRatio = parseRatio(r.cells[ratioIdx]);
+    const totalDrift = storedTotal !== total;
+    const ratioDrift = Math.abs((storedRatio ?? 0) - ratioPct) > 0.05;
+    if (!totalDrift && !ratioDrift) continue;
+    while (r.cells.length <= Math.max(totalIdx, ratioIdx)) r.cells.push('');
+    if (totalDrift) {
+      r.cells[totalIdx] = String(total);
+      writes.push({ a1: `${sheets.columnLetter(totalIdx)}${r.row}`, values: [[String(total)]] });
+    }
+    if (ratioDrift) {
+      const ratio = `${ratioPct.toFixed(1)}%`;
+      r.cells[ratioIdx] = ratio;
+      writes.push({ a1: `${sheets.columnLetter(ratioIdx)}${r.row}`, values: [[ratio]] });
+    }
+  }
+  return writes;
+}
+
 async function load(): Promise<Snapshot> {
   const meta = await getMeta();
   const visible = meta.sheets
@@ -262,6 +316,16 @@ async function doRefresh(): Promise<void> {
       }
     } catch (err) {
       console.error('[sync] attendance recompute failed:', err instanceof Error ? err.message : err);
+    }
+    try {
+      const writes = recomputeWar(next);
+      if (writes.length > 0) {
+        await sheets.batchUpdateValues('WAR ATTENDANCE', writes);
+        next.rev = computeRev(next.tabs);
+        console.log(`[sync] recomputed WAR total points / ratio (${writes.length} cells)`);
+      }
+    } catch (err) {
+      console.error('[sync] war recompute failed:', err instanceof Error ? err.message : err);
     }
     const changed = !snapshot || snapshot.rev !== next.rev;
     snapshot = next;

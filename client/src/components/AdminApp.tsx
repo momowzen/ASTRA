@@ -301,8 +301,16 @@ export default function AdminApp({
   const joinedIdx = useMemo(() => allCols.find((c) => /date\s*joined/i.test(c.label))?.index ?? -1, [allCols]);
   const showTime = (tab?.meta.title ?? '').toUpperCase() === 'BASIC INFORMATION' && !projecting && joinedIdx >= 0;
   const cols = useMemo(
-    () => (projecting ? allCols.filter((c) => c.index === 0 || c.index === showCol) : allCols),
-    [allCols, showCol, projecting],
+    () => {
+      const base = projecting ? allCols.filter((c) => c.index === 0 || c.index === showCol) : allCols;
+      const isWar = (tab?.meta.title ?? '').toUpperCase() === 'WAR ATTENDANCE';
+      if (!isWar || projecting) return base;
+      return base.filter((c) => {
+        const l = c.label.trim().toUpperCase();
+        return l === 'IGN' || l === 'TOTAL POINTS' || l === 'ATTENDANCE RATIO';
+      });
+    },
+    [allCols, showCol, projecting, tab],
   );
 
   const filterChoices = useMemo(() => {

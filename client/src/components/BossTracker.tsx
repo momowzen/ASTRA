@@ -2,7 +2,7 @@ import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import type { DataResponse, TabData } from '../types';
 import { BOSSES } from '../bosses';
 import type { Boss } from '../bosses';
-import { addRow, ApiError, recordAttendance, saveCells, seedBossConfig } from '../api';
+import { addRow, ApiError, recordAttendance, recordWarAttendance, saveCells, seedBossConfig } from '../api';
 import { ocrVariants, scanParty } from '../ocr';
 import { useLang } from '../i18n';
 import { bossLabel } from '../display';
@@ -419,6 +419,10 @@ function AttendanceView({
     setRecording(true);
     try {
       await recordAttendance(custom ? 'Custom' : bossName, effPoints, [...selected]);
+      const boss = BOSSES.find((b) => b.name === bossName);
+      if (!custom && boss && (boss.cat === 'kransia' || boss.cat === 'corrosion')) {
+        await recordWarAttendance(bossName, [...selected]);
+      }
       toast(t('boss.recordedToast', { n: selected.size, pts: effPoints }), 'ok');
       setSelected(new Set());
       setScanOrder([]);

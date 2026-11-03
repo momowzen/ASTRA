@@ -1,6 +1,6 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import type { DataResponse } from '../types';
-import { ApiError, distribute } from '../api';
+import { ApiError, distribute, distributeWar } from '../api';
 import type { DistributionBand, DistributionResult } from '../api';
 import { useLang } from '../i18n';
 import { tabLabel } from '../display';
@@ -116,6 +116,13 @@ export default function AdminTools({ data, toast }: Props) {
     setSaving(true);
     try {
       const res = await distribute(pool);
+      // Also snapshot the current WAR ATTENDANCE into WAR ATTENDANCE HISTORY.
+      // Non-fatal: only runs if the war sheets exist.
+      try {
+        await distributeWar();
+      } catch (e) {
+        console.warn('[war] distribute skipped:', e);
+      }
       setSaved(res);
       toast(`${t('tools.savedNote', { title: distTitle })} · ${res.date}`, 'ok');
     } catch (err) {

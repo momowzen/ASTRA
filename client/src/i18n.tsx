@@ -571,6 +571,8 @@ const DICT: Record<string, { en: string; ko: string; ja: string; zh: string }> =
   'tab.bossConfig': { en: 'Boss Config', ko: '보스 설정', ja: "ボス設定", zh: '首领配置' },
   'tab.distributionHistory': { en: 'Distribution History', ko: '분배 내역', ja: "分配履歴", zh: '分配历史' },
   'tab.cpHistory': { en: 'CP History', ko: 'CP 기록', ja: "CP履歴", zh: 'CP 记录' },
+  'tab.warAttendance': { en: 'War Attendance', ko: '전쟁 출석', ja: "戦争出席", zh: '战争出勤' },
+  'tab.warAttendanceHistory': { en: 'War Attendance History', ko: '전쟁 출석 기록', ja: "戦争出席履歴", zh: '战争出勤记录' },
 
   'col.nation': { en: 'Nation', ko: '국가', ja: "国", zh: '国家' },
   'col.country': { en: 'Country', ko: '국가', ja: "国", zh: '国家' },
@@ -613,6 +615,8 @@ const DICT: Record<string, { en: string; ko: string; ja: string; zh: string }> =
   'col.belt': { en: 'Belt', ko: '벨트', ja: "ベルト", zh: '腰带' },
   'col.legendaryCloak': { en: 'Legendary cloak', ko: '레전더리 망토', ja: "レジェンダリー・マント", zh: '传说披风' },
   'col.points': { en: 'Points', ko: '포인트', ja: "ポイント", zh: '积分' },
+  'col.totalPoints': { en: 'Total Points', ko: '총 포인트', ja: "合計ポイント", zh: '总积分' },
+  'col.attendanceRatio': { en: 'Attendance Ratio', ko: '출석률', ja: "出席率", zh: '出勤率' },
   'col.reward': { en: 'Reward', ko: '보상', ja: "報酬", zh: '奖励' },
   'col.boss': { en: 'Boss', ko: '보스', ja: "ボス", zh: '首领' },
   'col.neck': { en: 'Neck', ko: '목', ja: "ネック", zh: '颈部' },

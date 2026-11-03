@@ -1,3 +1,10 @@
+export const WAR_BOSSES: string[] = [
+  'Icaruthia',
+  'Motti',
+  'Nevaeh',
+  'Lucus',
+  'Bahel',
+];
 export const BOSS_NAMES: string[] = [
   'Venatus',
   'Viorent',

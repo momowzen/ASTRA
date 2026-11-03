@@ -305,10 +305,21 @@ export async function distribute(pool: number): Promise<DistributionResult> {
   });
 }
 
+export async function distributeWar(): Promise<{ ok: boolean; date: string; count: number }> {
+  return request('/boss/war/distribute', { method: 'POST' });
+}
+
 export async function recordAttendance(boss: string, points: number, igns: string[]): Promise<void> {
   await request('/boss/attendance/record', {
     method: 'POST',
     body: JSON.stringify({ boss, points, igns }),
+  });
+}
+
+export async function recordWarAttendance(boss: string, igns: string[]): Promise<void> {
+  await request('/boss/war/record', {
+    method: 'POST',
+    body: JSON.stringify({ boss, igns }),
   });
 }
 
