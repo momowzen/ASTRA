@@ -1064,11 +1064,14 @@ api.post('/boss/war/record', requireAuth, requireAdmin, async (req, res) => {
 
     let totalIdx = headers.findIndex((h) => norm(h) === 'TOTAL POINTS' || norm(h) === 'TOTALPOINTS');
     let ratioIdx = headers.findIndex((h) => norm(h) === 'ATTENDANCE RATIO' || norm(h) === 'ATTENDANCERATIO');
-    let bossIdx = headers.findIndex((h) => norm(h) === norm(boss));
 
     if (totalIdx === -1) { totalIdx = headers.length; headers.push('TOTAL POINTS'); }
     if (ratioIdx === -1) { ratioIdx = headers.length; headers.push('ATTENDANCE RATIO'); }
-    if (bossIdx === -1) { bossIdx = headers.length; headers.push(boss); }
+    // Always append a new column for this kill, even if the same boss was recorded
+    // before (mirrors BOSS ATTENDANCE, which keeps one column per kill so
+    // multiple weekly instances accumulate instead of overwriting).
+    const bossIdx = headers.length;
+    headers.push(boss);
 
     const finalCount = headers.length;
     const bossCols: number[] = [];
