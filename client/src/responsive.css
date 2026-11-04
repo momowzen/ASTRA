@@ -912,28 +912,28 @@
     overscroll-behavior: contain;
   }
 
-  .shell:not(.shell-member):not(.shell-free) .content-roster {
+  .shell:not(.shell-free) .content-roster {
     flex: 1;
     min-height: 0;
     overflow: hidden;
   }
-  .shell:not(.shell-member):not(.shell-free) .content-roster > .roster-view {
+  .shell:not(.shell-free) .content-roster > .roster-view {
     flex: 1;
     min-height: 0;
     overflow: hidden;
   }
-  .shell:not(.shell-member):not(.shell-free) .content-roster .stat-row {
+  .shell:not(.shell-free) .content-roster .stat-row {
     flex: none;
   }
-  .shell:not(.shell-member):not(.shell-free) .content-roster .roster-main {
+  .shell:not(.shell-free) .content-roster .roster-main {
     flex: 1;
     min-height: 0;
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
     overscroll-behavior: contain;
   }
-  .shell:not(.shell-member):not(.shell-free) .content-roster .roster-left,
-  .shell:not(.shell-member):not(.shell-free) .content-roster .roster-top {
+  .shell:not(.shell-free) .content-roster .roster-left,
+  .shell:not(.shell-free) .content-roster .roster-top {
     flex: none;
   }
 }

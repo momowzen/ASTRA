@@ -3,7 +3,7 @@ import { MEMBER_HIDDEN_TABS } from '../types';
 import type { Column, DataResponse, RosterMember, Session, TabData } from '../types';
 import { buildColumns, formatCp, isCpLabel, isDateLabel, isMark, MEMBER_ALWAYS_EDITABLE, MEMBER_READONLY, optionColor, timeInGuildParts, toIsoDate } from '../utils';
 import { ApiError, apiBase, saveCells } from '../api';
-import { IconBulb, IconClose, IconGear, IconGem, IconGrid, IconLogout, IconMenu, IconMusic, IconSheet, IconSparkles, IconTimer, IconTrendingUp, IconTrophy, IconUser, IconUsers } from './icons';
+import { IconBulb, IconClose, IconGear, IconGem, IconGrid, IconLogout, IconMenu, IconMusic, IconOverview, IconSheet, IconSparkles, IconTimer, IconTrendingUp, IconTrophy, IconUser, IconUsers } from './icons';
 import Avatar from './Avatar';
 import MemberSettingsModal from './MemberSettingsModal';
 import ProfileProgress from './ProfileProgress';
@@ -11,6 +11,7 @@ import AttendancePodium from './AttendancePodium';
 import RosterProfileCard from './RosterProfileCard';
 import MediaMusic from './MediaMusic';
 import ActiveParticipation from './ActiveParticipation';
+import GuildRoster from './GuildRoster';
 import TopbarBossTracker from './TopbarBossTracker';
 import { DatePicker, Select } from './Dropdown';
 import { LangToggle, useLang } from '../i18n';
@@ -366,6 +367,7 @@ export default function MemberApp({
   const [menuOpen, setMenuOpen] = useState(false);
   const navSlider = useNavSlider();
   const [jump, setJump] = useState<{ tab: string; col: number } | null>(null);
+  const [overviewView, setOverviewView] = useState(false);
   const [rosterView, setRosterView] = useState(false);
   const [rosterCol, setRosterCol] = useState(-1);
   const [rosterVal, setRosterVal] = useState('');
@@ -417,6 +419,17 @@ export default function MemberApp({
 
   function selectTab(title: string) {
     setActiveTitle(title);
+    setOverviewView(false);
+    setRosterView(false);
+    setToolsView(null);
+    setParticipationView(false);
+    setMediaView(null);
+    setMenuOpen(false);
+  }
+
+  function showOverview() {
+    setOverviewView(true);
+    setActiveTitle('');
     setRosterView(false);
     setToolsView(null);
     setParticipationView(false);
@@ -425,6 +438,7 @@ export default function MemberApp({
   }
 
   function showRoster() {
+    setOverviewView(false);
     setRosterView(true);
     setActiveTitle('');
     setToolsView(null);
@@ -438,6 +452,7 @@ export default function MemberApp({
   function showParticipation() {
     setParticipationView(true);
     setActiveTitle('');
+    setOverviewView(false);
     setRosterView(false);
     setToolsView(null);
     setMediaView(null);
@@ -447,6 +462,7 @@ export default function MemberApp({
   function showTool(tool: ToolView) {
     setToolsView(tool);
     setActiveTitle('');
+    setOverviewView(false);
     setRosterView(false);
     setParticipationView(false);
     setMediaView(null);
@@ -457,6 +473,7 @@ export default function MemberApp({
     setMediaView(view);
     setMusicVisited(true);
     setActiveTitle('');
+    setOverviewView(false);
     setRosterView(false);
     setToolsView(null);
     setParticipationView(false);
@@ -553,7 +570,7 @@ export default function MemberApp({
   }, [musicBackground]);
 
   const activeTab = memberTabs.find((t) => t.meta.title === activeTitle);
-  const isDashboard = !activeTab && !rosterView && !toolsView && !mediaView && !participationView;
+  const isDashboard = !activeTab && !rosterView && !toolsView && !mediaView && !participationView && !overviewView;
 
   const myRow = useMemo(() => {
     const ign = session.ign.trim().toLowerCase();
@@ -612,11 +629,20 @@ export default function MemberApp({
         const v = JSON.parse(raw);
         if (v?.type === 'sheet' && memberTabs.some((t) => t.meta.title === v.title)) {
           setActiveTitle(v.title);
+          setOverviewView(false);
+          setRosterView(false);
+          setToolsView(null);
+          setParticipationView(false);
+          setMediaView(null);
+        } else if (v?.type === 'overview') {
+          setOverviewView(true);
+          setActiveTitle('');
           setRosterView(false);
           setToolsView(null);
           setParticipationView(false);
           setMediaView(null);
         } else if (v?.type === 'roster') {
+          setOverviewView(false);
           setRosterView(true);
           setActiveTitle('');
           setToolsView(null);
@@ -625,12 +651,14 @@ export default function MemberApp({
         } else if (v?.type === 'participation') {
           setParticipationView(true);
           setActiveTitle('');
+          setOverviewView(false);
           setRosterView(false);
           setToolsView(null);
           setMediaView(null);
         } else if (v?.type === 'tool' && v.tool) {
           setToolsView(v.tool as ToolView);
           setActiveTitle('');
+          setOverviewView(false);
           setRosterView(false);
           setParticipationView(false);
           setMediaView(null);
@@ -638,6 +666,7 @@ export default function MemberApp({
           setMediaView('music');
           setMusicVisited(true);
           setActiveTitle('');
+          setOverviewView(false);
           setRosterView(false);
           setToolsView(null);
           setParticipationView(false);
@@ -654,11 +683,12 @@ export default function MemberApp({
       if (mediaView === 'music') desc = { type: 'media' };
       else if (toolsView) desc = { type: 'tool', tool: toolsView };
       else if (participationView) desc = { type: 'participation' };
+      else if (overviewView) desc = { type: 'overview' };
       else if (rosterView) desc = { type: 'roster' };
       else if (activeTitle) desc = { type: 'sheet', title: activeTitle };
       localStorage.setItem(`astra.member.view.${session.ign.trim().toLowerCase()}`, JSON.stringify(desc));
     } catch {}
-  }, [activeTitle, rosterView, toolsView, participationView, mediaView, restored]);
+  }, [activeTitle, rosterView, toolsView, participationView, overviewView, mediaView, restored]);
   const showCollectionTip = !!activeTab && COLLECTION_TABS.has(activeTab.meta.title.trim().toUpperCase());
   const collectionGroups: { label: string; cols: Column[] }[] = [];
   if (activeTab && activeTab.meta.headerRows === 2) {
@@ -760,21 +790,21 @@ export default function MemberApp({
           ))}
 
           <div className="section-label">{t('member.guildInfo')}</div>
+          <button
+            className={`nav-item ${overviewView ? 'active' : ''}`}
+            onClick={showOverview}
+            title={t('member.dashboard')}
+          >
+            <span className="ico">
+              <IconOverview />
+            </span>
+            {t('member.dashboard')}
+          </button>
           <button className={`nav-item ${rosterView ? 'active' : ''}`} onClick={showRoster} title={t('member.roster')}>
             <span className="ico">
               <IconUsers />
             </span>
             {t('member.roster')}
-          </button>
-          <button
-            className={`nav-item ${participationView ? 'active' : ''}`}
-            onClick={showParticipation}
-            title={t('participation.active')}
-          >
-            <span className="ico">
-              <IconTrendingUp />
-            </span>
-            {t('participation.active')}
           </button>
           <button
             className={`nav-item ${toolsView === 'attendance' ? 'active' : ''}`}
@@ -785,6 +815,16 @@ export default function MemberApp({
               <IconTrophy />
             </span>
             {t('member.toolAttendance')}
+          </button>
+          <button
+            className={`nav-item ${participationView ? 'active' : ''}`}
+            onClick={showParticipation}
+            title={t('participation.active')}
+          >
+            <span className="ico">
+              <IconTrendingUp />
+            </span>
+            {t('participation.active')}
           </button>
 
           <div className="section-label">{t('member.tools')}</div>
@@ -911,7 +951,8 @@ export default function MemberApp({
           <LangToggle />
         </header>
 
-        <div className="content">
+        <div className={`content${overviewView ? ' content-roster' : ''}`}>
+          {overviewView && <GuildRoster data={data} />}
           {isDashboard && (
             <div className="profile-hero">
               <div className="hero-sigil">

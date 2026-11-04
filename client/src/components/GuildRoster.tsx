@@ -195,10 +195,13 @@ export default function GuildRoster({ data }: Props) {
   const basic = data.tabs.find((tb) => tb.meta.title.toUpperCase() === 'BASIC INFORMATION');
   const equipment = data.tabs.find((tb) => tb.meta.title.toUpperCase() === 'EQUIPMENT');
   const attendanceTab = data.tabs.find((tb) => tb.meta.title.toUpperCase() === 'BOSS ATTENDANCE');
-  const attendance = useMemo(
+  const computedAttendance = useMemo(
     () => attendanceStats(basic, attendanceTab),
     [basic, attendanceTab],
   );
+  /* The server sends a precomputed summary so members (who don't receive the
+     internal BOSS ATTENDANCE sheet) see identical numbers. */
+  const attendance = data.attendance ?? computedAttendance;
 
   const members = useMemo(() => {
     return (basic?.rows ?? [])

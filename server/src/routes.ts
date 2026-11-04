@@ -33,6 +33,11 @@ const MAX_AVATAR_BYTES = 4 * 1024 * 1024;
 
 const INTERNAL_TABS = ['BOSS ATTENDANCE', 'BOSS CONFIG', 'DISTRIBUTION HISTORY', 'CP HISTORY', 'SETTINGS', 'WAR ATTENDANCE', 'WAR ATTENDANCE HISTORY', 'ACTIVE PARTICIPATION HISTORY'];
 
+/* Guild-visible tabs sent whole to members (needed by the member Dashboard,
+   which mirrors the admin Overview). Members never see these as editable sheet
+   tabs - the client hides them - but the roster data is already exposed. */
+const MEMBER_FULL_TABS = new Set(['BASIC INFORMATION', 'EQUIPMENT']);
+
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
 function distributionDate(d: Date): string {
@@ -280,6 +285,64 @@ function computeParticipation(snap: Snapshot): ParticipationRow[] {
   });
 }
 
+export interface AttendanceSummary {
+  attended: number;
+  missed: number;
+  slots: number;
+  kills: number;
+  members: number;
+  pct: number;
+}
+
+/**
+ * Guild attendance roll-up for the overview/dashboard (mirrors the client's
+ * attendanceStats). Computed server-side so members get the same numbers
+ * without receiving the internal BOSS ATTENDANCE sheet.
+ */
+function computeAttendance(snap: Snapshot): AttendanceSummary | null {
+  const basic = snap.tabs.find((t) => t.meta.title.toUpperCase() === 'BASIC INFORMATION');
+  if (!basic) return null;
+  const members = new Set<string>();
+  for (const row of basic.rows) {
+    const k = (row.cells[0] || '').trim().toLowerCase();
+    if (k) members.add(k);
+  }
+  if (members.size === 0) return null;
+
+  const empty: AttendanceSummary = { attended: 0, missed: 0, slots: 0, kills: 0, members: members.size, pct: 0 };
+  const attendance = snap.tabs.find((t) => t.meta.title.toUpperCase() === 'BOSS ATTENDANCE');
+  if (!attendance) return empty;
+
+  const headers = attendance.meta.headers;
+  const width = Math.max(attendance.meta.columnCount, ...headers.map((h) => h.length));
+  const bossCols: number[] = [];
+  for (let i = 2; i < width; i++) {
+    if (headers.some((h) => String(h[i] ?? '').trim() !== '')) bossCols.push(i);
+  }
+  if (bossCols.length === 0) return empty;
+
+  const rowsByIgn = new Map<string, { cells: string[] }>();
+  for (const row of attendance.rows) {
+    const k = (row.cells[0] || '').trim().toLowerCase();
+    if (!k || !members.has(k) || rowsByIgn.has(k)) continue;
+    rowsByIgn.set(k, row);
+  }
+
+  let attended = 0;
+  for (const row of rowsByIgn.values()) {
+    for (const col of bossCols) if ((row.cells[col] ?? '').trim() !== '') attended += 1;
+  }
+  const slots = members.size * bossCols.length;
+  return {
+    attended,
+    missed: Math.max(0, slots - attended),
+    slots,
+    kills: bossCols.length,
+    members: members.size,
+    pct: slots > 0 ? (attended / slots) * 100 : 0,
+  };
+}
+
 api.get('/data', requireAuth, (req, res) => {
   const s = req.session!;
   const snap = getSnapshot();
@@ -297,7 +360,10 @@ api.get('/data', requireAuth, (req, res) => {
     .filter((t) => isAdmin || !INTERNAL_TABS.includes(t.meta.title.toUpperCase()))
     .map((t) => ({
       meta: t.meta,
-      rows: isAdmin ? t.rows : t.rows.filter((r) => (r.cells[0] || '').trim().toLowerCase() === ign),
+      rows:
+        isAdmin || MEMBER_FULL_TABS.has(t.meta.title.toUpperCase())
+          ? t.rows
+          : t.rows.filter((r) => (r.cells[0] || '').trim().toLowerCase() === ign),
     }));
 
   const basic = snap.tabs.find((t) => t.meta.title.toUpperCase() === 'BASIC INFORMATION');
@@ -391,6 +457,7 @@ api.get('/data', requireAuth, (req, res) => {
     roster,
     leaderboard,
     participation,
+    attendance: computeAttendance(snap),
     avatars: avatarMap(),
     memberEdit: memberEditEnabled(),
     sheetUrl: config.spreadsheetId
