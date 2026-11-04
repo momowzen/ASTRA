@@ -321,6 +321,14 @@ const DICT: Record<string, { en: string; ko: string; ja: string; zh: string }> =
   'cell.edit': { en: 'Click to edit', ko: '클릭하여 편집', ja: "クリックして編集", zh: '点击编辑' },
 
   'roster.members': { en: 'Members', ko: '멤버', ja: "メンバー", zh: '成员' },
+
+  'participation.field': { en: 'Field Boss Participation', ko: '필드 보스 참여', ja: "フィールドボス参加", zh: '野外首领参与' },
+
+  'participation.war': { en: 'War Participation', ko: '전쟁 참여', ja: "戦争参加", zh: '战争参与' },
+
+  'participation.active': { en: 'Active Participation', ko: '활동 참여도', ja: "活動参加率", zh: '活跃参与度' },
+
+  'participation.empty': { en: 'No participation data yet', ko: '아직 참여 데이터가 없습니다', ja: "参加データがまだありません", zh: '暂无参与数据' },
   'roster.totalCp': { en: 'Total CP', ko: '총 CP', ja: "合計CP", zh: '总 CP' },
   'roster.avgCp': { en: 'Average CP', ko: '평균 CP', ja: "平均CP", zh: '平均 CP' },
   'roster.topCp': { en: 'Top CP', ko: '최고 CP', ja: "最高CP", zh: '最高 CP' },
@@ -573,6 +581,7 @@ const DICT: Record<string, { en: string; ko: string; ja: string; zh: string }> =
   'tab.cpHistory': { en: 'CP History', ko: 'CP 기록', ja: "CP履歴", zh: 'CP 记录' },
   'tab.warAttendance': { en: 'War Attendance', ko: '전쟁 출석', ja: "戦争出席", zh: '战争出勤' },
   'tab.warAttendanceHistory': { en: 'War Attendance History', ko: '전쟁 출석 기록', ja: "戦争出席履歴", zh: '战争出勤记录' },
+  'tab.activeParticipationHistory': { en: 'Active Participation History', ko: '활동 참여도 기록', ja: "活動参加率履歴", zh: '活跃参与度记录' },
 
   'col.nation': { en: 'Nation', ko: '국가', ja: "国", zh: '国家' },
   'col.country': { en: 'Country', ko: '국가', ja: "国", zh: '国家' },

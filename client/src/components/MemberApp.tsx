@@ -3,13 +3,14 @@ import { MEMBER_HIDDEN_TABS } from '../types';
 import type { Column, DataResponse, RosterMember, Session, TabData } from '../types';
 import { buildColumns, formatCp, isCpLabel, isDateLabel, isMark, MEMBER_ALWAYS_EDITABLE, MEMBER_READONLY, optionColor, timeInGuildParts, toIsoDate } from '../utils';
 import { ApiError, apiBase, saveCells } from '../api';
-import { IconBulb, IconClose, IconGear, IconGem, IconGrid, IconLogout, IconMenu, IconMusic, IconSheet, IconSparkles, IconTimer, IconTrophy, IconUser, IconUsers } from './icons';
+import { IconBulb, IconClose, IconGear, IconGem, IconGrid, IconLogout, IconMenu, IconMusic, IconSheet, IconSparkles, IconTimer, IconTrendingUp, IconTrophy, IconUser, IconUsers } from './icons';
 import Avatar from './Avatar';
 import MemberSettingsModal from './MemberSettingsModal';
 import ProfileProgress from './ProfileProgress';
 import AttendancePodium from './AttendancePodium';
 import RosterProfileCard from './RosterProfileCard';
 import MediaMusic from './MediaMusic';
+import ActiveParticipation from './ActiveParticipation';
 import TopbarBossTracker from './TopbarBossTracker';
 import { DatePicker, Select } from './Dropdown';
 import { LangToggle, useLang } from '../i18n';
@@ -369,6 +370,7 @@ export default function MemberApp({
   const [rosterCol, setRosterCol] = useState(-1);
   const [rosterVal, setRosterVal] = useState('');
   const [toolsView, setToolsView] = useState<ToolView | null>(null);
+  const [participationView, setParticipationView] = useState(false);
   const [mediaView, setMediaView] = useState<'music' | null>(null);
   const [musicVisited, setMusicVisited] = useState(false);
   const [musicBackground, setMusicBackground] = useState(() => {
@@ -417,6 +419,7 @@ export default function MemberApp({
     setActiveTitle(title);
     setRosterView(false);
     setToolsView(null);
+    setParticipationView(false);
     setMediaView(null);
     setMenuOpen(false);
   }
@@ -425,9 +428,19 @@ export default function MemberApp({
     setRosterView(true);
     setActiveTitle('');
     setToolsView(null);
+    setParticipationView(false);
     setMediaView(null);
     setRosterCol(-1);
     setRosterVal('');
+    setMenuOpen(false);
+  }
+
+  function showParticipation() {
+    setParticipationView(true);
+    setActiveTitle('');
+    setRosterView(false);
+    setToolsView(null);
+    setMediaView(null);
     setMenuOpen(false);
   }
 
@@ -435,6 +448,7 @@ export default function MemberApp({
     setToolsView(tool);
     setActiveTitle('');
     setRosterView(false);
+    setParticipationView(false);
     setMediaView(null);
     setMenuOpen(false);
   }
@@ -445,6 +459,7 @@ export default function MemberApp({
     setActiveTitle('');
     setRosterView(false);
     setToolsView(null);
+    setParticipationView(false);
     setMenuOpen(false);
   }
 
@@ -538,7 +553,7 @@ export default function MemberApp({
   }, [musicBackground]);
 
   const activeTab = memberTabs.find((t) => t.meta.title === activeTitle);
-  const isDashboard = !activeTab && !rosterView && !toolsView && !mediaView;
+  const isDashboard = !activeTab && !rosterView && !toolsView && !mediaView && !participationView;
 
   const myRow = useMemo(() => {
     const ign = session.ign.trim().toLowerCase();
@@ -599,16 +614,25 @@ export default function MemberApp({
           setActiveTitle(v.title);
           setRosterView(false);
           setToolsView(null);
+          setParticipationView(false);
           setMediaView(null);
         } else if (v?.type === 'roster') {
           setRosterView(true);
           setActiveTitle('');
+          setToolsView(null);
+          setParticipationView(false);
+          setMediaView(null);
+        } else if (v?.type === 'participation') {
+          setParticipationView(true);
+          setActiveTitle('');
+          setRosterView(false);
           setToolsView(null);
           setMediaView(null);
         } else if (v?.type === 'tool' && v.tool) {
           setToolsView(v.tool as ToolView);
           setActiveTitle('');
           setRosterView(false);
+          setParticipationView(false);
           setMediaView(null);
         } else if (v?.type === 'media') {
           setMediaView('music');
@@ -616,6 +640,7 @@ export default function MemberApp({
           setActiveTitle('');
           setRosterView(false);
           setToolsView(null);
+          setParticipationView(false);
         }
       }
     } catch {}
@@ -628,11 +653,12 @@ export default function MemberApp({
       let desc: { type: string; title?: string; tool?: string } = { type: 'dashboard' };
       if (mediaView === 'music') desc = { type: 'media' };
       else if (toolsView) desc = { type: 'tool', tool: toolsView };
+      else if (participationView) desc = { type: 'participation' };
       else if (rosterView) desc = { type: 'roster' };
       else if (activeTitle) desc = { type: 'sheet', title: activeTitle };
       localStorage.setItem(`astra.member.view.${session.ign.trim().toLowerCase()}`, JSON.stringify(desc));
     } catch {}
-  }, [activeTitle, rosterView, toolsView, mediaView, restored]);
+  }, [activeTitle, rosterView, toolsView, participationView, mediaView, restored]);
   const showCollectionTip = !!activeTab && COLLECTION_TABS.has(activeTab.meta.title.trim().toUpperCase());
   const collectionGroups: { label: string; cols: Column[] }[] = [];
   if (activeTab && activeTab.meta.headerRows === 2) {
@@ -739,6 +765,16 @@ export default function MemberApp({
               <IconUsers />
             </span>
             {t('member.roster')}
+          </button>
+          <button
+            className={`nav-item ${participationView ? 'active' : ''}`}
+            onClick={showParticipation}
+            title={t('participation.active')}
+          >
+            <span className="ico">
+              <IconTrendingUp />
+            </span>
+            {t('participation.active')}
           </button>
           <button
             className={`nav-item ${toolsView === 'attendance' ? 'active' : ''}`}
@@ -983,6 +1019,10 @@ export default function MemberApp({
               onBackgroundChange={setMusicBackground}
               onNowPlayingChange={setNowPlaying}
             />
+          )}
+
+          {participationView && (
+            <ActiveParticipation entries={data.participation ?? []} avatars={data.avatars} />
           )}
 
           {rosterView && (

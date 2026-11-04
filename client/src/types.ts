@@ -28,10 +28,18 @@ export interface DataResponse {
   tabs: TabData[];
   roster?: RosterMember[];
   leaderboard?: { ign: string; points: number; perfect?: number }[];
+  participation?: ParticipationEntry[];
   avatars?: Record<string, string>;
   memberEdit?: boolean;
   sheetUrl?: string;
   unchanged?: boolean;
+}
+
+export interface ParticipationEntry {
+  ign: string;
+  field: number;
+  war: number;
+  active: number;
 }
 
 export interface RosterMember {
@@ -106,6 +114,6 @@ export interface Column {
   group: string;
 }
 
-export const INTERNAL_TABS = ['BOSS ATTENDANCE', 'BOSS CONFIG', 'SETTINGS'];
+export const INTERNAL_TABS = ['BOSS ATTENDANCE', 'BOSS CONFIG', 'WAR ATTENDANCE', 'SETTINGS'];
 
-export const MEMBER_HIDDEN_TABS = ['BOSS ATTENDANCE', 'BOSS CONFIG', 'DISTRIBUTION HISTORY', 'CP HISTORY', 'SETTINGS', 'WAR ATTENDANCE', 'WAR ATTENDANCE HISTORY'];
+export const MEMBER_HIDDEN_TABS = ['BOSS ATTENDANCE', 'BOSS CONFIG', 'DISTRIBUTION HISTORY', 'CP HISTORY', 'SETTINGS', 'WAR ATTENDANCE', 'WAR ATTENDANCE HISTORY', 'ACTIVE PARTICIPATION HISTORY'];

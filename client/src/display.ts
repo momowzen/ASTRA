@@ -16,6 +16,7 @@ export const TAB_KEYS: Record<string, string> = {
   'CP HISTORY': 'tab.cpHistory',
   'WAR ATTENDANCE': 'tab.warAttendance',
   'WAR ATTENDANCE HISTORY': 'tab.warAttendanceHistory',
+  'ACTIVE PARTICIPATION HISTORY': 'tab.activeParticipationHistory',
 };
 
 export const COL_KEYS: Record<string, string> = {

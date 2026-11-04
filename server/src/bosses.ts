@@ -50,3 +50,8 @@ export const BOSS_NAMES: string[] = [
   'Lucus',
   'Bahel',
 ];
+
+/* Every known boss that is not a war (kransia/rift) boss counts as a field boss. */
+export const FIELD_BOSSES: string[] = BOSS_NAMES.filter(
+  (name) => !WAR_BOSSES.some((w) => w.toLowerCase() === name.toLowerCase()),
+);

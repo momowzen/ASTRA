@@ -6,9 +6,10 @@ import { rateLimit, requireAdmin, requireAuth, signToken } from './auth';
 import { applyLocalWrite, findIgn, getSnapshot, getTab, intPoints, memberEditEnabled, rowBelongsTo, scheduleRefresh, noteWrite, noteTabMutation, lastError } from './store';
 import { avatarMap, clearAvatar, setAvatar } from './avatars';
 import { deleteAvatarByUrl, prepareAvatar, storeAvatar } from './storage';
-import { BOSS_NAMES, WAR_BOSSES } from './bosses';
+import { BOSS_NAMES, FIELD_BOSSES, WAR_BOSSES } from './bosses';
 import { listActivity, logEntries, makeCellEntry, snapshotValue } from './activity';
 import type { ActivityActor } from './activity';
+import type { Snapshot } from './store';
 import { getMedia, streamMediaTrack } from './media';
 
 class ForbiddenRow extends Error {
@@ -30,7 +31,7 @@ const MAX_VALUE_LEN = 1000;
 const MAX_UPDATES = 200;
 const MAX_AVATAR_BYTES = 4 * 1024 * 1024;
 
-const INTERNAL_TABS = ['BOSS ATTENDANCE', 'BOSS CONFIG', 'DISTRIBUTION HISTORY', 'CP HISTORY', 'SETTINGS', 'WAR ATTENDANCE', 'WAR ATTENDANCE HISTORY'];
+const INTERNAL_TABS = ['BOSS ATTENDANCE', 'BOSS CONFIG', 'DISTRIBUTION HISTORY', 'CP HISTORY', 'SETTINGS', 'WAR ATTENDANCE', 'WAR ATTENDANCE HISTORY', 'ACTIVE PARTICIPATION HISTORY'];
 
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
@@ -209,6 +210,76 @@ api.post('/auth/username', requireAuth, async (req, res) => {
   }
 });
 
+export interface ParticipationRow {
+  ign: string;
+  field: number;
+  war: number;
+  active: number;
+}
+
+/**
+ * Active participation: per IGN, share of recorded field-boss / war-boss kills
+ * attended. Derived from BOSS ATTENDANCE (field columns) and WAR ATTENDANCE
+ * (kransia/rift columns). Shared by GET /data and the participation history
+ * snapshot so the displayed value and the archived value always agree.
+ */
+function computeParticipation(snap: Snapshot): ParticipationRow[] {
+  const basic = snap.tabs.find((t) => t.meta.title.toUpperCase() === 'BASIC INFORMATION');
+  const igns: string[] = [];
+  const seenIgn = new Set<string>();
+  for (const r of basic?.rows ?? []) {
+    const ign = (r.cells[0] || '').trim();
+    if (!ign) continue;
+    const k = ign.toLowerCase();
+    if (seenIgn.has(k)) continue;
+    seenIgn.add(k);
+    igns.push(ign);
+  }
+
+  const attTab = snap.tabs.find((t) => t.meta.title.toUpperCase() === 'BOSS ATTENDANCE');
+  const warTab = snap.tabs.find((t) => t.meta.title.toUpperCase() === 'WAR ATTENDANCE');
+  const fieldSet = new Set(FIELD_BOSSES.map((n) => n.toLowerCase()));
+  const warSet = new Set(WAR_BOSSES.map((n) => n.toLowerCase()));
+
+  const attHeaders = attTab?.meta.headers[0] ?? [];
+  const fieldCols: number[] = [];
+  for (let i = 2; i < attHeaders.length; i++) {
+    const boss = String(attHeaders[i] ?? '').trim().toLowerCase();
+    if (boss && fieldSet.has(boss)) fieldCols.push(i);
+  }
+  const warHeaders = warTab?.meta.headers[0] ?? [];
+  const warCols: number[] = [];
+  for (let i = 0; i < warHeaders.length; i++) {
+    const boss = String(warHeaders[i] ?? '').trim().toLowerCase();
+    if (boss && warSet.has(boss)) warCols.push(i);
+  }
+
+  const attByIgn = new Map<string, { cells: string[] }>();
+  for (const r of attTab?.rows ?? []) {
+    const k = (r.cells[0] || '').trim().toLowerCase();
+    if (k && !attByIgn.has(k)) attByIgn.set(k, r);
+  }
+  const warByIgn = new Map<string, { cells: string[] }>();
+  for (const r of warTab?.rows ?? []) {
+    const k = (r.cells[0] || '').trim().toLowerCase();
+    if (k && !warByIgn.has(k)) warByIgn.set(k, r);
+  }
+
+  const round1 = (n: number) => Math.round(n * 10) / 10;
+  return igns.map((ign) => {
+    const k = ign.toLowerCase();
+    const ar = attByIgn.get(k);
+    let attendedField = 0;
+    for (const i of fieldCols) if (ar && intPoints(ar.cells[i]) > 0) attendedField++;
+    const wr = warByIgn.get(k);
+    let attendedWar = 0;
+    for (const i of warCols) if (wr && intPoints(wr.cells[i]) > 0) attendedWar++;
+    const field = fieldCols.length > 0 ? round1((attendedField / fieldCols.length) * 100) : 0;
+    const war = warCols.length > 0 ? round1((attendedWar / warCols.length) * 100) : 0;
+    return { ign, field, war, active: round1((field + war) / 2) };
+  });
+}
+
 api.get('/data', requireAuth, (req, res) => {
   const s = req.session!;
   const snap = getSnapshot();
@@ -305,6 +376,10 @@ api.get('/data', requireAuth, (req, res) => {
     .filter((m) => m.ign)
     .sort((a, b) => b.points - a.points || a.ign.localeCompare(b.ign));
 
+  // Active participation is derived from the internal sheets; members get the
+  // computed percentages without the sheets themselves.
+  const participation = computeParticipation(snap);
+
   res.json({
     rev: snap.rev,
     ts: snap.ts,
@@ -315,6 +390,7 @@ api.get('/data', requireAuth, (req, res) => {
     tabs,
     roster,
     leaderboard,
+    participation,
     avatars: avatarMap(),
     memberEdit: memberEditEnabled(),
     sheetUrl: config.spreadsheetId
@@ -1048,6 +1124,56 @@ api.post('/boss/war/distribute', requireAuth, requireAdmin, async (_req, res) =>
     bad(res, 502, 'Could not write war attendance history');
   }
 });
+
+api.post('/boss/participation/distribute', requireAuth, requireAdmin, async (_req, res) => {
+  try {
+    const snap = getSnapshot();
+    const histTab = snap.tabs.find((t) => t.meta.title.toUpperCase() === 'ACTIVE PARTICIPATION HISTORY');
+    if (!histTab) return bad(res, 404, 'ACTIVE PARTICIPATION HISTORY tab not found');
+
+    const participation = computeParticipation(snap);
+    const date = distributionDate(new Date());
+    const header0 = histTab.meta.headers[0] || ['IGN'];
+    const existingCol = header0.findIndex((h) => String(h ?? '').trim() === date);
+    const colIndex = existingCol >= 0 ? existingCol : header0.length;
+    const letter = sheets.columnLetter(colIndex);
+
+    const rowByIgn = new Map<string, number>();
+    for (const r of histTab.rows) {
+      const ign = (r.cells[0] || '').trim().toLowerCase();
+      if (ign && !rowByIgn.has(ign)) rowByIgn.set(ign, r.row);
+    }
+
+    const writes: { a1: string; values: string[][] }[] = [];
+    if (!String(header0[0] ?? '').trim()) writes.push({ a1: 'A1', values: [['IGN']] });
+    if (existingCol < 0) writes.push({ a1: `${letter}1`, values: [[date]] });
+
+    const newRows: string[][] = [];
+    for (const p of participation) {
+      const value = `${p.active.toFixed(1)}%`;
+      const row = rowByIgn.get(p.ign.trim().toLowerCase());
+      if (row) {
+        writes.push({ a1: `${letter}${row}`, values: [[value]] });
+      } else {
+        const cells = new Array(colIndex + 1).fill('');
+        cells[0] = p.ign;
+        cells[colIndex] = value;
+        newRows.push(cells);
+      }
+    }
+
+    await sheets.batchUpdateValues('ACTIVE PARTICIPATION HISTORY', writes);
+    for (const cells of newRows) await sheets.appendRow('ACTIVE PARTICIPATION HISTORY', cells, colIndex + 1);
+
+    noteTabMutation('ACTIVE PARTICIPATION HISTORY');
+    scheduleRefresh();
+    res.json({ ok: true, date, count: participation.length });
+  } catch (err) {
+    console.error('[participation] distribute failed:', err);
+    bad(res, 502, 'Could not write active participation history');
+  }
+});
+
 const ATTENDANCE_PROMPT = `You transcribe player names from a game guild screenshot.
 Output ONLY the player names visible in the image, one per line, in reading order.
 Rules:

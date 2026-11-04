@@ -35,12 +35,67 @@
 
 .shell-member .content > .sheet-panel,
 .shell-member .content > .roster-panel,
-.shell-member .content > .attendance-board {
+.shell-member .content > .attendance-board,
+.shell-member .content > .participation-view {
   flex: 1 1 0;
   min-height: 0;
   overflow: hidden;
   display: flex;
   flex-direction: column;
+}
+
+/* ---------- Active participation ---------- */
+.participation-view {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 0;
+  min-height: 0;
+  gap: var(--sp-4);
+}
+
+.participation-view > .table-card {
+  flex: 1 1 0;
+  min-height: 0;
+}
+
+.participation-view > .table-card > .table-scroll {
+  flex: 1 1 auto;
+  min-height: 0;
+  max-height: none;
+}
+
+.participation-value {
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.participation-active {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+}
+
+.participation-bar {
+  flex: 1 1 auto;
+  min-width: 56px;
+  max-width: 160px;
+  height: 6px;
+  border-radius: var(--r-pill);
+  background: rgba(167, 184, 173, 0.12);
+  overflow: hidden;
+}
+
+.participation-fill {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--accent), var(--accent-2));
+}
+
+.participation-pct {
+  flex: none;
+  min-width: 48px;
+  text-align: right;
 }
 
 .attendance-board {

@@ -7,6 +7,7 @@ import { addRow as apiAddRow, deleteRow as apiDeleteRow, saveCells, ApiError } f
 import { DatePicker, Select } from './Dropdown';
 import { IconBulb, IconClose, IconGear, IconGrid, IconHistory, IconLogout, IconMenu, IconOverview, IconPlus, IconReward, IconSearch, IconTrash, IconTrendingUp, IconTrophy, IconUserCheck } from './icons';
 import AdminSettings from './AdminSettings';
+import ActiveParticipation from './ActiveParticipation';
 import TopbarBossTracker from './TopbarBossTracker';
 import BossTracker from './BossTracker';
 import GuildRoster from './GuildRoster';
@@ -180,6 +181,7 @@ export default function AdminApp({
   const [bossView, setBossView] = useState<'dashboard' | 'attendance' | 'config' | null>(null);
   const [toolView, setToolView] = useState<'distribution' | 'cp-update' | 'profile-completion' | 'activity-log' | null>(null);
   const [rosterView, setRosterView] = useState(true);
+  const [participationView, setParticipationView] = useState(false);
   const [editing, setEditing] = useState<{ row: number; col: number } | null>(null);
   const [addOpen, setAddOpen] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState<number | null>(null);
@@ -253,6 +255,12 @@ export default function AdminApp({
           setRosterView(false);
           setBossView(null);
           setActiveTitle('');
+        } else if (v?.type === 'participation') {
+          setParticipationView(true);
+          setRosterView(false);
+          setBossView(null);
+          setToolView(null);
+          setActiveTitle('');
         }
       }
     } catch {}
@@ -265,11 +273,17 @@ export default function AdminApp({
       let desc: { type: string; title?: string; view?: string; tool?: string } = { type: 'roster' };
       if (bossView) desc = { type: 'boss', view: bossView };
       else if (toolView) desc = { type: 'tool', tool: toolView };
+      else if (participationView) desc = { type: 'participation' };
       else if (rosterView) desc = { type: 'roster' };
       else if (activeTitle) desc = { type: 'sheet', title: activeTitle };
       localStorage.setItem(`astra.admin.view.${session.username.trim().toLowerCase()}`, JSON.stringify(desc));
     } catch {}
-  }, [activeTitle, bossView, toolView, rosterView, restored]);
+  }, [activeTitle, bossView, toolView, rosterView, participationView, restored]);
+
+  /* Any other view taking over clears the participation view. */
+  useEffect(() => {
+    if (rosterView || bossView || toolView || activeTitle) setParticipationView(false);
+  }, [rosterView, bossView, toolView, activeTitle]);
   const isCpH = (tab?.meta.title ?? '').toUpperCase() === 'CP HISTORY';
   const isDistH = (tab?.meta.title ?? '').toUpperCase() === 'DISTRIBUTION HISTORY';
 
@@ -553,6 +567,24 @@ export default function AdminApp({
             </span>
             {t('tools.profileCompletion')}
           </button>
+          <button
+            className={`nav-item nav-caps ${participationView ? 'active' : ''}`}
+            onClick={() => {
+              setParticipationView(true);
+              setBossView(null);
+              setToolView(null);
+              setRosterView(false);
+              setActiveTitle('');
+              setEditing(null);
+              setShowCol(-1);
+              setFilterVal('');
+            }}
+          >
+            <span className="ico">
+              <IconTrendingUp />
+            </span>
+            {t('participation.active')}
+          </button>
 
           <div className="section-label">{t('admin.trackerSection')}</div>
           <button
@@ -651,7 +683,7 @@ export default function AdminApp({
             .map((tb) => (
               <button
                 key={tb.meta.title}
-                className={`nav-item nav-caps ${!bossView && !toolView && !rosterView && tb.meta.title === tab?.meta.title ? 'active' : ''}`}
+                className={`nav-item nav-caps ${!bossView && !toolView && !rosterView && !participationView && tb.meta.title === tab?.meta.title ? 'active' : ''}`}
                 onClick={() => {
                   setActiveTitle(tb.meta.title);
                   setBossView(null);
@@ -699,7 +731,9 @@ export default function AdminApp({
           <div className="topbar-heading">
             <h2>
               <span className="topbar-tab-title">
-                {rosterView
+                {participationView
+                  ? t('participation.active')
+                  : rosterView
                   ? t('admin.rosterOverview')
                   : bossView
                     ? bossView === 'dashboard'
@@ -723,7 +757,7 @@ export default function AdminApp({
             </h2>
           </div>
           <div className="grow" />
-          {!bossView && !toolView && !rosterView && (
+          {!bossView && !toolView && !rosterView && !participationView && (
             <div className="toolbar">
               <div className="search">
                 <IconSearch />
@@ -806,7 +840,9 @@ export default function AdminApp({
         </header>
 
         <div className={`content${fit ? ' content-fit' : ''}${rosterView ? ' content-roster' : ''}`}>
-          {rosterView ? (
+          {participationView ? (
+            <ActiveParticipation entries={data.participation ?? []} avatars={data.avatars} />
+          ) : rosterView ? (
             <GuildRoster data={data} />
           ) : bossView ? (
             <BossTracker view={bossView} data={data} onPatch={onPatch} toast={toast} />
