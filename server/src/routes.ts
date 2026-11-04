@@ -6,7 +6,7 @@ import { rateLimit, requireAdmin, requireAuth, signToken } from './auth';
 import { applyLocalWrite, findIgn, getSnapshot, getTab, intPoints, memberEditEnabled, rowBelongsTo, scheduleRefresh, noteWrite, noteTabMutation, lastError } from './store';
 import { avatarMap, clearAvatar, setAvatar } from './avatars';
 import { deleteAvatarByUrl, prepareAvatar, storeAvatar } from './storage';
-import { BOSS_NAMES, FIELD_BOSSES, WAR_BOSSES } from './bosses';
+import { BOSS_NAMES, FIELD_BOSSES, WAR_BOSS_POINTS, WAR_BOSSES } from './bosses';
 import { listActivity, logEntries, makeCellEntry, snapshotValue } from './activity';
 import type { ActivityActor } from './activity';
 import type { Snapshot } from './store';
@@ -31,7 +31,7 @@ const MAX_VALUE_LEN = 1000;
 const MAX_UPDATES = 200;
 const MAX_AVATAR_BYTES = 4 * 1024 * 1024;
 
-const INTERNAL_TABS = ['BOSS ATTENDANCE', 'BOSS CONFIG', 'DISTRIBUTION HISTORY', 'CP HISTORY', 'SETTINGS', 'WAR ATTENDANCE', 'WAR ATTENDANCE HISTORY', 'ACTIVE PARTICIPATION HISTORY'];
+const INTERNAL_TABS = ['BOSS ATTENDANCE', 'BOSS CONFIG', 'DISTRIBUTION HISTORY', 'CP HISTORY', 'SETTINGS', 'WAR ATTENDANCE', 'WAR ATTENDANCE HISTORY', 'ACTIVE PARTICIPATION HISTORY', 'WAR BOSS CONFIG'];
 
 /* Guild-visible tabs sent whole to members (needed by the member Dashboard,
    which mirrors the admin Overview). Members never see these as editable sheet
@@ -341,6 +341,36 @@ function computeAttendance(snap: Snapshot): AttendanceSummary | null {
     members: members.size,
     pct: slots > 0 ? (attended / slots) * 100 : 0,
   };
+}
+
+/**
+ * Ensure WAR BOSS CONFIG exists and is seeded with the default war-boss
+ * points. Sheet-only: created lazily so recording a war boss always has a
+ * config to read (and admins can edit it directly).
+ */
+async function ensureWarBossConfig(): Promise<{ seeded: boolean; count: number }> {
+  const meta = await sheets.getSpreadsheetMeta();
+  if (!meta.sheets.some((s) => s.title === 'WAR BOSS CONFIG')) {
+    await sheets.addSheet('WAR BOSS CONFIG');
+  }
+  const vals = await sheets.batchGetValues(['WAR BOSS CONFIG']);
+  const rows = vals['WAR BOSS CONFIG'] || [];
+  const have = new Set(rows.map((r) => (r[0] || '').trim()).filter(Boolean));
+  const missing = WAR_BOSSES.filter((name) => !have.has(name));
+  const writes: { a1: string; values: string[][] }[] = [];
+  if (rows.length === 0) {
+    writes.push({ a1: 'A1', values: [['Boss', 'Points']] });
+  }
+  let last = rows.length > 0 ? rows.length : 1;
+  for (const name of missing) {
+    last += 1;
+    writes.push({ a1: `A${last}`, values: [[name, String(WAR_BOSS_POINTS[name] ?? 1)]] });
+  }
+  if (writes.length === 0) return { seeded: false, count: 0 };
+  await sheets.batchUpdateValues('WAR BOSS CONFIG', writes);
+  noteTabMutation('WAR BOSS CONFIG');
+  scheduleRefresh();
+  return { seeded: true, count: missing.length };
 }
 
 api.get('/data', requireAuth, (req, res) => {
@@ -792,6 +822,16 @@ api.post('/boss/config/seed', requireAuth, requireAdmin, async (_req, res) => {
   }
 });
 
+api.post('/boss/war/config/seed', requireAuth, requireAdmin, async (_req, res) => {
+  try {
+    const result = await ensureWarBossConfig();
+    res.json({ ok: true, ...result });
+  } catch (err) {
+    console.error('[boss] seed war config failed:', err);
+    bad(res, 502, 'Could not seed war boss config');
+  }
+});
+
 api.post('/boss/attendance/record', requireAuth, requireAdmin, async (req, res) => {
   const boss = String(req.body?.boss ?? '').trim();
   const points = Number(req.body?.points);
@@ -995,6 +1035,28 @@ api.post('/boss/war/record', requireAuth, requireAdmin, async (req, res) => {
     const tab = getTab('WAR ATTENDANCE');
     if (!tab) return bad(res, 404, 'WAR ATTENDANCE tab not found');
 
+    // point value for this boss (from WAR BOSS CONFIG, or the default)
+    if (!getTab('WAR BOSS CONFIG')) {
+      try {
+        await ensureWarBossConfig();
+      } catch (e) {
+        console.error('[war] ensure config failed:', e);
+      }
+    }
+    const warConfigTab = getTab('WAR BOSS CONFIG');
+    const warConfigPoints = new Map<string, number>();
+    for (const r of warConfigTab?.rows ?? []) {
+      const name = (r.cells[0] || '').trim();
+      if (name) warConfigPoints.set(name.toLowerCase(), intPoints(r.cells[1]));
+    }
+    const points =
+      warConfigPoints.get(boss.toLowerCase()) ??
+      WAR_BOSS_POINTS[boss] ??
+      WAR_BOSS_POINTS[
+        Object.keys(WAR_BOSS_POINTS).find((k) => k.toLowerCase() === boss.toLowerCase()) ?? ''
+      ] ??
+      1;
+
     const norm = (s: string) => String(s ?? '').trim().toUpperCase();
     const headers = [...(tab.meta.headers[0] || [])];
     while (headers.length < tab.meta.columnCount) headers.push('');
@@ -1015,7 +1077,14 @@ api.post('/boss/war/record', requireAuth, requireAdmin, async (req, res) => {
       if (!h || h === 'IGN' || h === 'TOTAL POINTS' || h === 'TOTALPOINTS' || h === 'ATTENDANCE RATIO' || h === 'ATTENDANCERATIO') continue;
       bossCols.push(i);
     }
-    const numInstances = bossCols.length;
+    const pointsForBoss = (name: string): number =>
+      warConfigPoints.get(name.toLowerCase()) ??
+      WAR_BOSS_POINTS[name] ??
+      WAR_BOSS_POINTS[Object.keys(WAR_BOSS_POINTS).find((k) => k.toLowerCase() === name.toLowerCase()) ?? ''] ??
+      1;
+    // Max an IGN can earn this cycle: sum of the points of every recorded war boss.
+    let maxPoints = 0;
+    for (const ci of bossCols) maxPoints += pointsForBoss(String(headers[ci] ?? ''));
 
     const writes: { a1: string; values: string[][] }[] = [];
     // write any new headers
@@ -1034,7 +1103,7 @@ api.post('/boss/war/record', requireAuth, requireAdmin, async (req, res) => {
       if (key && !existingRows.has(key)) existingRows.set(key, r.row);
     }
 
-    const fmtRatio = (total: number) => (numInstances > 0 ? `${((total / numInstances) * 100).toFixed(1)}%` : '0%');
+    const fmtRatio = (total: number) => (maxPoints > 0 ? `${((total / maxPoints) * 100).toFixed(1)}%` : '0%');
 
     // update existing rows
     for (const r of tab.rows) {
@@ -1045,7 +1114,7 @@ api.post('/boss/war/record', requireAuth, requireAdmin, async (req, res) => {
       let total = 0;
       for (const ci of bossCols) {
         if (ci === bossIdx) {
-          const v = hit ? 1 : 0;
+          const v = hit ? points : 0;
           total += v;
           writes.push({ a1: `${sheets.columnLetter(ci)}${r.row}`, values: [[String(v)]] });
         } else {
@@ -1063,11 +1132,10 @@ api.post('/boss/war/record', requireAuth, requireAdmin, async (req, res) => {
       const cells = new Array(finalCount).fill('');
       cells[0] = ign;
       for (const ci of bossCols) {
-        cells[ci] = ci === bossIdx ? '1' : '0';
+        cells[ci] = ci === bossIdx ? String(points) : '0';
       }
-      const total = 1;
-      cells[totalIdx] = String(total);
-      cells[ratioIdx] = fmtRatio(total);
+      cells[totalIdx] = String(points);
+      cells[ratioIdx] = fmtRatio(points);
       newRows.push(cells);
     }
     // also ensure absent scanned? already handled (existing rows updated with 0 for non-scanned)
@@ -1077,7 +1145,7 @@ api.post('/boss/war/record', requireAuth, requireAdmin, async (req, res) => {
 
     noteTabMutation('WAR ATTENDANCE');
     scheduleRefresh();
-    res.json({ ok: true, boss, instances: numInstances });
+    res.json({ ok: true, boss, instances: bossCols.length });
   } catch (err) {
     console.error('[war] record failed:', err);
     bad(res, 502, 'Could not record war attendance');

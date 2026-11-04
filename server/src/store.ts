@@ -215,12 +215,25 @@ function recomputeWar(next: Snapshot): { a1: string; values: string[][] }[] {
     }
     bossCols.push(i);
   }
-  const instances = bossCols.length;
+  // points per boss (from WAR BOSS CONFIG), used to derive the max an IGN can
+  // earn this cycle so the ratio can be TOTAL POINTS / maxPoints.
+  const cfgTab = next.tabs.find((t) => t.meta.title.toUpperCase() === 'WAR BOSS CONFIG');
+  const cfg = new Map<string, number>();
+  for (const r of cfgTab?.rows ?? []) {
+    const name = (r.cells[0] || '').trim().toLowerCase();
+    if (name) {
+      const p = intPoints(r.cells[1]);
+      cfg.set(name, p > 0 ? p : 1);
+    }
+  }
+  let maxPoints = 0;
+  for (const ci of bossCols) maxPoints += cfg.get(norm(headers[ci]).toLowerCase()) ?? 1;
+
   const writes: { a1: string; values: string[][] }[] = [];
   for (const r of tab.rows) {
     let total = 0;
     for (const ci of bossCols) total += intPoints(r.cells[ci]);
-    const ratioPct = instances > 0 ? (total / instances) * 100 : 0;
+    const ratioPct = maxPoints > 0 ? (total / maxPoints) * 100 : 0;
     const storedTotal = intPoints(r.cells[totalIdx]);
     const storedRatio = parseRatio(r.cells[ratioIdx]);
     const totalDrift = storedTotal !== total;

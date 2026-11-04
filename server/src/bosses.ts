@@ -55,3 +55,12 @@ export const BOSS_NAMES: string[] = [
 export const FIELD_BOSSES: string[] = BOSS_NAMES.filter(
   (name) => !WAR_BOSSES.some((w) => w.toLowerCase() === name.toLowerCase()),
 );
+
+/* Default point values for war (kransia/rift) bosses, mirroring BOSS CONFIG. */
+export const WAR_BOSS_POINTS: Record<string, number> = {
+  Icaruthia: 1,
+  Motti: 1,
+  Nevaeh: 2,
+  Lucus: 2,
+  Bahel: 2,
+};
