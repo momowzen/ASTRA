@@ -724,6 +724,11 @@ export default function MemberApp({
     return rosterMembers.filter((m) => (m[key] || '').trim() === rosterVal);
   }, [rosterMembers, rosterCol, rosterVal]);
 
+  const rosterIgnWidth = useMemo(() => {
+    const max = rosterMembers.reduce((m, r) => Math.max(m, (r.ign || '').length), 0);
+    return max > 0 ? `${Math.max(4, max + 2)}ch` : undefined;
+  }, [rosterMembers]);
+
   const leaderboard = data.leaderboard ?? [];
   const lbTop = leaderboard[0]?.points ?? 0;
   const lbThreshold = lbTop > 0 ? Math.max(1, Math.round(lbTop * 0.3)) : 0;
@@ -1105,7 +1110,7 @@ export default function MemberApp({
                   <thead>
                     <tr className="labels single">
                       {ROSTER_COLS.map((c, i) => (
-                        <th key={c.key} className={i === 0 ? 'ign-col' : ''}>
+                        <th key={c.key} className={i === 0 ? 'ign-col' : ''} style={i === 0 && rosterIgnWidth ? { width: rosterIgnWidth } : undefined}>
                           {colLabel(c.label, t, lang)}
                         </th>
                       ))}
@@ -1114,7 +1119,7 @@ export default function MemberApp({
                   <tbody>
                     {rosterRows.map((m, i) => (
                       <tr key={m.ign}>
-                        <td className="ign-col">
+                        <td className="ign-col" style={rosterIgnWidth ? { width: rosterIgnWidth } : undefined}>
                           <div
                             className="cell roster-name roster-ign-click"
                             role="button"

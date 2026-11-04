@@ -8,6 +8,8 @@ import { DatePicker, Select } from './Dropdown';
 import { IconBulb, IconClose, IconGear, IconGrid, IconHistory, IconLogout, IconMenu, IconOverview, IconPlus, IconReward, IconSearch, IconTrash, IconTrendingUp, IconTrophy, IconUserCheck } from './icons';
 import AdminSettings from './AdminSettings';
 import ActiveParticipation from './ActiveParticipation';
+import ActiveParticipationHistoryView from './ActiveParticipationHistoryView';
+import WarAdminTools from './WarAdminTools';
 import TopbarBossTracker from './TopbarBossTracker';
 import BossTracker from './BossTracker';
 import GuildRoster from './GuildRoster';
@@ -179,7 +181,7 @@ export default function AdminApp({
   const [showCol, setShowCol] = useState(-1);
   const [filterVal, setFilterVal] = useState('');
   const [bossView, setBossView] = useState<'dashboard' | 'attendance' | 'config' | null>(null);
-  const [toolView, setToolView] = useState<'distribution' | 'cp-update' | 'profile-completion' | 'activity-log' | null>(null);
+  const [toolView, setToolView] = useState<'distribution' | 'war-distribution' | 'cp-update' | 'profile-completion' | 'activity-log' | null>(null);
   const [rosterView, setRosterView] = useState(true);
   const [participationView, setParticipationView] = useState(false);
   const [editing, setEditing] = useState<{ row: number; col: number } | null>(null);
@@ -209,7 +211,7 @@ export default function AdminApp({
 
   const sheetTabs = data.tabs.filter((tb) => !INTERNAL_TABS.includes(tb.meta.title.toUpperCase()));
 
-  const fit = toolView === 'distribution' || toolView === 'cp-update' || toolView === 'profile-completion' || toolView === 'activity-log' || bossView !== null || (!rosterView && !bossView && !toolView);
+  const fit = toolView === 'distribution' || toolView === 'war-distribution' || toolView === 'cp-update' || toolView === 'profile-completion' || toolView === 'activity-log' || bossView !== null || (!rosterView && !bossView && !toolView);
 
   useLayoutEffect(() => {
     const el = document.querySelector<HTMLElement>('.topbar');
@@ -285,7 +287,9 @@ export default function AdminApp({
     if (rosterView || bossView || toolView || activeTitle) setParticipationView(false);
   }, [rosterView, bossView, toolView, activeTitle]);
   const isCpH = (tab?.meta.title ?? '').toUpperCase() === 'CP HISTORY';
-  const isDistH = (tab?.meta.title ?? '').toUpperCase() === 'DISTRIBUTION HISTORY';
+  const isDistH = (tab?.meta.title ?? '').toUpperCase() === 'BOSS DISTRIBUTION HISTORY';
+  const isWarH = (tab?.meta.title ?? '').toUpperCase() === 'WAR DISTRIBUTION HISTORY';
+  const isPartH = (tab?.meta.title ?? '').toUpperCase() === 'ACTIVE PARTICIPATION HISTORY';
 
   const rosterTab = useMemo(
     () =>
@@ -311,6 +315,20 @@ export default function AdminApp({
   }, [search, nickCol, rosterTab]);
 
   const allCols = useMemo(() => (tab ? buildColumns(tab.meta) : []), [tab]);
+  const ignWidth = useMemo(() => {
+    const rows = tab?.rows ?? [];
+    const max = rows.reduce((m, r) => Math.max(m, String(r.cells[0] ?? '').length), 0);
+    return max > 0 ? `${Math.max(4, max + 2)}ch` : undefined;
+  }, [tab]);
+
+  const ignStyle = useMemo<CSSProperties>(() => {
+    const s: CSSProperties = {};
+    if (ignWidth) {
+      s.width = ignWidth;
+      s.minWidth = ignWidth;
+    }
+    return s;
+  }, [ignWidth]);
   const projecting = showCol >= 0;
   const joinedIdx = useMemo(() => allCols.find((c) => /date\s*joined/i.test(c.label))?.index ?? -1, [allCols]);
   const showTime = (tab?.meta.title ?? '').toUpperCase() === 'BASIC INFORMATION' && !projecting && joinedIdx >= 0;
@@ -645,6 +663,22 @@ export default function AdminApp({
             {t('tools.distribution')}
           </button>
           <button
+            className={`nav-item nav-caps ${toolView === 'war-distribution' ? 'active' : ''}`}
+            onClick={() => {
+              setToolView('war-distribution');
+              setBossView(null);
+              setRosterView(false);
+              setEditing(null);
+              setShowCol(-1);
+              setFilterVal('');
+            }}
+          >
+            <span className="ico">
+              <IconReward />
+            </span>
+            {t('tools.warDistribution')}
+          </button>
+          <button
             className={`nav-item nav-caps ${toolView === 'cp-update' ? 'active' : ''}`}
             onClick={() => {
               setToolView('cp-update');
@@ -683,7 +717,7 @@ export default function AdminApp({
             .map((tb) => (
               <button
                 key={tb.meta.title}
-                className={`nav-item nav-caps ${!bossView && !toolView && !rosterView && !participationView && tb.meta.title === tab?.meta.title ? 'active' : ''}`}
+                className={`nav-item nav-caps ${!bossView && !toolView && !rosterView && !participationView && !isPartH && tb.meta.title === tab?.meta.title ? 'active' : ''}`}
                 onClick={() => {
                   setActiveTitle(tb.meta.title);
                   setBossView(null);
@@ -748,7 +782,9 @@ export default function AdminApp({
                           ? t('tools.profileCompletion')
                           : toolView === 'activity-log'
                             ? t('tools.activityLog')
-                            : t('tools.distribution')
+                           : toolView === 'war-distribution'
+                             ? t('tools.warDistribution')
+                             : t('tools.distribution')
                       : tab
                       ? tabLabel(tab.meta.title, t, lang)
                       : t('member.loading')}
@@ -757,7 +793,7 @@ export default function AdminApp({
             </h2>
           </div>
           <div className="grow" />
-          {!bossView && !toolView && !rosterView && !participationView && (
+          {!bossView && !toolView && !rosterView && !participationView && !isPartH && (
             <div className="toolbar">
               <div className="search">
                 <IconSearch />
@@ -849,6 +885,8 @@ export default function AdminApp({
           ) : toolView ? (
             toolView === 'cp-update' ? (
               <CpUpdate data={data} toast={toast} />
+            ) : toolView === 'war-distribution' ? (
+              <WarAdminTools data={data} toast={toast} />
             ) : toolView === 'profile-completion' ? (
               <ProfileCompletion data={data} />
             ) : toolView === 'activity-log' ? (
@@ -858,6 +896,8 @@ export default function AdminApp({
             )
           ) : isCpH && tab ? (
             <CpHistoryView tab={tab} rows={rows} />
+          ) : isPartH && tab ? (
+            <ActiveParticipationHistoryView tab={tab} rows={rows} />
           ) : (
             <div className="table-card">
             <div className="table-meta">
@@ -884,7 +924,7 @@ export default function AdminApp({
               )}
             </div>
             <div className="table-scroll">
-              <table className={`grid admin-grid${grouped ? ' grouped' : ''}`}>
+              <table className={`grid admin-grid${grouped ? ' grouped' : ''}${isDistH || isWarH ? ' history-fit' : ''}`}>
                 <thead>
                   {tab && tab.meta.headerRows === 2 && !projecting ? (
                     <>
@@ -892,7 +932,7 @@ export default function AdminApp({
                         <th className="rownum" rowSpan={2}>
                           #
                         </th>
-                        <th className="ign-col" rowSpan={2}>
+                        <th className="ign-col" rowSpan={2} style={ignStyle}>
                           {colLabel(cols[0]?.label ?? '', t, lang)}
                         </th>
                         {groupRuns.map((g, i) => (
@@ -913,7 +953,7 @@ export default function AdminApp({
                   ) : (
                     <tr className="labels single">
                       <th className="rownum">#</th>
-                      <th className="ign-col" aria-sort={isBasic ? sortAria('ign') : undefined}>
+                      <th className="ign-col" aria-sort={isBasic ? sortAria('ign') : undefined} style={ignStyle}>
                         {isBasic ? (
                           <SortButton
                             label={colLabel(cols[0]?.label ?? 'IGN', t, lang)}
@@ -987,12 +1027,13 @@ export default function AdminApp({
                           <td
                             key={c.index}
                             className={`${c.index === 0 ? 'ign-col' : ''}${groupEnds.has(c.index) ? ' col-sep' : ''}${leftAlignedLabel(c.label) ? ' align-left' : ''}`}
-                            aria-readonly={isDistH || undefined}
+                            style={c.index === 0 ? ignStyle : undefined}
+                            aria-readonly={isDistH || isPartH || undefined}
                             onClick={() => {
-                              if (!isDistH && !busy && !isOption && !isDate) setEditing({ row: r.row, col: c.index });
+                              if (!isDistH && !isPartH && !busy && !isOption && !isDate) setEditing({ row: r.row, col: c.index });
                             }}
                           >
-                            {!isDistH && isEditing && !isOption && !isDate ? (
+                            {!isDistH && !isPartH && isEditing && !isOption && !isDate ? (
                               <EditableCell
                                 initial={value}
                                 options={options}
@@ -1001,7 +1042,7 @@ export default function AdminApp({
                                 onCommit={(v) => commitCell(r.row, c.index, v)}
                                 onCancel={() => setEditing(null)}
                               />
-                            ) : !isDistH && isOption ? (
+                            ) : !isDistH && !isPartH && isOption ? (
                               <Select
                                 variant="cell"
                                 value={value}
@@ -1010,7 +1051,7 @@ export default function AdminApp({
                                 onChange={(next) => void commitCell(r.row, c.index, next)}
                                 options={optionList.map((o) => ({ value: o, label: valueLabel(o, t, lang), color: optionColor(o) }))}
                               />
-                            ) : !isDistH && isDate ? (
+                            ) : !isDistH && !isPartH && isDate ? (
                               <DatePicker
                                 variant="cell"
                                 value={toIsoDate(value)}

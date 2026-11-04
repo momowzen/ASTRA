@@ -305,11 +305,14 @@ export async function distribute(pool: number): Promise<DistributionResult> {
   });
 }
 
-export async function distributeWar(): Promise<{ ok: boolean; date: string; count: number }> {
-  return request('/boss/war/distribute', { method: 'POST' });
+export async function distributeWar(pool: number): Promise<DistributionResult> {
+  return request('/boss/war/distribute', {
+    method: 'POST',
+    body: JSON.stringify({ pool }),
+  });
 }
 
-export async function distributeParticipation(): Promise<{ ok: boolean; date: string; count: number }> {
+export async function distributeParticipation(): Promise<{ ok: boolean; date: string; count: number; skipped?: boolean; reason?: string }> {
   return request('/boss/participation/distribute', { method: 'POST' });
 }
 

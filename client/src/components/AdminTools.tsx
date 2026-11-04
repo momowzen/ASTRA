@@ -1,6 +1,6 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import type { DataResponse } from '../types';
-import { ApiError, distribute, distributeParticipation, distributeWar } from '../api';
+import { ApiError, distribute, distributeParticipation } from '../api';
 import type { DistributionBand, DistributionResult } from '../api';
 import { useLang } from '../i18n';
 import { tabLabel } from '../display';
@@ -39,7 +39,7 @@ function useWideScreen(): boolean {
 
 export default function AdminTools({ data, toast }: Props) {
   const { t, lang } = useLang();
-  const distTitle = tabLabel('DISTRIBUTION HISTORY', t, lang);
+  const distTitle = tabLabel('BOSS DISTRIBUTION HISTORY', t, lang);
   const members = useMemo(() => membersFromData(data), [data]);
   const topPoints = members[0]?.points ?? 0;
   const threshold = topPoints > 0 ? Math.max(1, Math.round(topPoints * 0.3)) : 0;
@@ -115,19 +115,15 @@ export default function AdminTools({ data, toast }: Props) {
     if (!poolValid) return;
     setSaving(true);
     try {
-      const res = await distribute(pool);
-      // Also archive the current WAR ATTENDANCE and ACTIVE PARTICIPATION.
-      // Non-fatal: each only runs if its history sheet exists.
+      // Archive active participation BEFORE resetting boss attendance, so the
+      // snapshot still sees both sheets. Non-fatal; skipped if data is missing.
       try {
-        await distributeWar();
-      } catch (e) {
-        console.warn('[war] distribute skipped:', e);
-      }
-      try {
-        await distributeParticipation();
+        const pr = await distributeParticipation();
+        if (!pr.skipped) toast(t('tools.participationArchived', { date: pr.date }), 'ok');
       } catch (e) {
         console.warn('[participation] distribute skipped:', e);
       }
+      const res = await distribute(pool);
       setSaved(res);
       toast(`${t('tools.savedNote', { title: distTitle })} · ${res.date}`, 'ok');
     } catch (err) {

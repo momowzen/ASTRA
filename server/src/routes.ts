@@ -31,7 +31,7 @@ const MAX_VALUE_LEN = 1000;
 const MAX_UPDATES = 200;
 const MAX_AVATAR_BYTES = 4 * 1024 * 1024;
 
-const INTERNAL_TABS = ['BOSS ATTENDANCE', 'BOSS CONFIG', 'DISTRIBUTION HISTORY', 'CP HISTORY', 'SETTINGS', 'WAR ATTENDANCE', 'WAR ATTENDANCE HISTORY', 'ACTIVE PARTICIPATION HISTORY', 'WAR BOSS CONFIG'];
+const INTERNAL_TABS = ['BOSS ATTENDANCE', 'BOSS CONFIG', 'BOSS DISTRIBUTION HISTORY', 'CP HISTORY', 'SETTINGS', 'WAR ATTENDANCE', 'WAR DISTRIBUTION HISTORY', 'ACTIVE PARTICIPATION HISTORY', 'WAR BOSS CONFIG'];
 
 /* Guild-visible tabs sent whole to members (needed by the member Dashboard,
    which mirrors the admin Overview). Members never see these as editable sheet
@@ -924,7 +924,7 @@ api.post('/boss/distribute', requireAuth, requireAdmin, async (req, res) => {
 
     const rows = members.map((m) => ({ ign: m.ign, points: m.points, diamonds: diamonds.get(m.ign) ?? 0 }));
 
-    const distTab = snap.tabs.find((t) => t.meta.title.toUpperCase() === 'DISTRIBUTION HISTORY');
+    const distTab = snap.tabs.find((t) => t.meta.title.toUpperCase() === 'BOSS DISTRIBUTION HISTORY');
     const header0 = distTab?.meta.headers[0] || [];
     const header1 = distTab?.meta.headers[1] || [];
     const date = distributionDate(new Date());
@@ -969,9 +969,9 @@ api.post('/boss/distribute', requireAuth, requireAdmin, async (req, res) => {
       }
     }
 
-    await sheets.batchUpdateValues('DISTRIBUTION HISTORY', writes);
+    await sheets.batchUpdateValues('BOSS DISTRIBUTION HISTORY', writes);
     for (const cells of newRows) {
-      await sheets.appendRow('DISTRIBUTION HISTORY', cells, rewardCol + 1);
+      await sheets.appendRow('BOSS DISTRIBUTION HISTORY', cells, rewardCol + 1);
     }
 
     const resetWrites: { a1: string; values: string[][] }[] = [];
@@ -1002,7 +1002,7 @@ api.post('/boss/distribute', requireAuth, requireAdmin, async (req, res) => {
     }
     if (resetWrites.length > 0) await sheets.batchUpdateValues('BOSS ATTENDANCE', resetWrites);
     for (const r of attTab.rows) noteWrite('BOSS ATTENDANCE', r.row, 1, '');
-    noteTabMutation('DISTRIBUTION HISTORY');
+    noteTabMutation('BOSS DISTRIBUTION HISTORY');
     noteTabMutation('BOSS ATTENDANCE');
 
     scheduleRefresh();
@@ -1155,29 +1155,64 @@ api.post('/boss/war/record', requireAuth, requireAdmin, async (req, res) => {
   }
 });
 
-api.post('/boss/war/distribute', requireAuth, requireAdmin, async (_req, res) => {
+api.post('/boss/war/distribute', requireAuth, requireAdmin, async (req, res) => {
+  const pool = Number(req.body?.pool);
+  if (!Number.isFinite(pool) || pool <= 0) {
+    return bad(res, 400, 'A positive diamond pool is required');
+  }
+
   try {
     const snap = getSnapshot();
     const warTab = snap.tabs.find((t) => t.meta.title.toUpperCase() === 'WAR ATTENDANCE');
-    const histTab = snap.tabs.find((t) => t.meta.title.toUpperCase() === 'WAR ATTENDANCE HISTORY');
+    const histTab = snap.tabs.find((t) => t.meta.title.toUpperCase() === 'WAR DISTRIBUTION HISTORY');
     if (!warTab) return bad(res, 404, 'WAR ATTENDANCE tab not found');
-    if (!histTab) return bad(res, 404, 'WAR ATTENDANCE HISTORY tab not found');
+    if (!histTab) return bad(res, 404, 'WAR DISTRIBUTION HISTORY tab not found');
 
     const norm = (s: string) => String(s ?? '').trim().toUpperCase();
     const wHeaders = warTab.meta.headers[0] || [];
     const totalIdx = wHeaders.findIndex((h) => norm(String(h)) === 'TOTAL POINTS' || norm(String(h)) === 'TOTALPOINTS');
     const ratioIdx = wHeaders.findIndex((h) => norm(String(h)) === 'ATTENDANCE RATIO' || norm(String(h)) === 'ATTENDANCERATIO');
 
+    const parseRatio = (v: string | undefined) => {
+      const s = String(v ?? '').trim().replace(/%$/, '');
+      const n = Number.parseFloat(s);
+      return Number.isFinite(n) ? n : 0;
+    };
+
+    // Only IGNs with 5 points OR 50% score are included.
+    const members = warTab.rows
+      .map((r) => {
+        const ign = (r.cells[0] || '').trim();
+        const points = totalIdx >= 0 ? intPoints(r.cells[totalIdx]) : 0;
+        const ratio = ratioIdx >= 0 ? parseRatio(r.cells[ratioIdx]) : 0;
+        return { ign, points, ratio };
+      })
+      .filter((m) => m.ign && (m.points >= 5 || m.ratio >= 50));
+
+    if (members.length === 0) return bad(res, 400, 'No members meet the 5-points / 50% threshold');
+
+    const totalPoints = members.reduce((s, m) => s + m.points, 0);
+    const diamonds = new Map<string, number>();
+    for (const m of members) {
+      diamonds.set(m.ign, totalPoints > 0 ? Math.round((pool * m.points) / totalPoints) : 0);
+    }
+    const remainder = pool - [...diamonds.values()].reduce((s, n) => s + n, 0);
+    if (members.length > 0) {
+      diamonds.set(members[0].ign, (diamonds.get(members[0].ign) ?? 0) + remainder);
+    }
+    const rows = members.map((m) => ({ ign: m.ign, points: m.points, diamonds: diamonds.get(m.ign) ?? 0 }));
+
     const date = distributionDate(new Date());
     const hHeaders = histTab.meta.headers[0] || ['IGN'];
     const hHeaders1 = histTab.meta.headers[1] || [];
-    let totalCol = -1;
+    // dated column pair: TOTAL POINTS (points) + Reward (diamonds). No ATTENDANCE RATIO.
+    let pointsCol = -1;
     for (let i = 1; i < hHeaders.length; i += 2) {
-      if (String(hHeaders[i] ?? '').trim() === date) { totalCol = i; break; }
+      if (String(hHeaders[i] ?? '').trim() === date) { pointsCol = i; break; }
     }
-    const appending = totalCol === -1;
-    if (appending) totalCol = hHeaders1.length > 0 ? hHeaders1.length : 1;
-    const ratioCol = totalCol + 1;
+    const appending = pointsCol === -1;
+    if (appending) pointsCol = hHeaders1.length > 0 ? hHeaders1.length : 1;
+    const rewardCol = pointsCol + 1;
 
     const ignRow = new Map<string, number>();
     for (const r of histTab.rows) {
@@ -1187,43 +1222,37 @@ api.post('/boss/war/distribute', requireAuth, requireAdmin, async (_req, res) =>
 
     const writes: { a1: string; values: string[][] }[] = [];
     if (appending) {
-      writes.push({ a1: `${sheets.columnLetter(totalCol)}1`, values: [[date]] });
-      writes.push({ a1: `${sheets.columnLetter(totalCol)}2`, values: [['TOTAL POINTS']] });
-      writes.push({ a1: `${sheets.columnLetter(ratioCol)}2`, values: [['ATTENDANCE RATIO']] });
+      writes.push({ a1: `${sheets.columnLetter(pointsCol)}1`, values: [[date]] });
+      writes.push({ a1: `${sheets.columnLetter(pointsCol)}2`, values: [['TOTAL POINTS']] });
+      writes.push({ a1: `${sheets.columnLetter(rewardCol)}2`, values: [['Reward']] });
     }
 
     const newRows: string[][] = [];
-    for (const r of warTab.rows) {
-      const ign = (r.cells[0] || '').trim();
-      if (!ign) continue;
-      const totalVal = totalIdx >= 0 ? (r.cells[totalIdx] || '').trim() : '';
-      const ratioVal = ratioIdx >= 0 ? (r.cells[ratioIdx] || '').trim() : '';
-      const existing = ignRow.get(ign);
+    for (const m of rows) {
+      const pts = m.points > 0 ? String(m.points) : '';
+      const existing = ignRow.get(m.ign);
       if (existing) {
-        writes.push({ a1: `${sheets.columnLetter(totalCol)}${existing}`, values: [[totalVal]] });
-        writes.push({ a1: `${sheets.columnLetter(ratioCol)}${existing}`, values: [[ratioVal]] });
+        writes.push({ a1: `${sheets.columnLetter(pointsCol)}${existing}`, values: [[pts]] });
+        writes.push({ a1: `${sheets.columnLetter(rewardCol)}${existing}`, values: [[String(m.diamonds)]] });
       } else {
-        const cells = new Array(ratioCol + 1).fill('');
-        cells[0] = ign;
-        cells[totalCol] = totalVal;
-        cells[ratioCol] = ratioVal;
+        const cells = new Array(rewardCol + 1).fill('');
+        cells[0] = m.ign;
+        cells[pointsCol] = pts;
+        cells[rewardCol] = String(m.diamonds);
         newRows.push(cells);
       }
     }
 
-    await sheets.batchUpdateValues('WAR ATTENDANCE HISTORY', writes);
-    for (const cells of newRows) await sheets.appendRow('WAR ATTENDANCE HISTORY', cells, ratioCol + 1);
+    await sheets.batchUpdateValues('WAR DISTRIBUTION HISTORY', writes);
+    for (const cells of newRows) await sheets.appendRow('WAR DISTRIBUTION HISTORY', cells, rewardCol + 1);
 
-    // Reset WAR ATTENDANCE for the next cycle: clear every column except IGN
-    // (boss columns + TOTAL POINTS + ATTENDANCE RATIO), mirroring the
-    // BOSS ATTENDANCE reset after a distribution.
+    // Reset WAR ATTENDANCE for the next cycle.
     const warReset: { a1: string; values: string[][] }[] = [];
     const warMaxRow = warTab.rows.length > 0 ? warTab.rows[warTab.rows.length - 1].row : 1;
     const warFirstRow = warTab.rows.length > 0 ? warTab.rows[0].row : 2;
     const warColCount = warTab.meta.columnCount;
     const warNorm = (s: string) => String(s ?? '').trim().toUpperCase();
     const warHeaders = warTab.meta.headers[0] || [];
-    // boss columns = everything except IGN / TOTAL POINTS / ATTENDANCE RATIO
     const warBossCols: number[] = [];
     for (let i = 0; i < warColCount; i++) {
       const h = warNorm(String(warHeaders[i] ?? ''));
@@ -1232,12 +1261,10 @@ api.post('/boss/war/distribute', requireAuth, requireAdmin, async (_req, res) =>
       }
     }
     if (warColCount > 1) {
-      // clear boss column headers only (keep TOTAL POINTS / ATTENDANCE RATIO headers)
       for (const ci of warBossCols) {
         const col = sheets.columnLetter(ci);
         warReset.push({ a1: `${col}1`, values: [['']] });
       }
-      // clear data cells for all non-IGN columns (boss + total + ratio)
       const firstDataCol = sheets.columnLetter(1);
       const lastDataCol = sheets.columnLetter(warColCount - 1);
       const dataRows = warMaxRow - warFirstRow + 1;
@@ -1249,17 +1276,15 @@ api.post('/boss/war/distribute', requireAuth, requireAdmin, async (_req, res) =>
       }
     }
     if (warReset.length > 0) await sheets.batchUpdateValues('WAR ATTENDANCE', warReset);
-    for (const r of warTab.rows) {
-      noteWrite('WAR ATTENDANCE', r.row, 1, '');
-    }
+    for (const r of warTab.rows) noteWrite('WAR ATTENDANCE', r.row, 1, '');
 
-    noteTabMutation('WAR ATTENDANCE HISTORY');
+    noteTabMutation('WAR DISTRIBUTION HISTORY');
     noteTabMutation('WAR ATTENDANCE');
     scheduleRefresh();
-    res.json({ ok: true, date, count: warTab.rows.length });
+    res.json({ ok: true, date, pool, totalBandPoints: totalPoints, rows });
   } catch (err) {
     console.error('[war] distribute failed:', err);
-    bad(res, 502, 'Could not write war attendance history');
+    bad(res, 502, 'Could not distribute war attendance');
   }
 });
 
@@ -1268,6 +1293,19 @@ api.post('/boss/participation/distribute', requireAuth, requireAdmin, async (_re
     const snap = getSnapshot();
     const histTab = snap.tabs.find((t) => t.meta.title.toUpperCase() === 'ACTIVE PARTICIPATION HISTORY');
     if (!histTab) return bad(res, 404, 'ACTIVE PARTICIPATION HISTORY tab not found');
+
+    const attTab = snap.tabs.find((t) => t.meta.title.toUpperCase() === 'BOSS ATTENDANCE');
+    const warTab = snap.tabs.find((t) => t.meta.title.toUpperCase() === 'WAR ATTENDANCE');
+    const attBossCols = (attTab?.meta.headers[0] || []).slice(2).filter((h) => String(h ?? '').trim() !== '');
+    const warBossCols = (warTab?.meta.headers[0] || []).filter((h) => {
+      const n = String(h ?? '').trim().toUpperCase();
+      return n && n !== 'IGN' && n !== 'TOTAL POINTS' && n !== 'TOTALPOINTS' && n !== 'ATTENDANCE RATIO' && n !== 'ATTENDANCERATIO';
+    });
+    // Only archive when BOTH attendances still have recorded data - otherwise one
+    // of them has already been reset and the archive would be incomplete.
+    if (attBossCols.length === 0 || warBossCols.length === 0) {
+      return res.json({ ok: true, skipped: true, reason: 'missing data' });
+    }
 
     const participation = computeParticipation(snap);
     const date = distributionDate(new Date());

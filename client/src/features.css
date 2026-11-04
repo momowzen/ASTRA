@@ -98,6 +98,12 @@
   text-align: right;
 }
 
+/* Active participation history: dated columns size to content, no auto-stretch. */
+.participation-history th,
+.participation-history td {
+  white-space: nowrap;
+}
+
 .attendance-board {
   display: flex;
   flex-direction: column;

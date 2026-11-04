@@ -12,10 +12,10 @@ export const TAB_KEYS: Record<string, string> = {
   'CLOAK COLLECTION': 'tab.cloakCollection',
   'BOSS ATTENDANCE': 'tab.bossAttendance',
   'BOSS CONFIG': 'tab.bossConfig',
-  'DISTRIBUTION HISTORY': 'tab.distributionHistory',
+  'BOSS DISTRIBUTION HISTORY': 'tab.distributionHistory',
   'CP HISTORY': 'tab.cpHistory',
   'WAR ATTENDANCE': 'tab.warAttendance',
-  'WAR ATTENDANCE HISTORY': 'tab.warAttendanceHistory',
+  'WAR DISTRIBUTION HISTORY': 'tab.warAttendanceHistory',
   'ACTIVE PARTICIPATION HISTORY': 'tab.activeParticipationHistory',
 };
 
