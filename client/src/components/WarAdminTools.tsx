@@ -31,7 +31,9 @@ function membersFromWar(data: DataResponse): { ign: string; points: number; rati
       points: totalIdx >= 0 ? intPoints(r.cells[totalIdx]) : 0,
       ratio: ratioIdx >= 0 ? parseRatio(r.cells[ratioIdx]) : 0,
     }))
-    .filter((m) => m.ign && (m.points >= 5 || m.ratio >= 50))
+    // Absolute threshold: 5 points = 50% of the 10-point maximum. Using the
+    // recorded-cycle ratio would include everyone early in the cycle.
+    .filter((m) => m.ign && m.points >= 5)
     .sort((a, b) => b.points - a.points || a.ign.localeCompare(b.ign));
 }
 

@@ -62,7 +62,7 @@ const DICT: Record<string, { en: string; ko: string; ja: string; zh: string }> =
   'login.systemsOnline': { en: 'Systems Online', ko: '시스템 온라인', ja: "システムオンライン", zh: '系统在线' },
   'login.systemsOffline': { en: 'Systems Offline', ko: '시스템 오프라인', ja: "システムオフライン", zh: '系统离线' },
 
-  'admin.trackerSection': { en: 'Boss Attendance Tracker', ko: '보스 출석 트래커', ja: "ボス出席トラッカー", zh: '首领出勤追踪' },
+  'admin.trackerSection': { en: 'Attendance Tracker', ko: '출석 추적기', ja: "出席トラッカー", zh: '出勤追踪' },
   'admin.rosterSection': { en: 'Guild Roster', ko: '길드 로스터', ja: "ギルドロスター", zh: '公会名单' },
   'admin.rosterOverview': { en: 'Overview', ko: '개요', ja: "概要", zh: '概览' },
   'admin.tag': { en: 'Admin', ko: '관리자', ja: "管理者", zh: '管理员' },
