@@ -1,10 +1,11 @@
-import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState, type ChangeEvent } from 'react';
 import { MEMBER_HIDDEN_TABS } from '../types';
 import type { Column, DataResponse, RosterMember, Session, TabData } from '../types';
-import { buildColumns, formatCp, isCpLabel, isDateLabel, isMark, MEMBER_ALWAYS_EDITABLE, MEMBER_READONLY, optionColor, timeInGuildParts, toIsoDate } from '../utils';
-import { ApiError, apiBase, saveCells } from '../api';
-import { IconBulb, IconClose, IconGear, IconGem, IconGrid, IconLogout, IconMenu, IconMusic, IconOverview, IconSheet, IconSparkles, IconTimer, IconTrendingUp, IconTrophy, IconUser, IconUsers } from './icons';
+import { buildColumns, fileToRawDataUrl, formatCp, isCpLabel, isDateLabel, isMark, isSupportedAvatar, MEMBER_ALWAYS_EDITABLE, MEMBER_READONLY, optionColor, timeInGuildParts, toIsoDate } from '../utils';
+import { ApiError, apiBase, saveCells, uploadAvatar } from '../api';
+import { IconBulb, IconCamera, IconClose, IconGear, IconGem, IconGrid, IconLogout, IconMenu, IconMusic, IconOverview, IconSheet, IconSparkles, IconTimer, IconTrendingUp, IconTrophy, IconUser, IconUsers } from './icons';
 import Avatar from './Avatar';
+import AvatarCropModal from './AvatarCropModal';
 import MemberSettingsModal from './MemberSettingsModal';
 import ProfileProgress from './ProfileProgress';
 import AttendancePodium from './AttendancePodium';
@@ -389,6 +390,9 @@ export default function MemberApp({
   const toolsFrameRef = useRef<HTMLIFrameElement>(null);
   const toolsCursorCleanupRef = useRef<(() => void) | null>(null);
   const [avatarOverride, setAvatarOverride] = useState<string | null | undefined>(undefined);
+  const heroAvatarInput = useRef<HTMLInputElement>(null);
+  const [heroCropSource, setHeroCropSource] = useState<string | null>(null);
+  const [heroAvatarBusy, setHeroAvatarBusy] = useState(false);
 
   const { t, lang } = useLang();
   const canEdit = data.memberEdit !== false;
@@ -457,6 +461,45 @@ export default function MemberApp({
     setToolsView(null);
     setMediaView(null);
     setMenuOpen(false);
+  }
+
+  /* Hero avatar upload: pick a file, crop it, then upload - same flow the
+     settings modal uses, but triggered from the profile picture itself. */
+  async function onHeroAvatarFile(e: ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (!file) return;
+    if (file.size > 4 * 1024 * 1024) {
+      toast(t('member.photoTooLarge'), 'err');
+      return;
+    }
+    if (!isSupportedAvatar(file)) {
+      toast(t('member.photoInvalid'), 'err');
+      return;
+    }
+    setHeroAvatarBusy(true);
+    try {
+      setHeroCropSource(await fileToRawDataUrl(file));
+    } catch {
+      toast(t('member.photoFailed'), 'err');
+    } finally {
+      setHeroAvatarBusy(false);
+    }
+  }
+
+  async function confirmHeroCrop(cropped: string) {
+    if (heroAvatarBusy) return;
+    setHeroAvatarBusy(true);
+    try {
+      const res = await uploadAvatar(cropped);
+      setAvatarOverride(res.url);
+      setHeroCropSource(null);
+      toast(t('member.photoUpdated'), 'ok');
+    } catch (err) {
+      toast(err instanceof ApiError ? err.message : t('member.photoFailed'), 'err');
+    } finally {
+      setHeroAvatarBusy(false);
+    }
   }
 
   function showTool(tool: ToolView) {
@@ -962,7 +1005,24 @@ export default function MemberApp({
             <div className="profile-hero">
               <div className="hero-sigil">
                 <Avatar ign={session.ign} src={ownAvatar} className="avatar" alt={session.ign} />
+                <button
+                  type="button"
+                  className="hero-sigil-edit"
+                  title={ownAvatar ? t('member.changePhoto') : t('member.uploadPhoto')}
+                  aria-label={ownAvatar ? t('member.changePhoto') : t('member.uploadPhoto')}
+                  onClick={() => heroAvatarInput.current?.click()}
+                  disabled={heroAvatarBusy}
+                >
+                  {heroAvatarBusy ? <span className="spinner" /> : <IconCamera />}
+                </button>
                 <span className="hero-sigil-ring" aria-hidden="true" />
+                <input
+                  ref={heroAvatarInput}
+                  className="avatar-input"
+                  type="file"
+                  accept="image/png,image/jpeg,image/webp"
+                  onChange={onHeroAvatarFile}
+                />
               </div>
               <div className="id">
                 <span className="hero-kicker">{t('member.profile')}</span>
@@ -1373,6 +1433,15 @@ export default function MemberApp({
           toast={toast}
           avatarUrl={ownAvatar}
           onAvatarUpdated={(url) => setAvatarOverride(url)}
+        />
+      )}
+
+      {heroCropSource && (
+        <AvatarCropModal
+          source={heroCropSource}
+          busy={heroAvatarBusy}
+          onCancel={() => setHeroCropSource(null)}
+          onConfirm={confirmHeroCrop}
         />
       )}
 

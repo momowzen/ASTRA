@@ -3035,6 +3035,53 @@ table.grid .labels.single th {
   border-radius: 50%;
   border: 1px dashed rgba(201, 138, 95, 0.45);
   animation: ring-rotate 34s linear infinite;
+  pointer-events: none;
+}
+
+/* Camera overlay on the profile picture: hidden until the avatar is hovered
+   or focused, so it doesn't take visual space until needed. */
+.hero-sigil-edit {
+  position: absolute;
+  inset: 0;
+  margin: auto;
+  z-index: 3;
+  display: grid;
+  place-items: center;
+  width: 76px;
+  height: 76px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: rgba(8, 13, 10, 0.55);
+  color: var(--gold-bright);
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity var(--dur-1), background var(--dur-1);
+}
+
+.hero-sigil:hover .hero-sigil-edit,
+.hero-sigil:focus-within .hero-sigil-edit {
+  opacity: 1;
+}
+
+.hero-sigil-edit:hover {
+  background: rgba(8, 13, 10, 0.72);
+}
+
+.hero-sigil-edit:disabled {
+  cursor: wait;
+}
+
+.hero-sigil-edit svg {
+  width: 22px;
+  height: 22px;
+}
+
+@media (hover: none) {
+  .hero-sigil-edit {
+    opacity: 1;
+    background: rgba(8, 13, 10, 0.32);
+  }
 }
 
 .profile-hero .id {
