@@ -104,6 +104,24 @@
   white-space: nowrap;
 }
 
+/* Boss / War distribution history use the generic admin grid, but their dated
+   columns should size to content like the Active Participation history view
+   instead of stretching to fill the table. */
+table.grid.history-fit {
+  width: max-content;
+}
+
+table.grid.history-fit th,
+table.grid.history-fit td {
+  white-space: nowrap;
+}
+
+/* Match the participation history's IGN divider (inset gold rule). */
+table.grid.history-fit th.ign-col,
+table.grid.history-fit td.ign-col {
+  box-shadow: inset -1px 0 0 rgba(201, 138, 95, 0.18);
+}
+
 .attendance-board {
   display: flex;
   flex-direction: column;
