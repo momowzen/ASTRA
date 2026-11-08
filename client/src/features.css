@@ -1998,6 +1998,18 @@ table.grid.dist-table thead th.ign-col {
   flex: none;
 }
 
+/* CP Update: dot on roster IGNs the screenshot scan matched. */
+.cp-match-dot {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  margin-right: 6px;
+  border-radius: 50%;
+  background: var(--green);
+  box-shadow: 0 0 6px rgba(127, 191, 155, 0.7);
+  vertical-align: middle;
+}
+
 .cp-upload {
   margin-bottom: 12px;
 }

@@ -56,6 +56,18 @@ export default function CpUpdate({ data, toast }: Props) {
   const readingRef = useRef(false);
   const pendingRead = useRef<Screenshot[] | null>(null);
 
+  /* IGNs the current screenshot scan matched to the roster, so the "Current CP"
+     list can flag them. Recomputed whenever the scanned rows are edited. */
+  const matchedIgns = useMemo(() => {
+    const rosterSet = new Set(roster.map((r) => r.ign));
+    const set = new Set<string>();
+    for (const it of items ?? []) {
+      const ign = it.ign.trim();
+      if (ign && it.cp.trim() && rosterSet.has(ign)) set.add(ign);
+    }
+    return set;
+  }, [items, roster]);
+
   function openManual(ign: string, cp: string) {
     setManual(ign);
     setManualCp(cp.replace(/[^\d]/g, ''));
@@ -199,24 +211,28 @@ export default function CpUpdate({ data, toast }: Props) {
             <span className="panel-count">{roster.length}</span>
           </div>
           <div className="cp-list">
-            {roster.map((r, i) => (
-              <div className="cp-row" key={r.ign}>
-                <Avatar
-                  ign={r.ign}
-                  src={data.avatars?.[r.ign.trim().toLowerCase()]}
-                  className="mini-avatar"
-                />
-                <button
-                  type="button"
-                  className="cp-ign"
-                  title={t('tools.cpManualEdit')}
-                  onClick={() => openManual(r.ign, r.cp)}
-                >
-                  {r.ign}
-                </button>
-                <span className="cp-val">{r.cp || '—'}</span>
-              </div>
-            ))}
+            {roster.map((r) => {
+              const matched = matchedIgns.has(r.ign);
+              return (
+                <div className={`cp-row${matched ? ' matched' : ''}`} key={r.ign}>
+                  <Avatar
+                    ign={r.ign}
+                    src={data.avatars?.[r.ign.trim().toLowerCase()]}
+                    className="mini-avatar"
+                  />
+                  <button
+                    type="button"
+                    className="cp-ign"
+                    title={t('tools.cpManualEdit')}
+                    onClick={() => openManual(r.ign, r.cp)}
+                  >
+                    {matched && <span className="cp-match-dot" title={t('tools.cpMatched')} aria-hidden="true" />}
+                    {r.ign}
+                  </button>
+                  <span className="cp-val">{r.cp || '—'}</span>
+                </div>
+              );
+            })}
           </div>
         </div>
 

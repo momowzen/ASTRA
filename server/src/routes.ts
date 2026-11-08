@@ -1529,6 +1529,10 @@ function prepareOcrReaders(
   if (ready.length === 0) {
     return { ok: false, status: 503, error: 'No AI reader key is configured on the server' };
   }
+  // Groq first: it's the fastest vision reader, and runOcrReader returns on the
+  // first success, so the ordering decides which provider answers. The rest
+  // keep their configured order and act as fallbacks.
+  ready.sort((a, b) => Number(b.name === 'Groq') - Number(a.name === 'Groq'));
   return { ok: true, ready };
 }
 
@@ -1552,29 +1556,6 @@ async function runOcrReader(
   return { ok: false, status: 502, error: errors.join(' | ') };
 }
 
-async function runOcrReadersAll(
-  image: string,
-  prompt: string,
-): Promise<{ ok: true; texts: string[] } | { ok: false; status: number; error: string }> {
-  const prep = prepareOcrReaders(image);
-  if (!prep.ok) return prep;
-
-  const settled = await Promise.allSettled(prep.ready.map((r) => r.read(image, prompt)));
-  const texts: string[] = [];
-  const errors: string[] = [];
-  settled.forEach((res, i) => {
-    if (res.status === 'fulfilled' && res.value.trim()) {
-      texts.push(res.value);
-    } else {
-      const msg = res.status === 'rejected' ? (res.reason as Error).message : 'empty reading';
-      console.error(`[ocr] ${prep.ready[i].name} failed:`, msg);
-      errors.push(`${prep.ready[i].name}: ${msg}`);
-    }
-  });
-  if (texts.length === 0) return { ok: false, status: 502, error: errors.join(' | ') || 'No reader produced text' };
-  return { ok: true, texts };
-}
-
 api.post('/ocr/attendance', requireAuth, requireAdmin, async (req, res) => {
   const result = await runOcrReader(String(req.body?.image ?? ''), ATTENDANCE_PROMPT);
   if (!result.ok) return bad(res, result.status, result.error);
@@ -1582,9 +1563,15 @@ api.post('/ocr/attendance', requireAuth, requireAdmin, async (req, res) => {
 });
 
 api.post('/ocr/cp', requireAuth, requireAdmin, async (req, res) => {
-  const result = await runOcrReadersAll(String(req.body?.image ?? ''), CP_PROMPT);
+  // Return as soon as the first provider produces a reading, exactly like the
+  // attendance reader. Previously every configured provider was awaited in
+  // parallel (and their outputs merged), so a slow/failing secondary provider
+  // (Gemini's multi-model fallback) held the whole response even though the
+  // first provider had already finished. The client still accepts an array so
+  // the response shape is unchanged.
+  const result = await runOcrReader(String(req.body?.image ?? ''), CP_PROMPT);
   if (!result.ok) return bad(res, result.status, result.error);
-  res.json({ texts: result.texts });
+  res.json({ texts: [result.text] });
 });
 
 api.post('/cp/update', requireAuth, requireAdmin, async (req, res) => {

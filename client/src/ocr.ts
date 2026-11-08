@@ -158,12 +158,10 @@ async function ocrCpAI(image: string): Promise<string[]> {
 }
 
 async function ocrCp(image: string): Promise<string[]> {
-  if (CP_READER === 'ai') {
-    try {
-      return await ocrCpAI(image);
-    } catch {
-    }
-  }
+  // Same AI vision route as the attendance reader: one request, first provider
+  // wins. Do not fall back to local Tesseract here - those multi-pass reads are
+  // far slower than the attendance flow and made CP scans feel stuck.
+  if (CP_READER === 'ai') return ocrCpAI(image);
   return runPasses(image, PSM.SINGLE_BLOCK, false);
 }
 
