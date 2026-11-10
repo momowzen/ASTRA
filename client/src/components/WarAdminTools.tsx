@@ -157,7 +157,7 @@ export default function WarAdminTools({ data, toast }: Props) {
             </div>
             <div className="stat-card">
               <div className="stat-label">{t('tools.members')}</div>
-              <div className="stat-value">{members.length}</div>
+              <div className="stat-value">{saved ? saved.rows.length : members.length}</div>
             </div>
             <div className="stat-card">
               <div className="stat-label">{t('tools.pool')}</div>

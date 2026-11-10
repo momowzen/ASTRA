@@ -1179,15 +1179,25 @@ api.post('/boss/war/distribute', requireAuth, requireAdmin, async (req, res) => 
       return Number.isFinite(n) ? n : 0;
     };
 
-    // Only IGNs with 5 points OR 50% score are included.
-    const members = warTab.rows
+    // Every IGN recorded in this war cycle, deduped case-insensitively.
+    const seenIgn = new Set<string>();
+    const allMembers = warTab.rows
       .map((r) => {
         const ign = (r.cells[0] || '').trim();
         const points = totalIdx >= 0 ? intPoints(r.cells[totalIdx]) : 0;
         const ratio = ratioIdx >= 0 ? parseRatio(r.cells[ratioIdx]) : 0;
         return { ign, points, ratio };
       })
-      .filter((m) => m.ign && (m.points >= 5 || m.ratio >= 50));
+      .filter((m) => {
+        if (!m.ign) return false;
+        const key = m.ign.toLowerCase();
+        if (seenIgn.has(key)) return false;
+        seenIgn.add(key);
+        return true;
+      });
+
+    // Only IGNs with 5 points OR 50% score receive a share of the pool.
+    const members = allMembers.filter((m) => m.points >= 5 || m.ratio >= 50);
 
     if (members.length === 0) return bad(res, 400, 'No members meet the 5-points / 50% threshold');
 
@@ -1200,7 +1210,16 @@ api.post('/boss/war/distribute', requireAuth, requireAdmin, async (req, res) => 
     if (members.length > 0) {
       diamonds.set(members[0].ign, (diamonds.get(members[0].ign) ?? 0) + remainder);
     }
-    const rows = members.map((m) => ({ ign: m.ign, points: m.points, diamonds: diamonds.get(m.ign) ?? 0 }));
+
+    // Members who attended but earned too few points still get archived with a
+    // 0 reward, so the history records the whole participating roster.
+    const rewarded = new Set(members.map((m) => m.ign.toLowerCase()));
+    const nonRecipients = allMembers.filter((m) => m.points > 0 && !rewarded.has(m.ign.toLowerCase()));
+
+    const rows = [
+      ...members.map((m) => ({ ign: m.ign, points: m.points, diamonds: diamonds.get(m.ign) ?? 0 })),
+      ...nonRecipients.map((m) => ({ ign: m.ign, points: m.points, diamonds: 0 })),
+    ].sort((a, b) => b.points - a.points || a.ign.localeCompare(b.ign));
 
     const date = distributionDate(new Date());
     const hHeaders = histTab.meta.headers[0] || ['IGN'];
@@ -1216,7 +1235,7 @@ api.post('/boss/war/distribute', requireAuth, requireAdmin, async (req, res) => 
 
     const ignRow = new Map<string, number>();
     for (const r of histTab.rows) {
-      const ign = (r.cells[0] || '').trim();
+      const ign = (r.cells[0] || '').trim().toLowerCase();
       if (ign && !ignRow.has(ign)) ignRow.set(ign, r.row);
     }
 
@@ -1230,7 +1249,7 @@ api.post('/boss/war/distribute', requireAuth, requireAdmin, async (req, res) => 
     const newRows: string[][] = [];
     for (const m of rows) {
       const pts = m.points > 0 ? String(m.points) : '';
-      const existing = ignRow.get(m.ign);
+      const existing = ignRow.get(m.ign.toLowerCase());
       if (existing) {
         writes.push({ a1: `${sheets.columnLetter(pointsCol)}${existing}`, values: [[pts]] });
         writes.push({ a1: `${sheets.columnLetter(rewardCol)}${existing}`, values: [[String(m.diamonds)]] });
