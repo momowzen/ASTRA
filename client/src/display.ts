@@ -32,6 +32,7 @@ export const COL_KEYS: Record<string, string> = {
   'LEGENDARY ACCESSORY DISTRIBUTION': 'col.legendaryAccDistribution',
   'RECEIVE LEG ACCE': 'col.receiveLegendaryAccessory',
   'RECEIVE LEGENDARY ACCESSORY': 'col.receiveLegendaryAccessory',
+  'BUY LEGENDARY ACCESSORY': 'col.buyLegendaryAccessory',
   'LEGENDARY CLOAK DISTRIBUTION': 'col.legendaryCloakDistribution',
   '5 PEICES SET ENCHANTMENT +15': 'col.fivePiece15',
   'GOLDBLOOD CLOAK+3': 'col.goldBloodCloak3',
@@ -153,6 +154,10 @@ const MEMBER_COL_OVERRIDES: Record<string, { label: string; values?: Record<stri
     values: { O: 'opt.wantAccessory.o', X: 'opt.wantAccessory.x' },
   },
   'RECEIVE LEGENDARY ACCESSORY': {
+    label: 'col.wantLegendaryAccessory',
+    values: { O: 'opt.wantAccessory.o', X: 'opt.wantAccessory.x' },
+  },
+  'BUY LEGENDARY ACCESSORY': {
     label: 'col.wantLegendaryAccessory',
     values: { O: 'opt.wantAccessory.o', X: 'opt.wantAccessory.x' },
   },

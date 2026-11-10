@@ -600,6 +600,7 @@ const DICT: Record<string, { en: string; ko: string; ja: string; zh: string }> =
   'col.legendaryCloakDistribution': { en: 'Legendary Cloak Distribution', ko: '레전더리 망토 분배', ja: "レジェンダリー・マント配分", zh: '传说披风分配' },
   'col.legendaryAccDistribution': { en: 'Legendary Accessory Distribution', ko: '레전더리 액세서리 분배', ja: "レジェンダリー・アクセサリー配分", zh: '传说饰品分配' },
   'col.receiveLegendaryAccessory': { en: 'Receive Legendary Accessory', ko: '레전더리 액세서리 수령', ja: "レジェンダリー・アクセサリー受領", zh: '传说饰品领取' },
+  'col.buyLegendaryAccessory': { en: 'Buy Legendary Accessory', ko: '레전더리 액세서리 구매', ja: "レジェンダリー・アクセサリー購入", zh: '购买传说饰品' },
   'col.legendaryCloakReceived': {
     en: 'HAVE YOU RECEIVED A LEGENDARY CLOAK FROM THE GUILD?',
     ko: '길드에서 레전더리 망토를 받으셨나요?', ja: "ギルドからレジェンダリー・マントを受け取りましたか？",
