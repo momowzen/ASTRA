@@ -142,6 +142,11 @@ function formatTime(seconds: number): string {
   return `${mins}:${String(secs).padStart(2, '0')}`;
 }
 
+/* The slider still reads 0-100%, but the audio graph multiplies the signal so
+   "100%" actually plays at 200% loudness. A limiter after the gain tames the
+   peaks that the extra headroom would otherwise clip. */
+const MUSIC_BOOST = 2;
+
 interface MediaMusicProps {
   active?: boolean;
   backgroundPlay?: boolean;
@@ -519,8 +524,21 @@ export default function MediaMusic({
       analyser.minDecibels = -90;
       analyser.maxDecibels = -10;
       analyser.smoothingTimeConstant = 0.5;
+      // Boost stage: the element volume stays capped at 1, so this gain is what
+      // makes the top of the slider louder than a normal 100% player. The
+      // compressor acts as a gentle limiter so boosted peaks do not clip.
+      const boost = context.createGain();
+      boost.gain.value = MUSIC_BOOST;
+      const limiter = context.createDynamicsCompressor();
+      limiter.threshold.value = -2;
+      limiter.knee.value = 0;
+      limiter.ratio.value = 20;
+      limiter.attack.value = 0.003;
+      limiter.release.value = 0.25;
       source.connect(analyser);
-      analyser.connect(context.destination);
+      analyser.connect(boost);
+      boost.connect(limiter);
+      limiter.connect(context.destination);
       audioCtxRef.current = context;
       sourceRef.current = source;
       analyserRef.current = analyser;
