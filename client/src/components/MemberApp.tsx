@@ -5,6 +5,7 @@ import { buildColumns, fileToRawDataUrl, formatCp, isCpLabel, isDateLabel, isMar
 import { ApiError, apiBase, saveCells, uploadAvatar } from '../api';
 import { IconBulb, IconCamera, IconClose, IconGear, IconGem, IconGrid, IconLogout, IconMenu, IconMusic, IconOverview, IconSheet, IconSparkles, IconTimer, IconTrendingUp, IconTrophy, IconUser, IconUsers } from './icons';
 import Avatar from './Avatar';
+import BrandLockup from './BrandLockup';
 import AvatarCropModal from './AvatarCropModal';
 import MemberSettingsModal from './MemberSettingsModal';
 import ProfileProgress from './ProfileProgress';
@@ -641,7 +642,7 @@ export default function MemberApp({
     if (!rosterTab || !rosterRow) return [] as { label: string; cls: string }[];
     const cols = buildColumns(rosterTab.meta);
     const out: { label: string; cls: string }[] = [];
-    for (const label of ['ROLE', 'CP', 'GUILD']) {
+    for (const label of ['GUILD', 'ROLE', 'CP']) {
       const c = cols.find((col) => col.label.trim().toUpperCase() === label);
       if (!c) continue;
       const v = (rosterRow.cells[c.index] || '').trim();
@@ -792,12 +793,9 @@ export default function MemberApp({
       >
         <div className="brand">
           <span className="brand-crest">
-            <img className="mark" src="./assets/logo.webp" alt="" />
+            <img className="mark" src="./assets/astra-crest-256.png" alt="" />
           </span>
-          <div className="brand-text">
-            <div className="name">ASTRA</div>
-            <div className="tag">{t('member.tag')}</div>
-          </div>
+          <BrandLockup tag={t('member.tag')} />
           <button
             className="drawer-close"
             aria-label={t('common.close')}
@@ -945,7 +943,7 @@ export default function MemberApp({
           </button>
           <div className="topbar-heading">
             <span className="topbar-brand">
-              <img className="topbar-logo" src="./assets/logo.webp" alt="" />
+              <img className="topbar-logo" src="./assets/astra-crest-256.png" alt="" />
               ASTRA
             </span>
           </div>
@@ -1015,7 +1013,6 @@ export default function MemberApp({
                 >
                   {heroAvatarBusy ? <span className="spinner" /> : <IconCamera />}
                 </button>
-                <span className="hero-sigil-ring" aria-hidden="true" />
                 <input
                   ref={heroAvatarInput}
                   className="avatar-input"
@@ -1043,7 +1040,7 @@ export default function MemberApp({
               <div className="hero-stats">
                 <div className="hero-stat">
                   <span>{t('member.rank')}</span>
-                  <strong>{myRankIndex >= 0 ? (myRankIndex + 1).toLocaleString('en-US') : '—'}</strong>
+                  <strong>{myRankIndex >= 0 ? `#${(myRankIndex + 1).toLocaleString('en-US')}` : '—'}</strong>
                 </div>
                 <div className="hero-stat">
                   <span>{t('boss.points')}</span>

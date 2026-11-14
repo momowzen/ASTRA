@@ -44,10 +44,7 @@ export default function ProfileProgress({ tabs, ign, tabText, onJump }: Props) {
 
   return (
     <div className="hero-progress">
-      <div className="hero-progress-head">
-        <span className="hero-progress-label">{t('member.progressLabel')}</span>
-        <span className="hero-progress-pct">{pct}%</span>
-      </div>
+      <span className="hero-progress-label">{t('member.progressLabel')}</span>
       <div
         className="progress-track"
         role="progressbar"
@@ -57,11 +54,13 @@ export default function ProfileProgress({ tabs, ign, tabText, onJump }: Props) {
       >
         <span className={`progress-fill ${pct >= 100 ? 'done' : ''}`} style={{ width: `${pct}%` }} />
       </div>
+      <span className="hero-progress-pct">{pct}%</span>
       {missingCount === 0 ? (
         <div className="hero-progress-done">{t('member.congrats')}</div>
       ) : (
         <button type="button" className="hero-progress-tip" onClick={() => setOpen(true)}>
           {t('member.showMissing')}
+          <span className="tip-count">{missingCount}</span>
           <span className="caret">▾</span>
         </button>
       )}

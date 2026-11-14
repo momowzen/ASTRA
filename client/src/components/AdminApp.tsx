@@ -18,6 +18,7 @@ import ActivityLog from './ActivityLog';
 import CpUpdate from './CpUpdate';
 import CpHistoryView from './CpHistoryView';
 import Avatar from './Avatar';
+import BrandLockup from './BrandLockup';
 import ProfileCompletion from './ProfileCompletion';
 import { LangToggle, useLang } from '../i18n';
 import { useNavSlider } from '../useNavSlider';
@@ -532,12 +533,9 @@ export default function AdminApp({
       >
         <div className="brand">
           <span className="brand-crest">
-            <img className="mark" src="./assets/logo.webp" alt="" />
+            <img className="mark" src="./assets/astra-crest-256.png" alt="" />
           </span>
-          <div className="brand-text">
-            <div className="name">ASTRA</div>
-            <div className="tag">{t('admin.tag')}</div>
-          </div>
+          <BrandLockup tag={t('admin.tag')} />
           <button
             className="drawer-close"
             aria-label={t('common.close')}

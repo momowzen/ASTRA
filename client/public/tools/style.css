@@ -737,3 +737,115 @@
 
 .astra-header,
 .status-bar { display: none !important; }
+
+    /* ============================================================
+       ASTRA HUD - in-game menu overlay
+       Appended last: same-specificity rules win over the base set.
+       ============================================================ */
+
+    /* Near-square plates */
+    .live-pill { border-radius: var(--radius-sm); }
+    .nav-pill { border-radius: var(--radius-sm); padding: 3px; }
+    .nav-indicator { border-radius: var(--radius-sm); }
+    .nav-btn { border-radius: var(--radius-sm); letter-spacing: 0.14em; }
+    .nav-btn.active { color: #f2eee1; background: rgba(224, 190, 122, 0.09); }
+    .segmented { border-radius: var(--radius-sm); }
+    .segmented .seg-btn { border-radius: var(--radius-sm); }
+    .segmented .seg-btn.active {
+      color: #ecd6a2;
+      background: rgba(224, 190, 122, 0.13);
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+    }
+    .segmented .seg-btn:focus-visible,
+    .seg-btn:focus-visible { outline-color: rgba(236, 214, 162, 0.8); }
+
+    /* Framed panels: warm hairline + corner ticks that brighten on hover */
+    .panel { position: relative; }
+    .panel::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      z-index: 2;
+      pointer-events: none;
+      border-radius: inherit;
+      opacity: 0.75;
+      transition: opacity var(--duration-normal) var(--ease-smooth);
+      background:
+        linear-gradient(var(--tick), var(--tick)) left 0 top 0 / 14px 1px,
+        linear-gradient(var(--tick), var(--tick)) left 0 top 0 / 1px 14px,
+        linear-gradient(var(--tick), var(--tick)) right 0 top 0 / 14px 1px,
+        linear-gradient(var(--tick), var(--tick)) right 0 top 0 / 1px 14px,
+        linear-gradient(var(--tick), var(--tick)) left 0 bottom 0 / 14px 1px,
+        linear-gradient(var(--tick), var(--tick)) left 0 bottom 0 / 1px 14px,
+        linear-gradient(var(--tick), var(--tick)) right 0 bottom 0 / 14px 1px,
+        linear-gradient(var(--tick), var(--tick)) right 0 bottom 0 / 1px 14px;
+      background-repeat: no-repeat;
+    }
+    .panel:hover::after { opacity: 1; }
+    .panel:hover { border-color: rgba(224, 190, 122, 0.3); box-shadow: var(--shadow-lg), inset 0 1px 0 var(--glass-highlight); }
+
+    /* Panel titles: mono caps with a gold bar, like the main app */
+    .panel-title {
+      font-family: var(--font-mono);
+      font-size: 0.68rem;
+      font-weight: 600;
+      letter-spacing: 0.22em;
+      color: #eae6da;
+    }
+    .panel-title::before {
+      content: "";
+      flex: none;
+      width: 3px;
+      height: 12px;
+      background: linear-gradient(180deg, #ecd6a2, #96683f);
+      box-shadow: 0 0 8px rgba(236, 214, 162, 0.35);
+    }
+    .panel-count {
+      border: 1px solid rgba(236, 214, 162, 0.28);
+      background: rgba(224, 190, 122, 0.07);
+      color: var(--soft-gold);
+      border-radius: var(--radius-sm);
+      letter-spacing: 0.08em;
+    }
+
+    /* Boss list cards: flat on a warm hairline, gold tick on hover */
+    .boss-card { background: rgba(226, 216, 192, 0.02); border-color: var(--glass-border); }
+    .boss-card:hover {
+      background: linear-gradient(90deg, rgba(224, 190, 122, 0.08), rgba(224, 190, 122, 0.02) 60%, transparent);
+      border-color: rgba(224, 190, 122, 0.3);
+      box-shadow: none;
+    }
+
+    /* Interval + schedule cards: champagne top edge instead of teal */
+    .interval-card::before { background: linear-gradient(90deg, rgba(236, 214, 162, 0.75), rgba(150, 104, 63, 0.4)); opacity: 0.45; }
+    .interval-card:hover::before { opacity: 0.85; }
+    .interval-card.highlight { border-color: rgba(236, 214, 162, 0.34); background: linear-gradient(135deg, rgba(224, 190, 122, 0.08), rgba(255, 255, 255, 0.02)); box-shadow: 0 0 20px rgba(224, 190, 122, 0.1); }
+    .interval-card.highlight::before { background: linear-gradient(90deg, #ecd6a2, #c69c5d); opacity: 0.9; }
+    .interval-title { color: var(--soft-gold); }
+    .day-header { color: var(--soft-gold); }
+    .day-card.today { border-color: rgba(236, 214, 162, 0.35); background: linear-gradient(135deg, rgba(224, 190, 122, 0.07), rgba(255, 255, 255, 0.02)); box-shadow: 0 0 20px rgba(224, 190, 122, 0.08); }
+    .day-card.today .day-header { color: #f0dfae; border-bottom-color: rgba(236, 214, 162, 0.25); }
+
+    /* Hero plate: champagne name + warm hover */
+    .hero-next:hover { border-color: rgba(224, 190, 122, 0.32); box-shadow: var(--shadow-xl), 0 0 44px rgba(224, 190, 122, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.05); }
+    .hero-name {
+      background: linear-gradient(180deg, #fbf7ec 0%, #e7dcc0 52%, #b8a97f 100%);
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+      color: transparent;
+    }
+    .hero-status-ring .track { stroke: rgba(226, 216, 192, 0.13); }
+
+    /* Hidden-class + relic cards get the same frame */
+    .class-card, .relic-card, .relic-grand-cell { border-color: var(--glass-border); }
+    .class-card:hover { box-shadow: var(--shadow-xl), 0 0 32px rgba(224, 190, 122, 0.1); }
+    .relic-card.active { border-color: rgba(236, 214, 162, 0.35); background: rgba(224, 190, 122, 0.05); }
+    .relic-num:focus { border-color: rgba(236, 214, 162, 0.5); }
+    .relic-stepper:hover { border-color: rgba(236, 214, 162, 0.3); }
+
+    /* Guild badge 3: soften the rose so it sits in the palette */
+    .guild-badge.guild-3, .hero-guild-badge.guild-3 { color: #e08070; border-color: rgba(224, 128, 112, 0.28); background: rgba(224, 128, 112, 0.09); }
+
+    /* Page switch fade - the tabs change like menu screens */
+    .page.active { animation: page-in 240ms ease both; }

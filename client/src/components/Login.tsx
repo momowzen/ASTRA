@@ -48,106 +48,93 @@ export default function Login({ onDone }: { onDone: (session: Session) => void }
 
   return (
     <div className="auth">
-      <section className="auth-scene" aria-hidden="true">
-        <div className="auth-scene-grid" />
-        <div className="auth-crest-wrap">
+      {/* HUD chrome: viewport corner brackets */}
+      <div className="auth-frame" aria-hidden="true" />
+
+      <div className="auth-lang">
+        <LangToggle />
+      </div>
+
+      <main className="auth-stage">
+        <div className="auth-crest-wrap" aria-hidden="true">
           <div className="auth-crest-halo" />
           <div className="auth-crest-ring auth-crest-ring--outer" />
           <div className="auth-crest-ring auth-crest-ring--inner" />
-          <img className="auth-crest" src="./assets/logo.webp" alt="" />
+          <div className="auth-crest-arc" />
+          <img className="auth-crest" src="./assets/astra-crest.png" alt="" />
         </div>
-        <div className="auth-scene-copy">
-          <span className="eyebrow">
-            <span className="eyebrow-rule" />
-            {t('login.tag')}
-          </span>
-          <p className="auth-scene-line">{t('login.sub')}</p>
-          <div className="auth-scene-tags">
-            <span>{t('login.roster')}</span>
-            <span>{t('login.attendance')}</span>
-            <span>{t('login.distribution')}</span>
+
+        <h1 className="auth-wordmark">ASTRA</h1>
+        <p className="auth-tagline">
+          <span className="auth-tagline-slash">//</span> {t('login.tag')}
+        </p>
+
+        <form className="auth-console" onSubmit={submit}>
+          <div className="auth-console-head">
+            <span className="auth-console-title">{t('login.secureAccess')}</span>
+            <span
+              className={`auth-console-status${online === false ? ' offline' : ''}`}
+              aria-live="polite"
+            >
+              <span className="status-dot" />
+              {online === false ? t('login.systemsOffline') : t('login.systemsOnline')}
+            </span>
           </div>
-        </div>
-        <div className="auth-scene-foot">
-          <span className="mono">ASTRA // {t('login.tag')}</span>
-          <span className="mono">{t('login.secureChannel')}</span>
-        </div>
-      </section>
 
-      <section className="auth-card">
-        <div className="auth-lang">
-          <LangToggle />
-        </div>
+          {error && <div className="error">{error}</div>}
 
-        <div className="auth-mobile-brand">
-          <img src="./assets/logo.webp" alt="" />
-          <span>ASTRA</span>
-        </div>
-
-        <div className="auth-card-body">
-          <span className="eyebrow">
-            <span className="eyebrow-rule" />
-            {t('login.secureAccess')}
-          </span>
-          <h1>{t('login.welcome')}</h1>
-          <p className="sub">{t('login.sub')}</p>
-
-          <form onSubmit={submit}>
-            {error && <div className="error">{error}</div>}
-            <div className="field">
-              <label htmlFor="u">{t('login.username')}</label>
-              <input
-                id="u"
-                className="input"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                placeholder={t('login.usernamePh')}
-                autoFocus
-                autoComplete="username"
-              />
-            </div>
-            <div className="field">
-              <label htmlFor="p">{t('login.password')}</label>
-              <input
-                id="p"
-                className="input"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="••••••••"
-                autoComplete="current-password"
-              />
-            </div>
-            <button className="btn btn-primary auth-submit" type="submit" disabled={busy}>
-              {busy ? (
-                <span className="spinner" />
-              ) : (
-                <>
-                  {t('login.signIn')}
-                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M5 12h14" />
-                    <path d="m13 6 6 6-6 6" />
-                  </svg>
-                </>
-              )}
-            </button>
-          </form>
-
-          <div className="hint">
-            <strong>{t('login.members')}:</strong> {t('login.hint')}
+          <div className="field">
+            <label htmlFor="u">{t('login.username')}</label>
+            <input
+              id="u"
+              className="input"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              placeholder={t('login.usernamePh')}
+              autoFocus
+              autoComplete="username"
+              spellCheck={false}
+            />
           </div>
-        </div>
+          <div className="field">
+            <label htmlFor="p">{t('login.password')}</label>
+            <input
+              id="p"
+              className="input"
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="••••••••"
+              autoComplete="current-password"
+            />
+          </div>
 
-        <div className="auth-card-foot">
-          <span className={`auth-foot-status${online === false ? ' offline' : ''}`} aria-live="polite">
-            <span className="status-dot" />
-            {online === false ? t('login.systemsOffline') : t('login.systemsOnline')}
-          </span>
-          <span className="mono" title={`commit ${APP_COMMIT}`}>
-            v{APP_VERSION}
-          </span>
-        </div>
-      </section>
+          <button className="btn btn-primary auth-submit" type="submit" disabled={busy}>
+            {busy ? (
+              <span className="spinner" />
+            ) : (
+              <>
+                {t('login.signIn')}
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <path d="M5 12h14" />
+                  <path d="m13 6 6 6-6 6" />
+                </svg>
+              </>
+            )}
+          </button>
+
+          <p className="auth-console-foot">
+            <span className="auth-console-note">&gt; {t('login.members')} —</span> {t('login.hint')}
+          </p>
+        </form>
+      </main>
+
+      <footer className="auth-bar">
+        <span className="auth-bar-mid mono">AUTHORIZED PERSONNEL ONLY</span>
+        <span className="mono" title={`commit ${APP_COMMIT}`}>
+          v{APP_VERSION}
+        </span>
+      </footer>
     </div>
   );
 }
