@@ -756,14 +756,8 @@
     inset: 12px;
   }
 
-  .intro-meta {
-    bottom: 9vh;
-    font-size: var(--fs-micro);
-    letter-spacing: 0.2em;
-  }
-
-  .intro-meta-rule {
-    width: 18px;
+  .intro-corner--bl {
+    display: none;
   }
 
   /* Admin uses the same top tab strip on mobile; the drawer exposes full navigation. */
@@ -961,7 +955,9 @@
   .hero-sigil,
   .hero-sigil::before,
   .hero-sigil::after,
-  .intro-stars,
+  .intro-crest,
+  .intro-halo,
+  .intro-ring,
   .attendance-arc,
   .dist-fill,
   .progress-fill,
@@ -969,36 +965,6 @@
   .live .dot {
     animation: none !important;
     transition: none !important;
-  }
-
-  .intro .con-star {
-    opacity: 1 !important;
-    animation: none !important;
-  }
-  .intro .con-link {
-    opacity: 0.22 !important;
-    animation: none !important;
-  }
-  .intro .stroke {
-    opacity: 1 !important;
-    animation: none !important;
-  }
-  .intro .trace-glow,
-  .intro .trace-core {
-    stroke-dashoffset: 0 !important;
-    animation: none !important;
-  }
-  .intro .trace-beam {
-    display: none !important;
-  }
-  .intro-word {
-    animation: intro-word-out 0.4s ease 0.6s both;
-  }
-  .intro-meta {
-    animation: intro-meta-in 0.3s ease 0.3s both, intro-word-out 0.3s ease 0.7s both;
-  }
-  .intro {
-    animation: intro-bg-out 0.5s ease 0.8s both;
   }
 }
 

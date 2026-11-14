@@ -22,7 +22,7 @@ const DICT: Record<string, { en: string; ko: string; ja: string; zh: string }> =
     zh: '电子表格没有可见的标签页，或服务账号已失去访问权限。',
   },
 
-  'intro.skip': { en: 'Skip', ko: '건너뛰기', ja: "スキップ", zh: '跳过' },
+
 
   'common.signOut': { en: 'Sign out', ko: '로그아웃', ja: "ログアウト", zh: '退出登录' },
   'common.settings': { en: 'Settings', ko: '설정', ja: "設定", zh: '设置' },

@@ -43,9 +43,13 @@ function forgetRememberedView(session: Session): void {
 }
 
 export default function App() {
+  /* A hidden tab never shows the cinematic - the gate must be visible. */
+  const visibleAtMount = typeof document === 'undefined' || document.visibilityState === 'visible';
   const [session, setSession] = useState<Session | null>(() => getSession());
-  const [intro, setIntro] = useState(() => !getSession());
+  const [intro, setIntro] = useState(() => !getSession() && visibleAtMount);
+  const [introExiting, setIntroExiting] = useState(() => !!getSession() || !visibleAtMount);
   const finishIntro = useCallback(() => setIntro(false), []);
+  const beginIntroExit = useCallback(() => setIntroExiting(true), []);
   const [data, setData] = useState<DataResponse | null>(null);
   const [error, setError] = useState('');
   const [toasts, setToasts] = useState<Toast[]>([]);
@@ -267,12 +271,15 @@ export default function App() {
     <LangProvider lang={lang} setLang={setLangPersist}>
       <Background />
       {/* inert while the intro plays so the login form can't be focused (which would trigger the browser's password autofill popup); it stays mounted underneath so the fade reveals it with no flash */}
-      <div className="app-body" {...({ inert: intro ? '' : undefined } as Record<string, unknown>)}>
+      <div
+        className={`app-body${introExiting ? '' : ' is-intro'}`}
+        {...({ inert: intro ? '' : undefined } as Record<string, unknown>)}
+      >
         {body}
       </div>
       <Toasts items={toasts} />
       <CursorFX />
-      {intro && <LoadingScreen onDone={finishIntro} />}
+      {intro && <LoadingScreen onDone={finishIntro} onExitStart={beginIntroExit} />}
     </LangProvider>
   );
 }

@@ -255,6 +255,17 @@ select option {
   position: relative;
   z-index: 1;
   min-height: 100%;
+  transition: transform 0.62s var(--ease-out);
+  will-change: transform;
+}
+
+/* Hidden under the intro. Never gate opacity/filter here: if the tab is
+   hidden the compositor freezes all motion, and the gate must still be
+   visible the moment the intro unmounts. Transform alone is survivable —
+   a frozen 4% zoom still gives a perfectly usable login screen. */
+.app-body.is-intro {
+  transform: scale(1.05) translate3d(0, -10px, 0);
+  pointer-events: none;
 }
 
 .mono {
