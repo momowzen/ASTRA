@@ -657,17 +657,16 @@ select option {
   text-transform: uppercase;
   margin: 0;
   color: #eae6da;
-  display: flex;
-  align-items: center;
-  gap: 10px;
 }
 
 .panel-card h3::before,
 .table-card h3::before {
   content: '';
-  flex: none;
+  display: inline-block;
   width: 3px;
-  height: 13px;
+  height: 12px;
+  margin-right: 9px;
+  vertical-align: -1.5px;
   background: linear-gradient(180deg, #ecd6a2, #96683f);
   box-shadow: 0 0 8px rgba(236, 214, 162, 0.35);
 }

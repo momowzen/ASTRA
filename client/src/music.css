@@ -281,6 +281,12 @@
   letter-spacing: 0.035em;
   color: #f0ede3;
   overflow-wrap: anywhere;
+  text-align: center;
+}
+
+/* Hero track title, not a section header - no tick bar */
+.music-track-copy h3::before {
+  content: none;
 }
 
 .music-track-meta {
