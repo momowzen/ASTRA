@@ -626,7 +626,7 @@ function DashboardView({ attendanceTab, avatars }: { attendanceTab: TabData | un
   }, [attendanceTab]);
 
   const topPoints = leaderboard[0]?.points ?? 0;
-  const threshold = topPoints > 0 ? Math.max(1, Math.round(topPoints * 0.3)) : 0;
+  const threshold = topPoints > 0 ? Math.max(1, Math.round(topPoints * 0.4)) : 0;
   const inBand = (points: number) => threshold > 0 && points >= threshold;
   const bandCount = leaderboard.filter((x) => inBand(x.points)).length;
 

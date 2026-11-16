@@ -911,7 +911,7 @@ api.post('/boss/distribute', requireAuth, requireAdmin, async (req, res) => {
       .filter((m) => m.ign)
       .sort((a, b) => b.points - a.points || a.ign.localeCompare(b.ign));
     const topPoints = members[0]?.points ?? 0;
-    const threshold = topPoints > 0 ? Math.max(1, Math.round(topPoints * 0.3)) : 0;
+    const threshold = topPoints > 0 ? Math.max(1, Math.round(topPoints * 0.4)) : 0;
     const band = members.filter((m) => threshold > 0 && m.points >= threshold);
     if (band.length === 0) return bad(res, 400, 'No points to distribute yet');
 

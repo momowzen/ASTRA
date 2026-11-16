@@ -775,7 +775,7 @@ export default function MemberApp({
 
   const leaderboard = data.leaderboard ?? [];
   const lbTop = leaderboard[0]?.points ?? 0;
-  const lbThreshold = lbTop > 0 ? Math.max(1, Math.round(lbTop * 0.3)) : 0;
+  const lbThreshold = lbTop > 0 ? Math.max(1, Math.round(lbTop * 0.4)) : 0;
   const inBand = (p: number) => lbThreshold > 0 && p >= lbThreshold;
   const myPoints = leaderboard.find((x) => x.ign.trim().toLowerCase() === session.ign.trim().toLowerCase())?.points ?? 0;
   const myRankIndex = leaderboard.findIndex((x) => x.ign.trim().toLowerCase() === session.ign.trim().toLowerCase());

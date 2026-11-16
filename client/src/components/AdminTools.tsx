@@ -42,7 +42,7 @@ export default function AdminTools({ data, toast }: Props) {
   const distTitle = tabLabel('BOSS DISTRIBUTION HISTORY', t, lang);
   const members = useMemo(() => membersFromData(data), [data]);
   const topPoints = members[0]?.points ?? 0;
-  const threshold = topPoints > 0 ? Math.max(1, Math.round(topPoints * 0.3)) : 0;
+  const threshold = topPoints > 0 ? Math.max(1, Math.round(topPoints * 0.4)) : 0;
   const band = useMemo(
     () => members.filter((m) => threshold > 0 && m.points >= threshold),
     [members, threshold],
@@ -70,7 +70,7 @@ export default function AdminTools({ data, toast }: Props) {
   const base: DistributionBand[] = saved ? saved.rows : preview;
   const showDiamonds = !!saved || poolValid;
   const top = base.reduce((m, r) => Math.max(m, r.points), 0);
-  const displayThr = top > 0 ? Math.max(1, Math.round(top * 0.3)) : 0;
+  const displayThr = top > 0 ? Math.max(1, Math.round(top * 0.4)) : 0;
   const displayRows = displayThr > 0 ? base.filter((r) => r.points >= displayThr) : [];
 
   const tableBoxRef = useRef<HTMLDivElement>(null);

@@ -443,7 +443,7 @@ const DICT: Record<string, { en: string; ko: string; ja: string; zh: string }> =
   'boss.membersWithPoints': { en: 'Members with points', ko: '포인트 보유 멤버', ja: "ポイント保有メンバー", zh: '拥有积分的成员' },
   'boss.bossesTracked': { en: 'Bosses tracked', ko: '추적 중인 보스', ja: "追跡中のボス", zh: '追踪中的首领' },
   'boss.membersOnBoard': { en: 'members on the board', ko: '명이 순위표에 있습니다', ja: "名がランクボードにいます", zh: '名成员在排行榜上' },
-  'boss.top30': { en: 'Top 30%', ko: '상위 30%', ja: "上位30%", zh: '前 30%' },
+  'boss.top30': { en: 'Top 40%', ko: '상위 40%', ja: "上位40%", zh: '前 40%' },
   'boss.top30Meta': {
     en: '{n} top contributors',
     ko: '상위 기여자 {n}명',
@@ -465,7 +465,7 @@ const DICT: Record<string, { en: string; ko: string; ja: string; zh: string }> =
   'tools.distribution': { en: 'Boss attendance distribution', ko: '보스 출석 분배', ja: "ボス出席分配", zh: '首领出勤分配' },
   'tools.warDistribution': { en: 'War Attendance Distribution', ko: '전쟁 출석 분배', ja: "戦争出席分配", zh: '战争出勤分配' },
   'tools.distTitle': { en: 'Boss Attendance Distribution', ko: '보스 출석 분배', ja: "ボス出席分配", zh: '首领出勤分配' },
-  'tools.band': { en: 'Top 30% contributors', ko: '상위 30% 기여자', ja: "上位30%貢献者", zh: '前 30% 贡献者' },
+  'tools.band': { en: 'Top 40% contributors', ko: '상위 40% 기여자', ja: "上位40%貢献者", zh: '前 40% 贡献者' },
   'tools.pool': { en: 'Diamond pool', ko: '다이아몬드 풀', ja: "ダイヤモンドプール", zh: '钻石池' },
   'tools.save': { en: 'Save', ko: '저장', ja: "保存", zh: '保存' },
   'tools.savedNote': { en: 'Saved to {title}', ko: '{title}에 저장됨', ja: "{title}に保存済み", zh: '已保存到 {title}' },
