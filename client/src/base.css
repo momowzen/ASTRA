@@ -876,18 +876,17 @@ select option {
 
 .auth-wordmark {
   margin: 2px 0 6px;
-  padding-left: 0.34em;
-  font-family: var(--display);
-  font-size: clamp(40px, 6.6vw, 58px);
-  font-weight: 800;
-  letter-spacing: 0.34em;
-  line-height: 1;
-  background: linear-gradient(180deg, #fdfaf0 0%, #ecdfb8 45%, #c9a76c 78%, #8a6742 100%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-  filter: drop-shadow(0 4px 22px rgba(236, 214, 162, 0.16));
+  padding: 0;
+  line-height: 0;
   user-select: none;
+}
+
+.auth-wordmark-img {
+  display: block;
+  width: clamp(230px, 38vw, 380px);
+  height: auto;
+  user-select: none;
+  filter: drop-shadow(0 16px 32px rgba(0, 0, 0, 0.6));
 }
 
 .auth-tagline {
@@ -1072,8 +1071,8 @@ select option {
     margin-bottom: 0;
   }
 
-  .auth-wordmark {
-    font-size: clamp(30px, 5vw, 40px);
+  .auth-wordmark-img {
+    width: clamp(215px, 40vw, 300px);
   }
 
   .auth-tagline {

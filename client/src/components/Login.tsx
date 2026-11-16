@@ -64,7 +64,16 @@ export default function Login({ onDone }: { onDone: (session: Session) => void }
           <img className="auth-crest" src="./assets/astra-crest.png" alt="" />
         </div>
 
-        <h1 className="auth-wordmark">ASTRA</h1>
+        <h1 className="auth-wordmark">
+          <img
+            className="auth-wordmark-img"
+            src="./assets/astra-wordmark.webp"
+            alt="ASTRA"
+            width={1600}
+            height={533}
+            draggable={false}
+          />
+        </h1>
         <p className="auth-tagline">
           <span className="auth-tagline-slash">//</span> {t('login.tag')}
         </p>

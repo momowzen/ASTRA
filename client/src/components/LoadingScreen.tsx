@@ -96,7 +96,16 @@ export default function LoadingScreen({ onDone, onExitStart }: { onDone: () => v
           <img className="intro-crest" src="./assets/astra-crest.png" alt="" />
         </div>
 
-        <h1 className="intro-wordmark">ASTRA</h1>
+        <h1 className="intro-wordmark">
+          <img
+            className="intro-wordmark-img"
+            src="./assets/astra-wordmark.webp"
+            alt="ASTRA"
+            width={1600}
+            height={533}
+            draggable={false}
+          />
+        </h1>
         <p className="intro-tagline">
           <span className="intro-tagline-slash">//</span> {t('login.tag')}
         </p>

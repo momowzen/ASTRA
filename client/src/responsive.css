@@ -731,11 +731,6 @@
     display: none;
   }
 
-  .auth-wordmark {
-    letter-spacing: 0.26em;
-    padding-left: 0.26em;
-  }
-
   .auth-bar {
     left: 16px;
     right: 16px;

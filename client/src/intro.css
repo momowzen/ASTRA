@@ -287,34 +287,32 @@
   }
 }
 
-/* Wordmark condenses out of wide tracking */
+/* Wordmark rises and de-blurs as it materializes */
 .intro-wordmark {
   margin: 6px 0 6px;
-  padding-left: 0.34em;
-  font-family: var(--display);
-  font-size: clamp(44px, 9vw, 72px);
-  font-weight: 800;
-  line-height: 1;
-  letter-spacing: 0.34em;
-  background: linear-gradient(180deg, #fdfaf0 0%, #ecdfb8 45%, #c9a76c 78%, #8a6742 100%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-  filter: drop-shadow(0 4px 22px rgba(236, 214, 162, 0.18));
+  line-height: 0;
   user-select: none;
   animation: wordmark-in 1.15s cubic-bezier(0.16, 1, 0.3, 1) 0.62s both;
+}
+
+.intro-wordmark-img {
+  display: block;
+  width: clamp(280px, 52vw, 470px);
+  height: auto;
+  user-select: none;
+  filter: drop-shadow(0 18px 34px rgba(0, 0, 0, 0.62));
 }
 
 @keyframes wordmark-in {
   from {
     opacity: 0;
-    letter-spacing: 0.72em;
-    filter: blur(6px);
+    transform: translateY(16px) scale(0.955);
+    filter: blur(10px) brightness(1.9);
   }
   to {
     opacity: 1;
-    letter-spacing: 0.34em;
-    filter: blur(0);
+    transform: translateY(0) scale(1);
+    filter: blur(0) brightness(1);
   }
 }
 
@@ -477,8 +475,8 @@
     height: 132px;
   }
 
-  .intro-wordmark {
-    font-size: clamp(34px, 10vw, 44px);
+  .intro-wordmark-img {
+    width: clamp(230px, 68vw, 340px);
   }
 
   .intro-tagline {
@@ -512,5 +510,9 @@
   .intro {
     animation: none !important;
     opacity: 1 !important;
+  }
+
+  .intro-wordmark {
+    animation: none;
   }
 }
