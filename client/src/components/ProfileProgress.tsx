@@ -1,4 +1,5 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import type { TabData } from '../types';
 import { profileColumns } from '../utils';
 import { useLang } from '../i18n';
@@ -14,6 +15,42 @@ interface Props {
 export default function ProfileProgress({ tabs, ign, tabText, onJump }: Props) {
   const { t, lang } = useLang();
   const [open, setOpen] = useState(false);
+  const [pos, setPos] = useState<{ top: number; right: number } | null>(null);
+  const tipRef = useRef<HTMLSpanElement>(null);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  /* Anchor the portalled dropdown to the tip button. */
+  const place = () => {
+    const el = tipRef.current;
+    if (!el) return;
+    const r = el.getBoundingClientRect();
+    setPos({ top: r.bottom + 8, right: Math.max(8, window.innerWidth - r.right) });
+  };
+
+  /* Close on click-away / Escape; re-anchor on resize & scroll. */
+  useEffect(() => {
+    if (!open) return;
+    place();
+    const onPointerDown = (e: PointerEvent) => {
+      const t = e.target as Node;
+      if (tipRef.current?.contains(t) || dropdownRef.current?.contains(t)) return;
+      setOpen(false);
+    };
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setOpen(false);
+    };
+    window.addEventListener('pointerdown', onPointerDown, true);
+    window.addEventListener('keydown', onKeyDown);
+    window.addEventListener('resize', place);
+    window.addEventListener('scroll', place, true);
+    return () => {
+      window.removeEventListener('pointerdown', onPointerDown, true);
+      window.removeEventListener('keydown', onKeyDown);
+      window.removeEventListener('resize', place);
+      window.removeEventListener('scroll', place, true);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open]);
 
   const { pct, groups } = useMemo(() => {
     const want = ign.trim().toLowerCase();
@@ -58,55 +95,64 @@ export default function ProfileProgress({ tabs, ign, tabText, onJump }: Props) {
       {missingCount === 0 ? (
         <div className="hero-progress-done">{t('member.congrats')}</div>
       ) : (
-        <button type="button" className="hero-progress-tip" onClick={() => setOpen(true)}>
-          {t('member.showMissing')}
-          <span className="tip-count">{missingCount}</span>
-          <span className="caret">▾</span>
-        </button>
+        <span className="hero-progress-tip-wrap" ref={tipRef}>
+          <button
+            type="button"
+            className="hero-progress-tip"
+            aria-expanded={open}
+            aria-haspopup="true"
+            onClick={() => setOpen((v) => !v)}
+          >
+            {t('member.showMissing')}
+            <span className="tip-count">{missingCount}</span>
+            <span className={`caret${open ? ' caret--open' : ''}`} aria-hidden="true">
+              ▾
+            </span>
+          </button>
+        </span>
       )}
 
-      {open && missingCount > 0 && (
-        <div className="overlay" onMouseDown={(e) => e.target === e.currentTarget && setOpen(false)}>
-          <div className="modal modal-fixed">
-            <h3>{t('member.missingTitle')}</h3>
-            <div className="modal-body">
-              {missingCount === 0 ? (
-                <p className="desc">{t('member.allComplete')}</p>
-              ) : (
-                <div className="missing-list">
-                  {groups.map((g) => (
-                    <div className="missing-group" key={g.tab}>
-                      <div className="missing-tab">{g.tab}</div>
-                      <div className="missing-items">
-                        {g.items.map((item) => (
-                          <button
-                            type="button"
-                            className="missing-item"
-                            key={item.id}
-                            data-tab={item.tab}
-                            data-col={item.col}
-                            onClick={() => {
-                              onJump(item.tab, item.col);
-                              setOpen(false);
-                            }}
-                          >
-                            {item.label}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  ))}
+      {open &&
+        pos &&
+        createPortal(
+          <div
+            className="missing-dropdown"
+            style={{ top: pos.top, right: pos.right }}
+            role="dialog"
+            aria-label={t('member.missingTitle')}
+            ref={dropdownRef}
+          >
+            <div className="missing-dropdown-head">
+              <h4>{t('member.missingTitle')}</h4>
+              <span className="tip-count">{missingCount}</span>
+            </div>
+            <div className="missing-list missing-list--scroll">
+              {groups.map((g) => (
+                <div className="missing-group" key={g.tab}>
+                  <div className="missing-tab">{g.tab}</div>
+                  <div className="missing-items">
+                    {g.items.map((item) => (
+                      <button
+                        type="button"
+                        className="missing-item"
+                        key={item.id}
+                        data-tab={item.tab}
+                        data-col={item.col}
+                        onClick={() => {
+                          onJump(item.tab, item.col);
+                          setOpen(false);
+                        }}
+                      >
+                        {item.label}
+                      </button>
+                    ))}
+                  </div>
                 </div>
-              )}
+              ))}
             </div>
-            <div className="row">
-              <button type="button" className="btn btn-ghost" onClick={() => setOpen(false)}>
-                {t('common.close')}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+          </div>,
+          document.body,
+        )}
     </div>
   );
 }

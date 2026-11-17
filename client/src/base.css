@@ -3109,7 +3109,6 @@ table.grid .labels.single th {
   border-radius: var(--r-md);
   background: linear-gradient(155deg, rgba(20, 28, 23, 0.85), rgba(7, 11, 9, 0.92));
   box-shadow: var(--elev-1), var(--bevel);
-  overflow: hidden;
   transition: border-color var(--dur-2) var(--ease);
 }
 
@@ -3117,6 +3116,7 @@ table.grid .labels.single th {
   content: '';
   position: absolute;
   inset: 0;
+  border-radius: inherit;
   background:
     linear-gradient(var(--tick), var(--tick)) left 0 top 0 / 16px 1px,
     linear-gradient(var(--tick), var(--tick)) left 0 top 0 / 1px 16px,
@@ -3136,6 +3136,7 @@ table.grid .labels.single th {
   content: '';
   position: absolute;
   inset: 0;
+  border-radius: inherit;
   background-image:
     linear-gradient(rgba(226, 216, 192, 0.04) 1px, transparent 1px),
     linear-gradient(90deg, rgba(226, 216, 192, 0.04) 1px, transparent 1px);
@@ -3789,6 +3790,77 @@ table.grid .labels.single th {
   border-color: rgba(201, 138, 95, 0.4);
   color: var(--gold-bright);
   background: rgba(201, 138, 95, 0.08);
+}
+
+/* Dropdown variant of the missing-fields list, anchored under the
+   "What's missing" link in the hero panel (replaces the modal). */
+.hero-progress-tip-wrap {
+  flex: none;
+}
+
+.hero-progress-tip .caret--open {
+  transform: rotate(180deg);
+}
+
+/* Portalled to <body> and anchored with fixed positioning so no ancestor
+   stacking context or overflow can trap it. */
+.missing-dropdown {
+  position: fixed;
+  z-index: var(--z-popover);
+  width: min(340px, 82vw);
+  padding: 12px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--r-md);
+  background: linear-gradient(170deg, #141c17 0%, #0d1310 55%, #090e0b 100%);
+  box-shadow: var(--elev-2), var(--bevel);
+  animation: enter var(--dur-2) var(--ease-out);
+}
+
+/* Corner ticks, same treatment as the floating modal. */
+.missing-dropdown::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  border-radius: var(--r-md);
+  opacity: 0.9;
+  background:
+    linear-gradient(var(--tick), var(--tick)) left 0 top 0 / 14px 1px,
+    linear-gradient(var(--tick), var(--tick)) left 0 top 0 / 1px 14px,
+    linear-gradient(var(--tick), var(--tick)) right 0 top 0 / 14px 1px,
+    linear-gradient(var(--tick), var(--tick)) right 0 top 0 / 1px 14px,
+    linear-gradient(var(--tick), var(--tick)) left 0 bottom 0 / 14px 1px,
+    linear-gradient(var(--tick), var(--tick)) left 0 bottom 0 / 1px 14px,
+    linear-gradient(var(--tick), var(--tick)) right 0 bottom 0 / 14px 1px,
+    linear-gradient(var(--tick), var(--tick)) right 0 bottom 0 / 1px 14px;
+  background-repeat: no-repeat;
+}
+
+.missing-dropdown-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-2);
+  margin: 0 2px 10px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--line-soft);
+}
+
+.missing-dropdown-head h4 {
+  margin: 0;
+  font-family: var(--mono);
+  font-size: var(--fs-micro);
+  font-weight: 600;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: #efece1;
+}
+
+.missing-list--scroll {
+  max-height: min(44vh, 330px);
+  overflow-y: auto;
+  padding-right: 4px;
+  scrollbar-gutter: stable;
 }
 
 .field-flash {
