@@ -138,6 +138,42 @@ table.grid.history-fit td.ign-col {
   background: rgba(5, 8, 7, 0.18);
 }
 
+/* Points Info (member boss attendance): floating list of configured boss
+   points, shown in a modal like the settings panel. */
+.points-info-btn {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.points-info-btn svg {
+  width: 14px;
+  height: 14px;
+}
+
+.points-info-modal .desc {
+  margin: 2px 0 14px;
+}
+
+.points-info-list {
+  flex: none;
+  max-height: min(52vh, 440px);
+  overflow-y: auto;
+  margin-bottom: 14px;
+}
+
+.points-info-table th:last-child,
+.points-info-table td:last-child {
+  text-align: right;
+  padding-right: 16px;
+}
+
+.points-info-table td:last-child .cell,
+.points-info-table th:last-child {
+  justify-content: flex-end;
+}
+
 .attendance-board .table-scroll {
   flex: 1;
   min-height: 0;

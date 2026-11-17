@@ -449,6 +449,10 @@ api.get('/data', requireAuth, (req, res) => {
 
   const attTab = snap.tabs.find((t) => t.meta.title.toUpperCase() === 'BOSS ATTENDANCE');
   const configTab = snap.tabs.find((t) => t.meta.title.toUpperCase() === 'BOSS CONFIG');
+  // Members don't receive the raw BOSS CONFIG tab; expose just name + points.
+  const bossConfig = (configTab?.rows ?? [])
+    .map((r) => ({ name: (r.cells[0] || '').trim(), points: intPoints(r.cells[1]) }))
+    .filter((b) => b.name);
   const configPoints = new Map<string, number>();
   for (const r of configTab?.rows ?? []) {
     const boss = (r.cells[0] || '').trim().toLowerCase();
@@ -486,6 +490,7 @@ api.get('/data', requireAuth, (req, res) => {
     tabs,
     roster,
     leaderboard,
+    bossConfig,
     participation,
     attendance: computeAttendance(snap),
     avatars: avatarMap(),

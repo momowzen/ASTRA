@@ -18,7 +18,7 @@ import TopbarBossTracker from './TopbarBossTracker';
 import { DatePicker, Select } from './Dropdown';
 import { LangToggle, useLang } from '../i18n';
 import { useNavSlider } from '../useNavSlider';
-import { colLabel, memberColIsLong, memberColLabel, memberColValueLabel, tabLabel, valueLabel } from '../display';
+import { colLabel, memberColIsLong, memberColLabel, memberColValueLabel, tabLabel, valueLabel, bossLabel } from '../display';
 
 interface Props {
   data: DataResponse;
@@ -366,6 +366,7 @@ export default function MemberApp({
   const [activeTitle, setActiveTitle] = useState('');
   const [restored, setRestored] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [pointsInfoOpen, setPointsInfoOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const navSlider = useNavSlider();
   const [jump, setJump] = useState<{ tab: string; col: number } | null>(null);
@@ -1068,6 +1069,15 @@ export default function MemberApp({
                 <div>
                   <h3>{t('member.topContributors')}</h3>
                 </div>
+                <button
+                  type="button"
+                  className="btn btn-sm btn-ghost points-info-btn"
+                  onClick={() => setPointsInfoOpen(true)}
+                  title={t('member.pointsInfo')}
+                >
+                  <IconGem />
+                  {t('member.pointsInfo')}
+                </button>
               </div>
               <AttendancePodium entries={leaderboard} avatars={data.avatars} />
               <div className="table-scroll attendance-ranking-list">
@@ -1431,6 +1441,54 @@ export default function MemberApp({
           avatarUrl={ownAvatar}
           onAvatarUpdated={(url) => setAvatarOverride(url)}
         />
+      )}
+
+      {pointsInfoOpen && (
+        <div
+          className="overlay"
+          onMouseDown={(e) => e.target === e.currentTarget && setPointsInfoOpen(false)}
+          role="dialog"
+          aria-modal="true"
+          aria-label={t('member.pointsInfo')}
+        >
+          <div className="modal points-info-modal">
+            <h3>{t('member.pointsInfo')}</h3>
+            <p className="desc">{t('member.pointsInfoDesc')}</p>
+
+            {(data.bossConfig?.length ?? 0) > 0 ? (
+              <div className="attendance-ranking-list points-info-list">
+                <table className="grid points-info-table">
+                  <thead>
+                    <tr className="labels single">
+                      <th>{t('boss.boss')}</th>
+                      <th>{t('boss.points')}</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {data.bossConfig!.map((b) => (
+                      <tr key={b.name}>
+                        <td>
+                          <div className="cell">{bossLabel(b.name, t, lang)}</div>
+                        </td>
+                        <td>
+                          <div className="cell">{b.points}</div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            ) : (
+              <div className="empty">{t('member.pointsInfoEmpty')}</div>
+            )}
+
+            <div className="row">
+              <button type="button" className="btn btn-ghost" onClick={() => setPointsInfoOpen(false)}>
+                {t('common.close')}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
 
       {heroCropSource && (

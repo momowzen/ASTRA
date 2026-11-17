@@ -28,6 +28,7 @@ export interface DataResponse {
   tabs: TabData[];
   roster?: RosterMember[];
   leaderboard?: { ign: string; points: number; perfect?: number }[];
+  bossConfig?: { name: string; points: number }[];
   participation?: ParticipationEntry[];
   attendance?: {
     attended: number;
