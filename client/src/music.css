@@ -250,21 +250,6 @@
   color: var(--faint);
 }
 
-.music-cover-index {
-  display: flex;
-  justify-content: center;
-  gap: var(--sp-1);
-  margin-top: 8px;
-  color: var(--muted);
-  font-family: var(--mono);
-  font-size: var(--fs-micro);
-  letter-spacing: 0.12em;
-}
-
-.music-cover-index span {
-  color: var(--faint);
-}
-
 .music-track-copy {
   width: 100%;
   max-width: 440px;
@@ -281,32 +266,14 @@
   letter-spacing: 0.035em;
   color: #f0ede3;
   overflow-wrap: anywhere;
-  text-align: center;
+  /* Follows .music-track-copy's text-align so the kicker and the title
+     always line up (centered normally, left-aligned in full screen). */
+  text-align: inherit;
 }
 
 /* Hero track title, not a section header - no tick bar */
 .music-track-copy h3::before {
   content: none;
-}
-
-.music-track-meta {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: var(--sp-2);
-  color: var(--muted);
-  font-family: var(--mono);
-  font-size: var(--fs-micro);
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-}
-
-.music-dot {
-  width: 3px;
-  height: 3px;
-  border-radius: 50%;
-  background: var(--accent);
-  box-shadow: 0 0 8px rgba(201, 138, 95, 0.5);
 }
 
 .music-progress {
@@ -994,8 +961,7 @@
 
 /* Bottom control bar (professional player style) */
 .music-shell.is-fs .music-cover-label,
-.music-shell.is-fs .music-cover-sub,
-.music-shell.is-fs .music-cover-index {
+.music-shell.is-fs .music-cover-sub {
   display: none;
 }
 
@@ -1024,11 +990,6 @@
   overflow: hidden;
   text-overflow: ellipsis;
   overflow-wrap: normal;
-}
-
-.music-shell.is-fs .music-track-meta {
-  justify-content: flex-start;
-  font-size: var(--fs-micro);
 }
 
 .music-shell.is-fs .music-progress {
@@ -1197,10 +1158,6 @@
 
   .music-shell.is-fs .music-track-copy {
     text-align: center;
-  }
-
-  .music-shell.is-fs .music-track-meta {
-    justify-content: center;
   }
 
   .music-shell.is-fs .music-progress {
@@ -1648,10 +1605,6 @@
     font-size: var(--fs-micro);
   }
 
-  .music-cover-index {
-    display: none;
-  }
-
   .music-track-copy {
     grid-column: 2;
     grid-row: 1;
@@ -1662,10 +1615,6 @@
   .music-track-copy h3 {
     margin: 1px 0 2px;
     font-size: var(--fs-md);
-  }
-
-  .music-track-meta {
-    justify-content: flex-start;
   }
 
   .music-progress {

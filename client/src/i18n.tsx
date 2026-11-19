@@ -312,7 +312,6 @@ const DICT: Record<string, { en: string; ko: string; ja: string; zh: string }> =
   'media.mute': { en: 'Mute', ko: '음소거', ja: "ミュート", zh: '静音' },
   'media.unmute': { en: 'Unmute', ko: '음소거 해제', ja: "ミュート解除", zh: '取消静音' },
   'media.volume': { en: 'Volume', ko: '볼륨', ja: "音量", zh: '音量' },
-  'media.drive': { en: 'Google Drive', ko: 'Google 드라이브', ja: "Google ドライブ", zh: 'Google 云端硬盘' },
   'media.streamError': {
     en: 'This track could not be played. Try another track.',
     ko: '이 트랙을 재생할 수 없습니다. 다른 트랙을 시도하세요.',

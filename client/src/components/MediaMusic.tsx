@@ -801,21 +801,12 @@ export default function MediaMusic({
                   <span className="music-cover-label">ASTRA</span>
                   <span className="music-cover-sub">SONGS</span>
                 </div>
-                <div className="music-cover-index">
-                  {String(index + 1).padStart(2, '0')}
-                  <span>/ {String(tracks.length).padStart(2, '0')}</span>
-                </div>
               </div>
 
               <div className="music-now-info">
                 <div className="music-track-copy">
                   <span className="music-kicker">{t('media.nowPlaying')}</span>
                   <h3>{current?.title || '—'}</h3>
-                  <div className="music-track-meta">
-                    <span>{current?.artist || 'ASTRA'}</span>
-                    <span className="music-dot" aria-hidden="true" />
-                    <span>{current?.modified || t('media.drive')}</span>
-                  </div>
                 </div>
               </div>
 
