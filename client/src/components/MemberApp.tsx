@@ -15,6 +15,7 @@ import MediaMusic from './MediaMusic';
 import ActiveParticipation from './ActiveParticipation';
 import GuildRoster from './GuildRoster';
 import TopbarBossTracker from './TopbarBossTracker';
+import ToolsHost from './ToolsHost';
 import { DatePicker, Select } from './Dropdown';
 import { LangToggle, useLang } from '../i18n';
 import { useNavSlider } from '../useNavSlider';
@@ -389,8 +390,6 @@ export default function MemberApp({
   const [toolsOnline, setToolsOnline] = useState(true);
   const [toolsAlarm, setToolsAlarm] = useState(false);
   const [profileMember, setProfileMember] = useState<RosterMember | null>(null);
-  const toolsFrameRef = useRef<HTMLIFrameElement>(null);
-  const toolsCursorCleanupRef = useRef<(() => void) | null>(null);
   const [avatarOverride, setAvatarOverride] = useState<string | null | undefined>(undefined);
   const heroAvatarInput = useRef<HTMLInputElement>(null);
   const [heroCropSource, setHeroCropSource] = useState<string | null>(null);
@@ -551,10 +550,10 @@ export default function MemberApp({
 
   const mapLang = (l: string) => (l === 'ko' || l === 'ja' || l === 'zh' ? l : 'en');
   const viewerTool = toolsView === 'tracker' || toolsView === 'hidden' || toolsView === 'relic';
-  const toolsApi = () =>
-    (toolsFrameRef.current?.contentWindow as (Window & { ASTRA_TOOLS?: AstraToolsApi }) | null)
-      ?.ASTRA_TOOLS;
+  const toolsApi = () => (window as Window & { ASTRA_TOOLS?: AstraToolsApi }).ASTRA_TOOLS;
 
+  /* Called by ToolsHost once the tools app has booted (and again each time the
+     tools view is re-opened): wire the status/alarm bridge and sync page+lang. */
   function onToolsLoad() {
     const api = toolsApi();
     if (!api) return;
@@ -564,37 +563,7 @@ export default function MemberApp({
     setToolsAlarm(!!api.alarmOn());
     api.setLang(mapLang(lang));
     if (viewerTool && toolsView) api.setPage(toolsView);
-
-    // The astral pointer lives in the parent document. Forward pointer events
-    // from the tools iframe so the halo/trail keeps working over its panel.
-    const frame = toolsFrameRef.current;
-    const win = frame?.contentWindow;
-    if (frame && win) {
-      toolsCursorCleanupRef.current?.();
-      const forward = (type: 'pointermove' | 'pointerdown') => (e: PointerEvent) => {
-        const rect = frame.getBoundingClientRect();
-        window.dispatchEvent(
-          new PointerEvent(type, {
-            clientX: rect.left + e.clientX,
-            clientY: rect.top + e.clientY,
-            pointerId: e.pointerId,
-            pointerType: e.pointerType,
-            isPrimary: e.isPrimary,
-          }),
-        );
-      };
-      const onMove = forward('pointermove');
-      const onDown = forward('pointerdown');
-      win.addEventListener('pointermove', onMove, { passive: true });
-      win.addEventListener('pointerdown', onDown, { passive: true });
-      toolsCursorCleanupRef.current = () => {
-        win.removeEventListener('pointermove', onMove);
-        win.removeEventListener('pointerdown', onDown);
-      };
-    }
   }
-
-  useEffect(() => () => toolsCursorCleanupRef.current?.(), []);
 
   useEffect(() => {
     if (viewerTool && toolsView) toolsApi()?.setPage(toolsView);
@@ -1052,16 +1021,9 @@ export default function MemberApp({
             </div>
           )}
 
-          {viewerTool && (
-            <iframe
-              ref={toolsFrameRef}
-              className="tools-frame"
-              src="./tools/index.html"
-              title={t('member.tools')}
-              allow="autoplay"
-              onLoad={onToolsLoad}
-            />
-          )}
+          {/* The tools mini-app stays mounted for the lifetime of the session
+              (hidden while another view is open) and boots on first use. */}
+          <ToolsHost visible={viewerTool} onLoad={onToolsLoad} />
 
           {toolsView === 'attendance' && (
             <div className="panel-card attendance-board">

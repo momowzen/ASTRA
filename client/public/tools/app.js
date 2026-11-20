@@ -11,6 +11,12 @@
     });
     const db = firebase.firestore();
 
+    /* The member page mounts the tools into a .tools-root element at the app
+       root, so relative asset URLs need a tools/ prefix there. Standalone
+       (served from /tools/) nothing changes. */
+    const __toolsInlined = !!document.querySelector('.tools-root');
+    function __toolsUrl(p){ return __toolsInlined ? 'tools/' + p : p; }
+
     const BOSSES=[
   {id:"Venatus",name:"Venatus",lvl:60,rs:36000},
   {id:"Viorent",name:"Viorent",lvl:65,rs:36000},
@@ -324,7 +330,7 @@ function langNext(){
         const gd=getGuildDisplay(bb.id);
         const gEl=$('nextGuild');
         if(gd){gEl.textContent=gd.display;gEl.className='hero-guild-badge guild-'+gd.idx;gEl.hidden=false}else{gEl.hidden=true}
-        const im=$('heroBossImg'),url='assets/'+bb.id+'.png';
+        const im=$('heroBossImg'),url=__toolsUrl('assets/'+bb.id+'.png');
         if(im.getAttribute('src')!==url){im.style.opacity=0;im.onload=()=>{im.style.opacity=1};im.src=url}
       }else if(nxtBoss){
         $('nextName').textContent='--';$('nextLv').textContent='';$('nextLoc').textContent='';$('nextTag').textContent='';$('nextAt').textContent='';$('nextGuild').hidden=true;nxtBoss=null;nxtTime=null;
@@ -942,9 +948,9 @@ function fitRelic(){
       const expandedSet=new Set([...document.querySelectorAll('.class-card.expanded')].map(c=>c.dataset.key));
       $('hiddenList').innerHTML=HIDDEN_CLASSES.map((c,i)=>{
         const exp=expandedSet.has(c.className);
-        const pairs=c.pairs.map(p=>'<div class="skill-pair">'+p.skills.map(s=>'<span class="skill-pair-item skill-pair-'+s.type+'"><img src="assets/'+s.type.toLowerCase()+'.png" alt="" class="hc-type-icon" loading="lazy" decoding="async"><span class="skill-pair-name">'+ht(s.name)+'</span></span>').join('')+'</div>').join('');
+        const pairs=c.pairs.map(p=>'<div class="skill-pair">'+p.skills.map(s=>'<span class="skill-pair-item skill-pair-'+s.type+'"><img src="'+__toolsUrl('assets/'+s.type.toLowerCase()+'.png')+'" alt="" class="hc-type-icon" loading="lazy" decoding="async"><span class="skill-pair-name">'+ht(s.name)+'</span></span>').join('')+'</div>').join('');
         const mils=c.milestones.map(m=>'<div class="milestone-item"><span class="milestone-lvl">'+m.lvl+'</span><span class="milestone-desc">'+ht(m.desc).replace(/(\+\d+(?:\.\d+)?%?)/g,'<span class="stat-val">$1</span>')+'</span></div>').join('');
-        return '<div class="class-card'+(exp?' expanded':'')+'" tabindex="0" aria-expanded="'+exp+'" data-key="'+c.className+'"><div class="class-card-header"><div class="class-icon"><img src="assets/'+c.className+'.png" alt="" class="class-icon-img" loading="lazy" decoding="async"></div><div class="class-title-group"><span class="class-name">'+ht(c.className)+'</span></div><span class="class-toggle" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg></span></div><div class="class-card-body"><div class="skill-block"><div class="skill-block-label">'+ht(c.skillName)+'</div><div class="skill-block-text">'+ht(c.skill)+'</div></div><div class="skill-pairs">'+pairs+'</div><div class="milestones"><div class="milestone-title">'+t('milestones')+'</div><div class="milestone-list">'+mils+'</div></div></div></div>';
+        return '<div class="class-card'+(exp?' expanded':'')+'" tabindex="0" aria-expanded="'+exp+'" data-key="'+c.className+'"><div class="class-card-header"><div class="class-icon"><img src="'+__toolsUrl('assets/'+c.className+'.png')+'" alt="" class="class-icon-img" loading="lazy" decoding="async"></div><div class="class-title-group"><span class="class-name">'+ht(c.className)+'</span></div><span class="class-toggle" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg></span></div><div class="class-card-body"><div class="skill-block"><div class="skill-block-label">'+ht(c.skillName)+'</div><div class="skill-block-text">'+ht(c.skill)+'</div></div><div class="skill-pairs">'+pairs+'</div><div class="milestones"><div class="milestone-title">'+t('milestones')+'</div><div class="milestone-list">'+mils+'</div></div></div></div>';
       }).join('');
       fitPairTexts();
       fitExpandedCards();
@@ -1153,6 +1159,10 @@ function fitRelic(){
     let ptrY=0,ptrReady=false,ptrActive=false;
     document.addEventListener('touchstart',(e)=>{
       if(window.innerWidth>900||!ptrEl)return;
+      // Inlined into the member page, this listener sits on the host document:
+      // only arm the gesture for touches that start on the tools themselves so
+      // pulling down on host content keeps its native scroll.
+      if(__toolsInlined&&!(e.target&&e.target.closest&&e.target.closest('.tools-root')))return;
       let el=e.target,scrollable=false;
       while(el&&el!==document.body&&el!==document.documentElement){
         if(el.scrollHeight>el.clientHeight+1){
@@ -1181,7 +1191,13 @@ function fitRelic(){
       const dy=e.changedTouches[0].clientY-ptrY;
       if(ptrActive&&dy>=80){
         ptrEl.classList.add('loading');
-        location.reload();
+        if(__toolsInlined){
+          // No full reload when inlined (that would reload the whole member
+          // app); refresh the data the tools poll instead.
+          pollData();pollGuildData();setTimeout(ptrReset,500);
+        }else{
+          location.reload();
+        }
         return;
       }
       ptrReset();
@@ -1308,7 +1324,7 @@ function fitRelic(){
 
     function checkForUpdate(){
       try{
-        fetch('version.json?_='+Date.now(),{cache:'no-store'})
+        fetch(__toolsUrl('version.json')+'?_='+Date.now(),{cache:'no-store'})
           .then(r=>{if(!r.ok)throw Error(r.status);return r.json()})
           .then(d=>{
             const v=d&&d.v;
@@ -1317,7 +1333,7 @@ function fitRelic(){
             if(prev&&prev!==v){
               lsSet('astraver',v);
               try{localStorage.removeItem(LS_PKEY);localStorage.removeItem(PRICE_MEMORY_KEY)}catch(e){}
-              location.reload();
+              if(!__toolsInlined)location.reload();
             }else if(!prev){
               lsSet('astraver',v);
             }

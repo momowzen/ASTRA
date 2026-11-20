@@ -2219,7 +2219,7 @@ select option {
   min-height: 0;
 }
 
-.shell-member .content > .tools-frame {
+.shell-member .content > .tools-root {
   flex: 1 1 auto;
   min-height: 420px;
 }

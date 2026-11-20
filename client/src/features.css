@@ -3047,16 +3047,25 @@ table.grid.dist-table thead th.ign-col {
   box-shadow: 0 0 10px rgba(217, 104, 95, 0.4);
 }
 
-/* ---------- Tools iframe ---------- */
+/* ---------- Tools workspace (inlined from public/tools, see ToolsHost) ---------- */
 
-.tools-frame {
+/* The tools keep a persistent mount point; `is-off` hides it while another
+   member view is active (app.js still writes to it from its timers). */
+.tools-root {
   flex: 1;
   width: 100%;
   min-height: 0;
-  border: 0;
-  border-radius: 0;
-  background: transparent;
-  box-shadow: none;
+}
+
+.tools-root.is-off {
+  display: none;
+}
+
+/* The host's generic .panel-count badge would otherwise restyle the tools'
+   own counters with the host font; keep the font the tools use standalone. */
+.tools-root .panel-count {
+  font-family: inherit;
+  font-variant-numeric: normal;
 }
 
 /* Basic Information input heights and notes field */
