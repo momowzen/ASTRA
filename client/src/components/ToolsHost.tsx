@@ -102,9 +102,11 @@ function scopeRules(css: string, scope: string): string {
       end += 1;
     }
     const body = css.slice(open + 1, end - 1);
-    const at = /^@[\w-]+/.exec(prelude)?.[0].toLowerCase() ?? '';
-    if (at === '@media' || at === '@supports') {
-      out += `${prelude} { ${scopeRules(body, scope)} }\n`;
+    const isSizeMedia = /^@media\b/i.test(prelude) && /\b(width|height)\b/i.test(prelude);
+    const at = (isSizeMedia ? '@container' : (/^@[\w-]+/.exec(prelude)?.[0].toLowerCase() ?? ''));
+    if (at === '@container' || at === '@media' || at === '@supports') {
+      const mediaPrelude = isSizeMedia ? prelude.replace(/^@media/i, '@container') : prelude;
+      out += `${mediaPrelude} { ${scopeRules(body, scope)} }\n`;
     } else if (at) {
       out += `${prelude} { ${body} }\n`;
     } else if (prelude) {

@@ -3117,6 +3117,9 @@ table.grid.dist-table thead th.ign-col {
   flex: 1;
   width: 100%;
   min-height: 0;
+  /* Let the inlined tools respond to their own width instead of the browser
+     viewport, so responsive layouts track the available pane (e.g. half-window). */
+  container-type: inline-size;
 }
 
 .tools-root.is-off {
