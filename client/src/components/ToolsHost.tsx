@@ -222,16 +222,15 @@ export default function ToolsHost({ visible, onLoad }: ToolsHostProps) {
   useEffect(() => {
     const root = rootRef.current;
     if (!visible || !root) return;
-    let cancelled = false;
+    // ToolsHost stays mounted for the whole session (the tools mini-app is only
+    // hidden via CSS), so it is safe to fire onLoad whenever boot resolves.
+    // Gating on a `cancelled` flag made onLoad silently no-op under React
+    // StrictMode's mount/unmount/remount cycle, which left the tools view
+    // uninitialised until a manual page refresh.
     bootTools(root).then(
-      () => {
-        if (!cancelled) onLoadRef.current();
-      },
+      () => onLoadRef.current(),
       (err) => console.error(err),
     );
-    return () => {
-      cancelled = true;
-    };
   }, [visible]);
 
   return <div ref={rootRef} className={`tools-root${visible ? '' : ' is-off'}`} />;
