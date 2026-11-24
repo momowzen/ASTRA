@@ -1985,6 +1985,15 @@ table.grid.dist-table thead th.ign-col {
   scrollbar-gutter: stable;
 }
 
+.cp-list .cp-val {
+  min-width: 0;
+}
+
+.cp-scan-input {
+  width: 110px;
+  flex: none;
+}
+
 .cp-row {
   display: flex;
   align-items: center;
@@ -2036,6 +2045,18 @@ table.grid.dist-table thead th.ign-col {
   border-radius: 50%;
   background: var(--green);
   box-shadow: 0 0 6px rgba(127, 191, 155, 0.7);
+  vertical-align: middle;
+}
+
+/* CP Update: red dot on roster IGNs the screenshot scan did not match. */
+.cp-unmatch-dot {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  margin-right: 6px;
+  border-radius: 50%;
+  background: var(--red, #ff6b7a);
+  box-shadow: 0 0 6px rgba(255, 107, 122, 0.7);
   vertical-align: middle;
 }
 
@@ -2166,6 +2187,47 @@ table.grid.dist-table thead th.ign-col {
   text-transform: uppercase;
   color: var(--faint);
   padding: 4px 0 10px;
+}
+
+/* CP Update: basic-information IGNs the screenshot scan did not match. */
+.cp-unmatched-block {
+  margin: 6px 0 10px;
+  padding: 8px 10px;
+  border: 1px dashed rgba(201, 138, 95, 0.28);
+  border-radius: var(--r-sm);
+  background: rgba(201, 138, 95, 0.04);
+}
+
+.cp-unmatched-head {
+  font-family: var(--mono);
+  font-size: var(--fs-micro);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin-bottom: 6px;
+}
+
+.cp-unmatched-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.cp-chip {
+  font-family: var(--mono);
+  font-size: var(--fs-micro);
+  padding: 3px 8px;
+  border: 1px solid rgba(201, 138, 95, 0.3);
+  border-radius: 999px;
+  background: rgba(201, 138, 95, 0.06);
+  color: var(--text);
+  cursor: pointer;
+  transition: var(--dur-1);
+}
+
+.cp-chip:hover {
+  border-color: rgba(201, 138, 95, 0.6);
+  background: rgba(201, 138, 95, 0.12);
 }
 
 .cp-read-list {

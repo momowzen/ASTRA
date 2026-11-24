@@ -1391,6 +1391,45 @@ Rules:
 - One line per row, in reading order. No headers, no numbering, no bullets, no quotes, no commentary.
 - Skip a row if its name or number is unreadable.`;
 
+/**
+ * Column-A names the client matches a scan against, used as an in-prompt
+ * spelling hint. Vision models are noticeably weaker on short Hangul names
+ * than on Latin ones ("황제오야파파" came back as "황에오빠의백"), but when the
+ * valid spellings are in the prompt the same model returns them exactly.
+ */
+const ROSTER_TABS: Record<'attendance' | 'cp', string[]> = {
+  attendance: ['BASIC INFORMATION', 'BOSS ATTENDANCE'],
+  cp: ['BASIC INFORMATION'],
+};
+
+function rosterNames(flow: 'attendance' | 'cp'): string[] {
+  try {
+    const snap = getSnapshot();
+    const names = new Set<string>();
+    for (const title of ROSTER_TABS[flow]) {
+      const tab = snap.tabs.find((t) => t.meta.title.toUpperCase() === title);
+      for (const row of tab?.rows ?? []) {
+        const name = (row.cells[0] || '').trim();
+        if (name) names.add(name);
+      }
+    }
+    return [...names].sort((a, b) => a.localeCompare(b));
+  } catch {
+    // Reading the screenshot must not depend on the sheet snapshot.
+    return [];
+  }
+}
+
+/** Append the guild roster to a reader prompt, when there is a sane amount of it. */
+function withRoster(prompt: string, names: string[]): string {
+  if (names.length === 0 || names.length > 300) return prompt;
+  return `${prompt}
+- This guild's member names are listed below. When a name in the image is one of these members, output that member's name exactly as written in the list (same spelling, spacing and symbols). Names that are not on the list must still be transcribed as displayed.
+- Only include names you can actually see in the image. Never add a roster name that is not visible.
+Guild roster (one name per line):
+${names.join('\n')}`;
+}
+
 interface ChatCompletionResponse {
   error?: { message?: string };
   choices?: { message?: { content?: string } }[];
@@ -1400,6 +1439,25 @@ interface GeminiResponse {
   error?: { code?: number; message?: string };
   candidates?: { content?: { parts?: { text?: string }[] } }[];
 }
+
+/**
+ * OCR timing budget. A vision read normally returns in under two seconds, so
+ * these are ceilings for the bad cases (provider queueing, quota errors,
+ * upstream outages), not the expected timings.
+ *
+ * - ONE attempt never waits longer than OCR_ATTEMPT_TIMEOUT_MS.
+ * - One provider (all its models) never spends longer than OCR_PROVIDER_BUDGET_MS.
+ * - A fallback provider is started once the primary has been busy for
+ *   OCR_HEDGE_DELAY_MS, instead of waiting for the primary to fail first.
+ * - The endpoint as a whole gives up after OCR_DEADLINE_MS.
+ */
+const OCR_ATTEMPT_TIMEOUT_MS = 15_000;
+const OCR_PROVIDER_BUDGET_MS = 20_000;
+const OCR_HEDGE_DELAY_MS = 2_500;
+const OCR_DEADLINE_MS = 25_000;
+
+/** Raised when the whole request ran out of its OCR_DEADLINE_MS budget. */
+class OcrDeadlineExceeded extends Error {}
 
 /**
  * Shared client for OpenAI-compatible chat-completions OCR readers (Groq,
@@ -1414,6 +1472,7 @@ async function readWithOpenAiChat(
     apiKey: string;
     model: string;
     extraBody?: Record<string, unknown>;
+    timeoutMs?: number;
   },
 ): Promise<string> {
   const upstream = await fetch(opts.url, {
@@ -1433,7 +1492,7 @@ async function readWithOpenAiChat(
       ],
       ...(opts.extraBody ?? {}),
     }),
-    signal: AbortSignal.timeout(60_000),
+    signal: AbortSignal.timeout(opts.timeoutMs ?? OCR_ATTEMPT_TIMEOUT_MS),
   });
   const data = (await upstream.json().catch(() => null)) as ChatCompletionResponse | null;
   if (!upstream.ok) {
@@ -1462,22 +1521,22 @@ async function readWithDeepSeek(image: string, prompt: string): Promise<string> 
   });
 }
 
-const GEMINI_MODELS = [
-  'gemini-3.5-flash',
-  'gemini-3.6-flash',
-  'gemini-3.7-flash',
-  'gemini-3.8-flash',
-  'gemini-3.5-flash-lite',
-  'gemini-flash-lite-latest',
-  'gemini-3.1-flash-lite',
-];
+const GEMINI_MODELS = ['gemini-3.8-flash', 'gemini-3.7-flash', 'gemini-3.5-flash-lite'];
 
 async function readWithGemini(image: string, prompt: string): Promise<string> {
   const mime = image.slice(image.indexOf('data:') + 5, image.indexOf(';'));
   const data = image.slice(image.indexOf(',') + 1);
+  const deadline = Date.now() + OCR_PROVIDER_BUDGET_MS;
   let lastError = '';
-  for (const model of GEMINI_MODELS) {
-    for (const thinking of [true, false]) {
+  models: for (const model of GEMINI_MODELS) {
+    // Two configs per model at most: thinking disabled (fast, what OCR wants),
+    // then the model default if the API rejects that override with a 400.
+    for (const noThinking of [true, false]) {
+      const remaining = deadline - Date.now();
+      if (remaining < 2_000) {
+        lastError = lastError || `${model}: skipped, OCR provider budget exhausted`;
+        break models;
+      }
       let status = 0;
       let message = '';
       try {
@@ -1496,9 +1555,9 @@ async function readWithGemini(image: string, prompt: string): Promise<string> {
                 },
               ],
               systemInstruction: { parts: [{ text: prompt }] },
-              ...(thinking ? { generationConfig: { thinkingConfig: { thinkingBudget: 0 } } } : {}),
+              ...(noThinking ? { generationConfig: { thinkingConfig: { thinkingBudget: 0 } } } : {}),
             }),
-            signal: AbortSignal.timeout(60_000),
+            signal: AbortSignal.timeout(Math.min(OCR_ATTEMPT_TIMEOUT_MS, remaining)),
           },
         );
         const body = (await upstream.json().catch(() => null)) as GeminiResponse | null;
@@ -1515,7 +1574,7 @@ async function readWithGemini(image: string, prompt: string): Promise<string> {
       }
       lastError = `${model}: ${message || `HTTP ${status}`}`;
       if (status === 401 || status === 403) throw new Error(lastError);
-      if (status !== 400 || !thinking) break;
+      if (status !== 400 || !noThinking) break;
     }
   }
   throw new Error(lastError || 'Gemini request failed');
@@ -1553,11 +1612,28 @@ function prepareOcrReaders(
   if (ready.length === 0) {
     return { ok: false, status: 503, error: 'No AI reader key is configured on the server' };
   }
-  // Groq first: it's the fastest vision reader, and runOcrReader returns on the
-  // first success, so the ordering decides which provider answers. The rest
-  // keep their configured order and act as fallbacks.
+  // Groq first: it's the fastest vision reader, so it takes the primary slot
+  // and the remaining providers hedge behind it. The rest keep their configured
+  // order.
   ready.sort((a, b) => Number(b.name === 'Groq') - Number(a.name === 'Groq'));
   return { ok: true, ready };
+}
+
+/** Run `promise`, rejecting with OcrDeadlineExceeded after `ms`. */
+function withDeadline<T>(promise: Promise<T>, ms: number): Promise<T> {
+  return new Promise<T>((resolve, reject) => {
+    const timer = setTimeout(() => reject(new OcrDeadlineExceeded(`OCR gave up after ${ms} ms`)), ms);
+    promise.then(
+      (value) => {
+        clearTimeout(timer);
+        resolve(value);
+      },
+      (err) => {
+        clearTimeout(timer);
+        reject(err);
+      },
+    );
+  });
 }
 
 async function runOcrReader(
@@ -1568,32 +1644,89 @@ async function runOcrReader(
   if (!prep.ok) return prep;
 
   const errors: string[] = [];
-  for (const reader of prep.ready) {
-    try {
-      const text = await reader.read(image, prompt);
-      return { ok: true, text };
-    } catch (err) {
-      console.error(`[ocr] ${reader.name} failed:`, err);
-      errors.push(`${reader.name}: ${(err as Error).message}`);
+  const timers: ReturnType<typeof setTimeout>[] = [];
+
+  /**
+   * One provider attempt that starts now (`delayMs` 0) or after the hedge
+   * delay, and that can also be started early if the primary fails first.
+   */
+  const provider = (reader: OcrReader, delayMs: number): { promise: Promise<string>; start: () => void } => {
+    let start!: () => void;
+    const promise = new Promise<string>((resolve, reject) => {
+      let fired = false;
+      let timer: ReturnType<typeof setTimeout> | undefined;
+      start = () => {
+        if (fired) return;
+        fired = true;
+        if (timer) clearTimeout(timer);
+        reader.read(image, prompt).then(resolve, (err) => {
+          console.error(`[ocr] ${reader.name} failed:`, err);
+          errors.push(`${reader.name}: ${(err as Error).message}`);
+          reject(err);
+        });
+      };
+      if (delayMs > 0) {
+        timer = setTimeout(start, delayMs);
+        timers.push(timer);
+      } else {
+        start();
+      }
+    });
+    return { promise, start };
+  };
+
+  // Hedge instead of chaining. The primary starts immediately and every
+  // fallback starts once the primary has been busy for OCR_HEDGE_DELAY_MS, so a
+  // provider that is queued upstream can no longer block the scan for its full
+  // timeout before the next one is even tried. The first success wins and the
+  // whole request is capped by OCR_DEADLINE_MS.
+  const [primary, ...fallbacks] = prep.ready;
+  const primarySlot = provider(primary, 0);
+  const fallbackSlots = fallbacks.map((reader) => provider(reader, OCR_HEDGE_DELAY_MS));
+
+  // A fast primary failure should not sit out the hedge delay: start the
+  // fallbacks the moment there is nothing left to wait for.
+  primarySlot.promise.catch(() => {
+    for (const slot of fallbackSlots) slot.start();
+  });
+
+  try {
+    const text = await withDeadline(
+      Promise.any([primarySlot.promise, ...fallbackSlots.map((slot) => slot.promise)]),
+      OCR_DEADLINE_MS,
+    );
+    return { ok: true, text };
+  } catch (err) {
+    const timedOut =
+      err instanceof OcrDeadlineExceeded ||
+      (errors.length > 0 && errors.every((e) => /abort|tim(ed)? ?out|budget exhausted/i.test(e)));
+    if (timedOut) {
+      console.error('[ocr] timed out:', errors.join(' | ') || (err as Error).message);
+      return { ok: false, status: 504, error: 'The screenshot reader timed out. Try again in a moment.' };
     }
+    return { ok: false, status: 502, error: errors.join(' | ') || 'All AI readers failed' };
+  } finally {
+    // A provider that answered before the hedge delay must not leave its timer
+    // armed: otherwise it fires a pointless fallback request after the response
+    // has already been sent.
+    for (const timer of timers) clearTimeout(timer);
   }
-  return { ok: false, status: 502, error: errors.join(' | ') };
 }
 
 api.post('/ocr/attendance', requireAuth, requireAdmin, async (req, res) => {
-  const result = await runOcrReader(String(req.body?.image ?? ''), ATTENDANCE_PROMPT);
+  const prompt = withRoster(ATTENDANCE_PROMPT, rosterNames('attendance'));
+  const result = await runOcrReader(String(req.body?.image ?? ''), prompt);
   if (!result.ok) return bad(res, result.status, result.error);
   res.json({ text: result.text });
 });
 
 api.post('/ocr/cp', requireAuth, requireAdmin, async (req, res) => {
-  // Return as soon as the first provider produces a reading, exactly like the
-  // attendance reader. Previously every configured provider was awaited in
-  // parallel (and their outputs merged), so a slow/failing secondary provider
-  // (Gemini's multi-model fallback) held the whole response even though the
-  // first provider had already finished. The client still accepts an array so
-  // the response shape is unchanged.
-  const result = await runOcrReader(String(req.body?.image ?? ''), CP_PROMPT);
+  // Same hedging reader as attendance: the first provider that produces a
+  // reading answers, and fallbacks only start if the primary is slow, so a
+  // failing secondary provider can no longer hold the whole response. The
+  // client still accepts an array so the response shape is unchanged.
+  const prompt = withRoster(CP_PROMPT, rosterNames('cp'));
+  const result = await runOcrReader(String(req.body?.image ?? ''), prompt);
   if (!result.ok) return bad(res, result.status, result.error);
   res.json({ texts: [result.text] });
 });

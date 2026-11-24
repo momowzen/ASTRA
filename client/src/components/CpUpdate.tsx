@@ -2,7 +2,7 @@ import { useMemo, useRef, useState } from 'react';
 import type { DataResponse } from '../types';
 import { ApiError, updateCp } from '../api';
 import type { CpItem } from '../api';
-import { formatCp } from '../utils';
+import { formatCp, parseCpNumber } from '../utils';
 import { useLang } from '../i18n';
 import { tabLabel } from '../display';
 import { Select } from './Dropdown';
@@ -39,7 +39,15 @@ export default function CpUpdate({ data, toast }: Props) {
     return (basic?.rows ?? [])
       .map((r) => ({ ign: (r.cells[0] || '').trim(), cp: formatCp(r.cells[1] ?? '') }))
       .filter((r) => r.ign)
-      .sort((a, b) => a.ign.localeCompare(b.ign));
+      .sort((a, b) => {
+        const an = parseCpNumber(a.cp);
+        const bn = parseCpNumber(b.cp);
+        const aEmpty = Number.isNaN(an);
+        const bEmpty = Number.isNaN(bn);
+        if (aEmpty !== bEmpty) return aEmpty ? 1 : -1;
+        if (!aEmpty && an !== bn) return bn - an;
+        return a.ign.localeCompare(b.ign);
+      });
   }, [basic]);
 
   const [images, setImages] = useState<Screenshot[]>([]);
@@ -67,6 +75,37 @@ export default function CpUpdate({ data, toast }: Props) {
     }
     return set;
   }, [items, roster]);
+
+  /* Left-panel display order: after a scan, unmatched members go to the top so
+     they can be edited quickly; otherwise (and within each group) sort by CP
+     descending, then IGN. */
+  const displayRoster = useMemo(() => {
+    const sortCp = (a: { ign: string; cp: string }, b: { ign: string; cp: string }) => {
+      const an = parseCpNumber(a.cp);
+      const bn = parseCpNumber(b.cp);
+      const aEmpty = Number.isNaN(an);
+      const bEmpty = Number.isNaN(bn);
+      if (aEmpty !== bEmpty) return aEmpty ? 1 : -1;
+      if (!aEmpty && an !== bn) return bn - an;
+      return a.ign.localeCompare(b.ign);
+    };
+    if (!items) return roster;
+    return [...roster].sort((a, b) => {
+      const aUn = !matchedIgns.has(a.ign);
+      const bUn = !matchedIgns.has(b.ign);
+      if (aUn !== bUn) return aUn ? -1 : 1;
+      return sortCp(a, b);
+    });
+  }, [roster, items, matchedIgns]);
+
+  /* BASIC INFORMATION IGNs that the screenshot scan did not match to a row. */
+  const unmatchedIgns = useMemo(() => {
+    if (!items) return [];
+    return roster
+      .map((r) => r.ign)
+      .filter((ign) => !matchedIgns.has(ign))
+      .sort((a, b) => a.localeCompare(b));
+  }, [items, roster, matchedIgns]);
 
   function openManual(ign: string, cp: string) {
     setManual(ign);
@@ -211,8 +250,10 @@ export default function CpUpdate({ data, toast }: Props) {
             <span className="panel-count">{roster.length}</span>
           </div>
           <div className="cp-list">
-            {roster.map((r) => {
+            {displayRoster.map((r) => {
               const matched = matchedIgns.has(r.ign);
+              const itemIndex = (items ?? []).findIndex((it) => it.ign.trim() === r.ign);
+              const scannedCp = itemIndex >= 0 ? (items![itemIndex].cp ?? '') : '';
               return (
                 <div className={`cp-row${matched ? ' matched' : ''}`} key={r.ign}>
                   <Avatar
@@ -227,9 +268,24 @@ export default function CpUpdate({ data, toast }: Props) {
                     onClick={() => openManual(r.ign, r.cp)}
                   >
                     {matched && <span className="cp-match-dot" title={t('tools.cpMatched')} aria-hidden="true" />}
+                    {!matched && items && <span className="cp-unmatch-dot" title={t('tools.cpUnmatched')} aria-hidden="true" />}
                     {r.ign}
                   </button>
-                  <span className="cp-val">{r.cp || '—'}</span>
+                  {matched ? (
+                    <>
+                      <span className="cp-val" title={t('tools.cpLeft')}>{r.cp || '—'}</span>
+                      <input
+                        className="input cp-scan-input"
+                        value={scannedCp}
+                        onChange={(e) => {
+                          if (itemIndex >= 0) patch(itemIndex, { cp: e.target.value });
+                        }}
+                        placeholder="CP"
+                      />
+                    </>
+                  ) : (
+                    <span className="cp-val">{r.cp || '—'}</span>
+                  )}
                 </div>
               );
             })}
@@ -308,6 +364,7 @@ export default function CpUpdate({ data, toast }: Props) {
               <div className="cp-read-list">
                 {items.map((it, i) => {
                   const matched = roster.some((r) => r.ign === it.ign.trim()) && !!it.cp.trim();
+                  if (matched) return null;
                   return (
                     <div className="cp-row" key={i}>
                       <span className={`cp-badge ${matched ? 'ok' : 'warn'}`}>
@@ -339,6 +396,27 @@ export default function CpUpdate({ data, toast }: Props) {
                   );
                 })}
               </div>
+
+              {unmatchedIgns.length > 0 && (
+                <div className="cp-unmatched-block">
+                  <div className="cp-unmatched-head">
+                    {t('tools.cpUnmatchedBasic')} · {unmatchedIgns.length}
+                  </div>
+                  <div className="cp-unmatched-chips">
+                    {unmatchedIgns.map((ign) => (
+                      <button
+                        type="button"
+                        className="cp-chip"
+                        key={ign}
+                        onClick={() => openManual(ign, roster.find((r) => r.ign === ign)?.cp ?? '')}
+                        title={t('tools.cpManualEdit')}
+                      >
+                        {ign}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               <div className="cp-actions">
                 <button

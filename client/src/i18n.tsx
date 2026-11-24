@@ -502,6 +502,7 @@ const DICT: Record<string, { en: string; ko: string; ja: string; zh: string }> =
   },
   'tools.cpMatched': { en: 'Matched', ko: '일치', ja: "一致", zh: '已匹配' },
   'tools.cpUnmatched': { en: 'Unmatched', ko: '불일치', ja: "不一致", zh: '未匹配' },
+  'tools.cpUnmatchedBasic': { en: 'Not in screenshot (basic info)', ko: '스크린샷에 없음 (기본 정보)', ja: "スクリーンショットに未検出（基本情報）", zh: '截图中未找到（基本信息）' },
   'tools.cpReading': { en: 'Reading screenshot…', ko: '스크린샷 읽는 중…', ja: "スクリーンショットを読み取り中…", zh: '正在读取截图…' },
   'tools.cpCouldNotRead': { en: 'Could not read the screenshot', ko: '스크린샷을 읽을 수 없습니다', ja: "スクリーンショットを読み取れませんでした", zh: '无法读取截图' },
   'tools.cpSomeFailed': { en: '{n} screenshot(s) failed to read', ko: '스크린샷 {n}개를 읽지 못했습니다', ja: "{n}枚のスクリーンショットの読み取りに失敗しました", zh: '{n} 张截图读取失败' },
