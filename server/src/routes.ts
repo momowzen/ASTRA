@@ -1454,7 +1454,7 @@ interface GeminiResponse {
 const OCR_ATTEMPT_TIMEOUT_MS = 15_000;
 const OCR_PROVIDER_BUDGET_MS = 20_000;
 const OCR_HEDGE_DELAY_MS = 2_500;
-const OCR_DEADLINE_MS = 25_000;
+const OCR_DEADLINE_MS = 30_000;
 
 /** Raised when the whole request ran out of its OCR_DEADLINE_MS budget. */
 class OcrDeadlineExceeded extends Error {}
@@ -1521,61 +1521,68 @@ async function readWithDeepSeek(image: string, prompt: string): Promise<string> 
   });
 }
 
-const GEMINI_MODELS = ['gemini-3.8-flash', 'gemini-3.7-flash', 'gemini-3.5-flash-lite'];
+/**
+ * Model order matters here. The flash-lite models read a full-size phone
+ * screenshot in 2-4 s. The bigger flash models are not usable for OCR:
+ * `gemini-3.8-flash` and `gemini-3.7-flash` accept `thinkingBudget: 0` but
+ * then never answer at all — the request just hangs until it is aborted, so
+ * putting them first turned every scan into a 504. They stay at the end, with
+ * their default thinking config, purely as a last resort.
+ */
+const GEMINI_MODELS: { model: string; generationConfig?: Record<string, unknown> }[] = [
+  { model: 'gemini-3.5-flash-lite' },
+  { model: 'gemini-3.1-flash-lite', generationConfig: { thinkingConfig: { thinkingBudget: 0 } } },
+  { model: 'gemini-3.8-flash' },
+];
 
 async function readWithGemini(image: string, prompt: string): Promise<string> {
   const mime = image.slice(image.indexOf('data:') + 5, image.indexOf(';'));
   const data = image.slice(image.indexOf(',') + 1);
   const deadline = Date.now() + OCR_PROVIDER_BUDGET_MS;
   let lastError = '';
-  models: for (const model of GEMINI_MODELS) {
-    // Two configs per model at most: thinking disabled (fast, what OCR wants),
-    // then the model default if the API rejects that override with a 400.
-    for (const noThinking of [true, false]) {
-      const remaining = deadline - Date.now();
-      if (remaining < 2_000) {
-        lastError = lastError || `${model}: skipped, OCR provider budget exhausted`;
-        break models;
-      }
-      let status = 0;
-      let message = '';
-      try {
-        const upstream = await fetch(
-          `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`,
-          {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'x-goog-api-key': config.geminiApiKey },
-            body: JSON.stringify({
-              contents: [
-                {
-                  parts: [
-                    { text: 'Read this screenshot.' },
-                    { inline_data: { mime_type: mime, data } },
-                  ],
-                },
-              ],
-              systemInstruction: { parts: [{ text: prompt }] },
-              ...(noThinking ? { generationConfig: { thinkingConfig: { thinkingBudget: 0 } } } : {}),
-            }),
-            signal: AbortSignal.timeout(Math.min(OCR_ATTEMPT_TIMEOUT_MS, remaining)),
-          },
-        );
-        const body = (await upstream.json().catch(() => null)) as GeminiResponse | null;
-        status = body?.error?.code ?? upstream.status;
-        if (upstream.ok) {
-          const text = (body?.candidates?.[0]?.content?.parts ?? []).map((p) => p.text ?? '').join('\n');
-          if (text.trim()) return text;
-          lastError = `${model}: empty reading`;
-          break;
-        }
-        message = String(body?.error?.message ?? '').split('\n')[0];
-      } catch (err) {
-        message = (err as Error).message;
-      }
-      lastError = `${model}: ${message || `HTTP ${status}`}`;
-      if (status === 401 || status === 403) throw new Error(lastError);
-      if (status !== 400 || !noThinking) break;
+  for (const { model, generationConfig } of GEMINI_MODELS) {
+    const remaining = deadline - Date.now();
+    if (remaining < 2_000) {
+      lastError = lastError || `${model}: skipped, OCR provider budget exhausted`;
+      break;
     }
+    let status = 0;
+    let message = '';
+    try {
+      const upstream = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'x-goog-api-key': config.geminiApiKey },
+          body: JSON.stringify({
+            contents: [
+              {
+                parts: [
+                  { text: 'Read this screenshot.' },
+                  { inline_data: { mime_type: mime, data } },
+                ],
+              },
+            ],
+            systemInstruction: { parts: [{ text: prompt }] },
+            ...(generationConfig ? { generationConfig } : {}),
+          }),
+          signal: AbortSignal.timeout(Math.min(OCR_ATTEMPT_TIMEOUT_MS, remaining)),
+        },
+      );
+      const body = (await upstream.json().catch(() => null)) as GeminiResponse | null;
+      status = body?.error?.code ?? upstream.status;
+      if (upstream.ok) {
+        const text = (body?.candidates?.[0]?.content?.parts ?? []).map((p) => p.text ?? '').join('\n');
+        if (text.trim()) return text;
+        lastError = `${model}: empty reading`;
+        continue;
+      }
+      message = String(body?.error?.message ?? '').split('\n')[0];
+    } catch (err) {
+      message = (err as Error).message;
+    }
+    lastError = `${model}: ${message || `HTTP ${status}`}`;
+    if (status === 401 || status === 403) throw new Error(lastError);
   }
   throw new Error(lastError || 'Gemini request failed');
 }
@@ -1595,6 +1602,8 @@ function readerFor(provider: string): { name: string; key: string; read: (image:
 
 type OcrReader = { name: string; key: string; read: (image: string, prompt: string) => Promise<string> };
 
+let loggedOcrOrder = '';
+
 /** Validation shared by every OCR endpoint: image shape + provider config. */
 function prepareOcrReaders(
   image: string,
@@ -1608,7 +1617,16 @@ function prepareOcrReaders(
   if (chosen.some((r) => r === null)) {
     return { ok: false, status: 400, error: `Unknown AI_PROVIDER value: ${config.aiProviders.join(', ')}` };
   }
-  const ready = chosen.filter((r): r is NonNullable<typeof r> => r !== null && r.key !== '');
+  // AI_PROVIDER sets the order, but any other provider that has a key is still
+  // a useful last-resort fallback: a single-provider deploy used to turn one
+  // provider's rate-limit or outage into a hard OCR failure.
+  const ordered = [...config.aiProviders];
+  for (const provider of ['groq', 'gemini', 'deepseek']) {
+    if (!ordered.includes(provider)) ordered.push(provider);
+  }
+  const ready = ordered
+    .map(readerFor)
+    .filter((r): r is NonNullable<typeof r> => r !== null && r.key !== '');
   if (ready.length === 0) {
     return { ok: false, status: 503, error: 'No AI reader key is configured on the server' };
   }
@@ -1616,6 +1634,13 @@ function prepareOcrReaders(
   // and the remaining providers hedge behind it. The rest keep their configured
   // order.
   ready.sort((a, b) => Number(b.name === 'Groq') - Number(a.name === 'Groq'));
+  // Log the order once (and whenever it changes) so a deploy can be checked for
+  // a missing provider key without exposing the keys themselves.
+  const order = ready.map((r) => r.name).join(' -> ');
+  if (order !== loggedOcrOrder) {
+    loggedOcrOrder = order;
+    console.log(`[ocr] provider order: ${order}`);
+  }
   return { ok: true, ready };
 }
 
